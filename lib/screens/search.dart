@@ -28,10 +28,10 @@ class _SearchState extends State<Search> {
                   borderRadius: BorderRadius.circular(10.0),
                   boxShadow: [
                     BoxShadow(
-                        color: const Color.fromARGB(50, 0, 0, 0),
+                        color: const Color.fromARGB(25, 0, 0, 0),
                         spreadRadius: 1,
-                        blurRadius: 5,
-                        offset: Offset(0, 5))
+                        blurRadius: 2,
+                        offset: Offset(0, 2))
                   ]),
               child: TextField(
                 decoration: InputDecoration(
