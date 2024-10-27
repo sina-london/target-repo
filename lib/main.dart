@@ -29,40 +29,41 @@ class _MainAppState extends State<MainApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-        debugShowCheckedModeBanner: false,
-        home: Scaffold(
-            body: IndexedStack(
-              index: _selectedIndex,
-              children: _screens,
+      debugShowCheckedModeBanner: false,
+      home: Scaffold(
+        body: IndexedStack(
+          index: _selectedIndex,
+          children: _screens,
+        ),
+        bottomNavigationBar: NavigationBar(
+          elevation: 0.5,
+          selectedIndex: _selectedIndex,
+          labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
+          onDestinationSelected: (index) {
+            setState(() {
+              _selectedIndex = index;
+            });
+          },
+          destinations: [
+            NavigationDestination(
+              icon: Icon(Icons.home),
+              label: "Home",
             ),
-            bottomNavigationBar: NavigationBar(
-              elevation: 0.5,
-              selectedIndex: _selectedIndex,
-              labelBehavior:
-                  NavigationDestinationLabelBehavior.onlyShowSelected,
-              onDestinationSelected: (index) {
-                setState(() {
-                  _selectedIndex = index;
-                });
-              },
-              destinations: [
-                NavigationDestination(
-                  icon: Icon(Icons.home),
-                  label: "Home",
-                ),
-                NavigationDestination(
-                  icon: Icon(Icons.search),
-                  label: "Search",
-                ),
-                NavigationDestination(
-                  icon: Icon(Icons.widgets),
-                  label: "Browse",
-                ),
-                NavigationDestination(
-                  icon: Icon(Icons.settings),
-                  label: "Settings",
-                ),
-              ],
-            )));
+            NavigationDestination(
+              icon: Icon(Icons.search),
+              label: "Search",
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.widgets),
+              label: "Browse",
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.settings),
+              label: "Settings",
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

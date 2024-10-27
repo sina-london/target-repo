@@ -13,6 +13,7 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   final AnimeService _animeService = AnimeService();
   List<dynamic>? topAiring;
+  List<dynamic>? movies;
   List<dynamic>? popular;
   bool _isLoading = true;
   String? error;
@@ -27,11 +28,13 @@ class _HomeState extends State<Home> {
       final results = await Future.wait([
         _animeService.fetchTopAiring(),
         _animeService.fetchPopular(),
+        _animeService.fetchMovies(),
       ]);
 
       setState(() {
         topAiring = results[0];
         popular = results[1];
+        movies = results[2];
         _isLoading = false;
       });
     } catch (e) {
@@ -85,7 +88,7 @@ class _HomeState extends State<Home> {
       body: RefreshIndicator(
         onRefresh: fetchData,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10.0),
+          padding: const EdgeInsets.all(10.0),
           child: ListView(
             children: [
               _buildSection(
@@ -102,18 +105,14 @@ class _HomeState extends State<Home> {
                 items: popular,
                 itemBuilder: (anime) => PopularItem(anime: anime),
               ),
-              const Text(
-                "Continue Watching",
-                style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
+              const Divider(
+                color: Colors.black,
+                thickness: 1,
               ),
-              const SizedBox(
-                height: 24,
-              ),
-              const Text(
-                "UNDER CONSTRUCTION",
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 30),
-                textAlign: TextAlign.center,
-              ),
+              _buildSection(
+                  title: 'Movies',
+                  items: movies,
+                  itemBuilder: (anime) => PopularItem(anime: anime))
             ],
           ),
         ),
