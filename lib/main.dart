@@ -38,6 +38,8 @@ class _MainAppState extends State<MainApp> {
             bottomNavigationBar: NavigationBar(
               elevation: 0.5,
               selectedIndex: _selectedIndex,
+              labelBehavior:
+                  NavigationDestinationLabelBehavior.onlyShowSelected,
               onDestinationSelected: (index) {
                 setState(() {
                   _selectedIndex = index;
