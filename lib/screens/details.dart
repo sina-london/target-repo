@@ -122,13 +122,14 @@ class _DetailsState extends State<Details> {
                   const SizedBox(
                     height: 8,
                   ),
-                  Row(
+                  Wrap(
+                    runSpacing: 6,
+                    spacing: 6,
                     children: [
                       _buildInfoChip(info!.type),
-                      const SizedBox(width: 8),
                       _buildInfoChip(info!.status),
-                      const SizedBox(width: 8),
                       _buildInfoChip(info!.subOrDub.toUpperCase()),
+                      ...(info!.genres.map((e) => _buildInfoChip(e)).toList())
                     ],
                   )
                 ]
@@ -144,7 +145,9 @@ class _DetailsState extends State<Details> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.2),
+        color: label == 'DUB'
+            ? Colors.purple.withOpacity(0.5)
+            : Colors.white.withOpacity(0.2),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Text(
@@ -261,7 +264,7 @@ class _DetailsState extends State<Details> {
               fontSize: 14,
             ),
             textAlign: TextAlign.center,
-            maxLines: _collapsedLines,
+            maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
         ],
@@ -304,12 +307,12 @@ class _DetailsState extends State<Details> {
                     controller: _scrollController,
                     slivers: [
                       SliverAppBar(
-                        title: Text(widget.title),
                         expandedHeight: 300,
-                        floating: false,
+                        floating: true,
                         pinned: true,
-                        flexibleSpace:
-                            FlexibleSpaceBar(background: _buildHeaderSection()),
+                        flexibleSpace: FlexibleSpaceBar(
+                          background: _buildHeaderSection(),
+                        ),
                       ),
                       SliverToBoxAdapter(
                           child: Padding(

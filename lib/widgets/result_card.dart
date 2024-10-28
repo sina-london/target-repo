@@ -20,14 +20,15 @@ class ResultCard extends StatelessWidget {
         );
       },
       child: Card(
-        elevation: 3,
+        elevation: 2,
         margin: const EdgeInsets.symmetric(horizontal: 0, vertical: 6),
+        color: Colors.white,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(15),
         ),
         child: Container(
           height: MediaQuery.of(context).size.width * 0.4,
-          padding: const EdgeInsets.all(8.0),
+          padding: const EdgeInsets.only(right: 5.0),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -126,25 +127,28 @@ class ResultCard extends StatelessWidget {
                           ),
                       ],
                     ),
+                    const Spacer(),
+                    const SizedBox(
+                      width: double.infinity,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          ButtonBar(
+                            children: [
+                              ButtonBar(
+                                children: [
+                                  Text("Watch Now"),
+                                  Icon(Icons.play_arrow)
+                                ],
+                              )
+                            ],
+                          )
+                        ],
+                      ),
+                    )
                   ],
                 ),
               ),
-              Container(
-                height: double.infinity,
-                width: 30,
-                decoration: BoxDecoration(
-                    color: Colors.grey[800],
-                    borderRadius: const BorderRadius.only(
-                        topRight: Radius.circular(15.0),
-                        bottomRight: Radius.circular(15.0))),
-                child: const Center(
-                  child: Icon(
-                    Icons.arrow_right,
-                    size: 30,
-                    color: Colors.white,
-                  ),
-                ),
-              )
             ],
           ),
         ),
