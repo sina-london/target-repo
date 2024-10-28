@@ -1,4 +1,3 @@
-// This file is located at: lib/widgets/popular_item.dart
 import 'package:flutter/material.dart';
 import 'package:nekoflow/screens/details.dart';
 

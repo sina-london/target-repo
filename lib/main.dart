@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:nekoflow/screens/browse.dart';
 import 'package:nekoflow/screens/home.dart';
 import 'package:nekoflow/screens/search.dart';
+import 'package:nekoflow/screens/settings.dart';
 
 void main() {
   runApp(const MainApp());
@@ -18,14 +19,7 @@ class MainApp extends StatefulWidget {
 
 class _MainAppState extends State<MainApp> {
   int _selectedIndex = 0;
-  final _screens = [
-    Home(),
-    Search(),
-    Browse(),
-    Container(
-      color: Colors.green,
-    ),
-  ];
+  final _screens = [Home(), Search(), Browse(), Settings()];
   @override
   Widget build(BuildContext context) {
     return MaterialApp(

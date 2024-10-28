@@ -1,10 +1,154 @@
 import 'package:flutter/material.dart';
+import 'package:nekoflow/data/models/search_result.dart';
+import 'package:nekoflow/screens/details.dart';
 
 class ResultCard extends StatelessWidget {
-  const ResultCard({super.key});
+  final Anime anime;
+  final int index;
+  const ResultCard({super.key, required this.anime, required this.index});
 
   @override
   Widget build(BuildContext context) {
-    return Text("Gonna be a card soon!");
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) =>
+                Details(id: anime.id, image: anime.image, title: anime.title),
+          ),
+        );
+      },
+      child: Card(
+        elevation: 3,
+        margin: const EdgeInsets.symmetric(horizontal: 0, vertical: 6),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(15),
+        ),
+        child: Container(
+          height: MediaQuery.of(context).size.width * 0.4,
+          padding: const EdgeInsets.all(8.0),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Image Section
+              Hero(
+                tag: 'anime_${anime.id}',
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: anime.image.isNotEmpty
+                      ? Image.network(
+                          anime.image,
+                          width: MediaQuery.of(context).size.width * 0.3,
+                          height: MediaQuery.of(context).size.width * 0.4,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              width: MediaQuery.of(context).size.width * 0.3,
+                              height: MediaQuery.of(context).size.width * 0.4,
+                              color: Colors.grey[300],
+                              child: const Icon(Icons.error),
+                            );
+                          },
+                        )
+                      : Container(
+                          width: MediaQuery.of(context).size.width * 0.3,
+                          height: MediaQuery.of(context).size.width * 0.4,
+                          color: Colors.grey[300],
+                          child: const Icon(Icons.image_not_supported),
+                        ),
+                ),
+              ),
+              const SizedBox(width: 12.0),
+
+              // Content Section
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Title with Index
+                    Text(
+                      "${index + 1}. ${anime.title}",
+                      style: const TextStyle(
+                        fontSize: 16.0,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 8.0),
+
+                    // Release Date
+                    if (anime.releaseDate.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8.0),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.calendar_today, size: 16),
+                            const SizedBox(width: 4),
+                            Text(
+                              anime.releaseDate,
+                              style: TextStyle(
+                                color: Colors.grey[600],
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                    // Tags Section
+                    Wrap(
+                      spacing: 8.0,
+                      runSpacing: 8.0,
+                      children: [
+                        // Sub/Dub Tag
+                        if (anime.subOrDub.isNotEmpty)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8.0,
+                              vertical: 4.0,
+                            ),
+                            decoration: BoxDecoration(
+                              color: anime.subOrDub.toLowerCase() == 'sub'
+                                  ? Colors.blue
+                                  : Colors.deepPurple,
+                              borderRadius: BorderRadius.circular(8.0),
+                            ),
+                            child: Text(
+                              anime.subOrDub.toUpperCase(),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 12.0,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                height: double.infinity,
+                width: 30,
+                decoration: BoxDecoration(
+                    color: Colors.grey[800],
+                    borderRadius: const BorderRadius.only(
+                        topRight: Radius.circular(15.0),
+                        bottomRight: Radius.circular(15.0))),
+                child: const Center(
+                  child: Icon(
+                    Icons.arrow_right,
+                    size: 30,
+                    color: Colors.white,
+                  ),
+                ),
+              )
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }

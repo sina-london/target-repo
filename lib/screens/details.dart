@@ -1,11 +1,9 @@
-// ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
-
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:nekoflow/data/models/details_model.dart';
-import 'package:nekoflow/screens/stream.dart';
+import 'package:http/http.dart' as http;
+import 'package:nekoflow/widgets/episodes_list.dart';
 
 class Details extends StatefulWidget {
   final String id;
@@ -20,12 +18,16 @@ class Details extends StatefulWidget {
 }
 
 class _DetailsState extends State<Details> {
+  ValueNotifier<bool> _isDescriptionExpanded = ValueNotifier(false);
   static const String baseUrl =
       "https://animaze-swart.vercel.app/anime/gogoanime/info";
 
   AnimeDetails? info;
-  bool isLoading = true;
+  bool _isLoading = true;
   String? error;
+  final ScrollController _scrollController = ScrollController();
+
+  static const int _collapsedLines = 3;
 
   @override
   void initState() {
@@ -35,7 +37,7 @@ class _DetailsState extends State<Details> {
 
   Future<void> fetchData() async {
     setState(() {
-      isLoading = true;
+      _isLoading = true;
       error = null;
     });
 
@@ -45,124 +47,223 @@ class _DetailsState extends State<Details> {
         final jsonData = json.decode(response.body);
         setState(() {
           info = AnimeDetails.fromJson(jsonData);
-          isLoading = false;
+          _isLoading = false;
         });
       } else {
         setState(() {
-          error = 'Something went wrong';
-          isLoading = false;
+          error = 'Failed to load anime details';
+          _isLoading = false;
         });
       }
     } catch (e) {
       setState(() {
-        error = 'Something went wrong';
-        isLoading = false;
+        error = 'Network error occurred';
+        _isLoading = false;
       });
     }
   }
 
-  Widget _buildHeaderImage() {
+  Widget _buildHeaderSection() {
     return Stack(
-      alignment: Alignment.bottomLeft,
       children: [
-        Image.network(
-          widget.image,
-          width: MediaQuery.of(context).size.width,
-          height: 300,
-          fit: BoxFit.cover,
-          errorBuilder: (context, error, stackTrace) => Center(
-            child: Icon(Icons.error),
-          ),
-          loadingBuilder: (context, child, loadingProgress) {
-            if (loadingProgress == null) return child;
-            return const SizedBox(
-              height: 300,
-              child: Center(
-                child: CircularProgressIndicator(),
-              ),
-            );
-          },
-        ),
-        Container(
-          width: double.infinity,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
+        ShaderMask(
+          shaderCallback: (rect) {
+            return LinearGradient(
+              begin: Alignment.bottomCenter,
+              end: Alignment.topCenter,
               colors: [
-                Colors.transparent,
-                Colors.black.withOpacity(0.7),
+                Colors.black,
+                Colors.black.withOpacity(0.2),
+                Colors.transparent
+              ],
+            ).createShader(rect);
+          },
+          blendMode: BlendMode.srcATop,
+          child: Image.network(
+            widget.image,
+            height: 400,
+            width: double.infinity,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) => Container(
+              height: 400,
+              color: Colors.grey[300],
+              child: Icon(Icons.error, size: 50, color: Colors.grey[600]),
+            ),
+          ),
+        ),
+        Positioned(
+          bottom: 0,
+          left: 0,
+          right: 0,
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.transparent,
+                  Colors.black.withOpacity(0.8),
+                ],
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  widget.title,
+                  style: const TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                if (info != null) ...[
+                  const SizedBox(
+                    height: 8,
+                  ),
+                  Row(
+                    children: [
+                      _buildInfoChip(info!.type),
+                      const SizedBox(width: 8),
+                      _buildInfoChip(info!.status),
+                      const SizedBox(width: 8),
+                      _buildInfoChip(info!.subOrDub.toUpperCase()),
+                    ],
+                  )
+                ]
               ],
             ),
           ),
-          padding: const EdgeInsets.all(16.0),
-          child: Text(
-            widget.title,
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 32,
-              color: Colors.white,
-            ),
-          ),
-        ),
+        )
       ],
     );
   }
 
-  Widget _buildInfoSection() {
-    if (info == null) return const SizedBox.shrink();
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildInfoRow(
-            "Genres",
-            info!.genres.join(', '),
-          ),
-          SizedBox(
-            height: 8.0,
-          ),
-          _buildInfoRow("Total Episodes",
-              "${info!.episodes.length} | Release Date: ${info!.releaseDate}"),
-          SizedBox(
-            height: 24.0,
-          ),
-          _buildSectionTitle("Description"),
-          const SizedBox(
-            height: 8.0,
-          ),
-          Text(
-            info!.description,
-            style: TextStyle(fontSize: 16),
-          ),
-          const SizedBox(
-            height: 24.0,
-          ),
-          _buildSectionTitle("Episodes"),
-          const SizedBox(
-            height: 16.0,
-          ),
-          _buildEpisodesList()
-        ],
+  Widget _buildInfoChip(String label) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 12,
+        ),
       ),
     );
   }
 
-  Widget _buildInfoRow(String label, String value) {
-    return RichText(
-      text: TextSpan(
-        style: const TextStyle(
-          color: Colors.black,
-          fontSize: 15,
-          height: 1.5,
+  Widget _buildDetailsSection() {
+    if (info == null) return const SizedBox.shrink();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            _buildQuickInfoItem(
+              Icons.calendar_today,
+              'Released',
+              info!.releaseDate,
+            ),
+            _buildQuickInfoItem(
+              Icons.list,
+              'Episodes',
+              info!.totalEpisodes.toString(),
+            ),
+            if (info!.otherName.isNotEmpty)
+              _buildQuickInfoItem(
+                Icons.translate,
+                'Other Name',
+                info!.otherName,
+              ),
+          ],
         ),
+        const SizedBox(height: 24),
+
+        _buildSectionTitle('Description'),
+        const SizedBox(height: 8),
+        ValueListenableBuilder(
+            valueListenable: _isDescriptionExpanded,
+            builder: (context, isExpanded, child) {
+              return AnimatedCrossFade(
+                crossFadeState: _isDescriptionExpanded.value
+                    ? CrossFadeState.showSecond
+                    : CrossFadeState.showFirst,
+                duration: const Duration(milliseconds: 300),
+                firstChild: Text(
+                  info!.description,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    height: 1.4,
+                  ),
+                  maxLines: _collapsedLines,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                secondChild: Text(
+                  info!.description,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    height: 1.4,
+                  ),
+                ),
+              );
+            }),
+        TextButton(
+            onPressed: () {
+              _isDescriptionExpanded.value = !_isDescriptionExpanded.value;
+            },
+            child: ValueListenableBuilder<bool>(
+              valueListenable: _isDescriptionExpanded,
+              builder: (context, isExpanded, child) {
+                return Text(
+                  isExpanded ? 'Show Less' : 'Show More',
+                  style: const TextStyle(color: Colors.black),
+                );
+              },
+            )),
+
+        const SizedBox(
+          height: 16,
+        ),
+
+        // Episodes
+        EpisodesList(
+          episodes: info!.episodes,
+          title: widget.title,
+        )
+      ],
+    );
+  }
+
+  Widget _buildQuickInfoItem(IconData icon, String label, String value) {
+    return Expanded(
+      child: Column(
         children: [
-          TextSpan(
-            text: "$label: ",
-            style: const TextStyle(fontWeight: FontWeight.bold),
+          Icon(icon, color: Theme.of(context).primaryColor),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+            ),
           ),
-          TextSpan(text: value),
+          const SizedBox(height: 2),
+          Text(
+            value,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+            ),
+            textAlign: TextAlign.center,
+            maxLines: _collapsedLines,
+            overflow: TextOverflow.ellipsis,
+          ),
         ],
       ),
     );
@@ -172,45 +273,8 @@ class _DetailsState extends State<Details> {
     return Text(
       title,
       style: const TextStyle(
-        fontWeight: FontWeight.bold,
         fontSize: 20,
-      ),
-    );
-  }
-
-  Widget _buildEpisodesList() {
-    return ListView.separated(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: info!.episodes.length,
-      separatorBuilder: (context, index) => const Divider(),
-      itemBuilder: (context, index) => _buildEpisodeRow(info!.episodes[index]),
-    );
-  }
-
-  Widget _buildEpisodeRow(Episode episode) {
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
-      title: Text(
-        "Episode ${episode.number}",
-        style: const TextStyle(
-          fontWeight: FontWeight.bold,
-          fontSize: 16,
-        ),
-      ),
-      trailing: TextButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => Stream(id: episode.id, title: widget.title),
-            ),
-          );
-        },
-        child: const Icon(
-          Icons.play_arrow,
-          size: 35,
-        ),
+        fontWeight: FontWeight.bold,
       ),
     );
   }
@@ -218,13 +282,9 @@ class _DetailsState extends State<Details> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
-        centerTitle: true,
-      ),
       body: RefreshIndicator(
         onRefresh: fetchData,
-        child: isLoading
+        child: _isLoading
             ? const Center(child: CircularProgressIndicator())
             : error != null
                 ? Center(
@@ -232,20 +292,31 @@ class _DetailsState extends State<Details> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(error!),
-                        const SizedBox(
-                          height: 16.0,
-                        ),
+                        const SizedBox(height: 16),
                         ElevatedButton(
                           onPressed: fetchData,
                           child: const Text('Retry'),
-                        )
+                        ),
                       ],
                     ),
                   )
-                : ListView(
-                    children: [
-                      _buildHeaderImage(),
-                      _buildInfoSection(),
+                : CustomScrollView(
+                    controller: _scrollController,
+                    slivers: [
+                      SliverAppBar(
+                        title: Text(widget.title),
+                        expandedHeight: 300,
+                        floating: false,
+                        pinned: true,
+                        flexibleSpace:
+                            FlexibleSpaceBar(background: _buildHeaderSection()),
+                      ),
+                      SliverToBoxAdapter(
+                          child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 20),
+                        child: _buildDetailsSection(),
+                      ))
                     ],
                   ),
       ),
