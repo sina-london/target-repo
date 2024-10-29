@@ -1,7 +1,9 @@
 
 # ShonenX - Anime Streaming App
 
-![ShonenX Logo](https://i.postimg.cc/Fzm49sZc/Picsart-24-10-29-10-03-15-133.png)
+<div align="center">
+    <img src="https://i.postimg.cc/Fzm49sZc/Picsart-24-10-29-10-03-15-133.png" alt="ShonenX Logo" width="300"/>
+</div>
 
 ## Overview
 
@@ -14,6 +16,21 @@
 - **Quality Selector**: Choose between various streaming qualities (320p - 1080p).
 - **Theme Toggle**: Switch between light and dark themes for a personalized viewing experience.
 - **Player Orientation Selector**: Select default orientation for optimal viewing.
+
+### Screenshots
+
+Here are some screenshots of the app:
+
+| Screen                | Screenshot                                                 |
+|-----------------------|-----------------------------------------------------------|
+| Home Screen           | <img src="screenshots/home_screen.png" width="200" />   |
+| Genre Selection       | <img src="screenshots/genre_selection.png" width="200" />|
+| Details Screen        | <img src="screenshots/details_screen.png" width="200" /> |
+| Settings Screen       | <img src="screenshots/settings_screen.png" width="200" /> |
+| Stream Screen         | <img src="screenshots/stream_screen.png" width="200" />  |
+| Browse Screen      | <img src="screenshots/browse_screen.png" width="200" /> |
+
+*Make sure to place your screenshot images in a folder named `screenshots` in your project directory, and replace the paths above with the actual image names.*
 
 ### Tech Stack
 
