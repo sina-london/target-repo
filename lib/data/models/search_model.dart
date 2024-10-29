@@ -4,18 +4,23 @@ class SearchResponseModel {
   final int currentPage;
   final bool hasNextPage;
   final int totalPages;
+  final List<AnimeResult> results;
 
   SearchResponseModel({
     required this.currentPage,
     required this.hasNextPage,
     required this.totalPages,
+    required this.results,
   });
 
   factory SearchResponseModel.fromJson(Map<String, dynamic> json) {
     return SearchResponseModel(
-      currentPage: json['currentPage'],
-      hasNextPage: json['hasNextPage'],
+      currentPage: json['currentPage'] as int,
+      hasNextPage: json['hasNextPage'] as bool,
       totalPages: json['totalPages'],
+      results: (json['results'] as List<dynamic>)
+          .map((animeResult) => AnimeResult.fromJson(animeResult))
+          .toList(),
     );
   }
 }
@@ -49,17 +54,17 @@ class AnimeResult {
 
   factory AnimeResult.fromJson(Map<String, dynamic> json) {
     return AnimeResult(
-      id: json['id'],
-      title: json['title'],
-      url: json['url'],
-      image: json['image'],
-      duration: json['duration'],
-      japaneseTitle: json['japaneseTitle'],
-      type: json['type'],
-      nsfw: json['nsfw'],
-      sub: json['sub'],
-      dub: json['dub'],
-      episodes: json['episodes'],
+      id: json['id'] as String,
+      title: json['title'] as String,
+      url: json['url'] as String,
+      image: json['image'] as String,
+      duration: json['duration'] as String,
+      japaneseTitle: json['japaneseTitle'] as String,
+      type: json['type'] as String,
+      nsfw: json['nsfw'] as bool,
+      sub: json['sub'] as int,
+      dub: json['dub'] as int,
+      episodes: json['episodes'] as int,
     );
   }
 }

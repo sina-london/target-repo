@@ -2,12 +2,13 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:nekoflow/data/models/genres_model.dart';
+import 'package:nekoflow/data/models/search_model.dart';
 import 'package:nekoflow/data/models/search_result.dart';
 import 'package:nekoflow/data/models/watch_model.dart';
 
 class AnimeService {
   static const String baseUrl =
-      "https://animaze-swart.vercel.app/anime/gogoanime";
+      "https://animaze-swart.vercel.app/anime/zoro";
   final http.Client _client = http.Client();
 
   /// Cancels all pending requests.
@@ -15,11 +16,12 @@ class AnimeService {
     _client.close();
   }
 
-  Future<List<dynamic>?> fetchTopAiring() async {
+  Future<SearchResponseModel?> fetchTopAiring() async {
     try {
       final response = await _client.get(Uri.parse("$baseUrl/top-airing"));
       if (response.statusCode == 200) {
-        return json.decode(response.body)['results'];
+        final jsonResponse = json.decode(response.body);
+        return SearchResponseModel.fromJson(jsonResponse);
       } else {
         throw Exception('Failed to load top airing anime');
       }
@@ -28,11 +30,12 @@ class AnimeService {
     }
   }
 
-  Future<List<dynamic>?> fetchPopular() async {
+  Future<SearchResponseModel?> fetchPopular() async {
     try {
-      final response = await _client.get(Uri.parse("$baseUrl/popular"));
+      final response = await _client.get(Uri.parse("$baseUrl/most-popular"));
       if (response.statusCode == 200) {
-        return json.decode(response.body)['results'];
+        final jsonResponse =  json.decode(response.body);
+        return SearchResponseModel.fromJson(jsonResponse);
       } else {
         throw Exception('Failed to load popular anime');
       }
@@ -41,11 +44,12 @@ class AnimeService {
     }
   }
 
-  Future<List<dynamic>?> fetchMovies() async {
+  Future<SearchResponseModel?> fetchFavourite() async {
     try {
-      final response = await _client.get(Uri.parse("$baseUrl/movies"));
+      final response = await _client.get(Uri.parse("$baseUrl/most-favourite"));
       if (response.statusCode == 200) {
-        return json.decode(response.body)['results'];
+        final jsonResponse =  json.decode(response.body);
+        return SearchResponseModel.fromJson(jsonResponse);
       } else {
         throw Exception('Failed to load movies');
       }

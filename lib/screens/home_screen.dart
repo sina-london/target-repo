@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:nekoflow/data/models/search_model.dart';
 import 'package:nekoflow/data/services/anime_service.dart';
 import 'package:nekoflow/widgets/featured_item.dart';
 import 'package:nekoflow/widgets/popular_item.dart';
@@ -12,9 +14,9 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final AnimeService _animeService = AnimeService();
-  List<dynamic>? topAiring;
-  List<dynamic>? movies;
-  List<dynamic>? popular;
+  List<AnimeResult>? _topAiring;
+  List<AnimeResult>? _favourite;
+  List<AnimeResult>? _popular;
   bool _isLoading = true;
   String? error;
 
@@ -25,18 +27,20 @@ class _HomeScreenState extends State<HomeScreen> {
     });
 
     try {
-      final results = await Future.wait([
+      List<SearchResponseModel?> results = await Future.wait([
         _animeService.fetchTopAiring(),
         _animeService.fetchPopular(),
-        _animeService.fetchMovies(),
+        _animeService.fetchFavourite(),
       ]);
 
       setState(() {
-        topAiring = results[0];
-        popular = results[1];
-        movies = results[2];
+        _topAiring = results[0]?.results;
+        _popular = results[1]?.results;
+        _favourite = results[2]?.results;
         _isLoading = false;
       });
+
+      print(results);
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -58,47 +62,56 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
-  Widget _buildSection(
-      {required String title,
-      required List<dynamic>? items,
-      required Widget Function(Map<String, dynamic>) itemBuilder,
-      bool featured = false}) {
+  Widget _buildHeaderSection() {
+    return SizedBox(
+      height: MediaQuery.of(context).size.height * 0.3,
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: const <Widget>[
+            Text(
+              "Sup Man, Whats on\nyour mind today?",
+              style: TextStyle(
+                  fontSize: 30, fontWeight: FontWeight.bold, letterSpacing: 0),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(
+              height: 10,
+            ),
+            Text(
+              "Find your favourite anime and \nwatch it right away",
+              style: TextStyle(fontWeight: FontWeight.w500, color: Colors.grey),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildContentSection({required String title}) {
     return Column(
+      mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (title != "")
-          Text(
-            title,
-            style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
+        Text(
+          title,
+          style: TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.w500,
+            letterSpacing: 0,
+            foreground: Paint()
+              ..shader = LinearGradient(
+                colors: [
+                  Color.fromARGB(255, 94, 96, 206),
+                  Color.fromARGB(255, 83, 144, 217),
+                ],
+              ).createShader(
+                Rect.fromLTWH(0.0, 0.0, 200.0,
+                    70.0), // Adjust the rect size based on your needs
+              ),
           ),
-        const SizedBox(height: 10.0),
-        if (_isLoading)
-          const Center(child: CircularProgressIndicator())
-        else if (error != null)
-          Center(child: Text(error!))
-        else if (items == null || items.isEmpty)
-          const Center(child: Text('No items found'))
-        else
-          featured
-              ? SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: items.map((item) => itemBuilder(item)).toList(),
-                  ),
-                )
-              : GridView(
-                  gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-                      maxCrossAxisExtent:
-                          MediaQuery.of(context).size.width * 0.5,
-                      mainAxisSpacing: 10.0,
-                      crossAxisSpacing: 10.0,
-                      childAspectRatio: 2 / 4),
-                  physics: const NeverScrollableScrollPhysics(),
-                  scrollDirection: Axis.vertical,
-                  shrinkWrap: true,
-                  children: items.map((anime) => itemBuilder(anime)).toList(),
-                )
+        ),
       ],
     );
   }
@@ -106,6 +119,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppBar(toolbarHeight: 0),
       body: RefreshIndicator(
         onRefresh: fetchData,
@@ -113,20 +127,8 @@ class _HomeScreenState extends State<HomeScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 10.0),
           child: ListView(
             children: [
-              _buildSection(
-                  title: '',
-                  items: topAiring,
-                  itemBuilder: (anime) => FeaturedItem(anime: anime),
-                  featured: true),
-              _buildSection(
-                title: 'Popular',
-                items: popular,
-                itemBuilder: (anime) => PopularItem(anime: anime),
-              ),
-              _buildSection(
-                  title: 'Movies',
-                  items: movies,
-                  itemBuilder: (anime) => PopularItem(anime: anime))
+              _buildHeaderSection(),
+              _buildContentSection(title: "Recommended")
             ],
           ),
         ),
