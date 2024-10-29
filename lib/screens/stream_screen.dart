@@ -7,16 +7,16 @@ import 'package:nekoflow/data/models/watch_model.dart';
 import 'package:nekoflow/data/services/anime_service.dart';
 import 'package:video_player/video_player.dart';
 
-class Stream extends StatefulWidget {
+class StreamScreen extends StatefulWidget {
   final String id;
   final String title;
-  const Stream({super.key, required this.id, required this.title});
+  const StreamScreen({super.key, required this.id, required this.title});
 
   @override
-  State<Stream> createState() => _StreamState();
+  State<StreamScreen> createState() => _StreamScreenState();
 }
 
-class _StreamState extends State<Stream> {
+class _StreamScreenState extends State<StreamScreen> {
   WatchResponse? _streamData;
   AnimeService _animeService = AnimeService();
   VideoPlayerController? _playerController;

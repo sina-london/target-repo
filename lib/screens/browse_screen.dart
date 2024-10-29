@@ -4,14 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:nekoflow/data/models/genres_model.dart';
 import 'package:nekoflow/data/services/anime_service.dart';
 
-class Browse extends StatefulWidget {
-  const Browse({super.key});
+class BrowseScreen extends StatefulWidget {
+  const BrowseScreen({super.key});
 
   @override
-  State<Browse> createState() => _BrowseState();
+  State<BrowseScreen> createState() => _BrowseScreenState();
 }
 
-class _BrowseState extends State<Browse> {
+class _BrowseScreenState extends State<BrowseScreen> {
   final AnimeService _animeService = AnimeService();
   List<Genre>? _genres = [];
   bool _isLoading = false;

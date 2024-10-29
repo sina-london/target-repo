@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:nekoflow/screens/details.dart';
+import 'package:nekoflow/screens/details_screen.dart';
 
 class FeaturedItem extends StatelessWidget {
   final Map<String, dynamic> anime;
@@ -12,7 +12,7 @@ class FeaturedItem extends StatelessWidget {
       onTap: () => Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => Details(
+          builder: (context) => DetailsScreen(
             id: anime['id'],
             image: anime['image'],
             title: anime['title'],
