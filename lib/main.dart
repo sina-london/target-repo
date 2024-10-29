@@ -8,6 +8,8 @@ import 'package:nekoflow/screens/search.dart';
 import 'package:nekoflow/screens/settings.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
   runApp(const MainApp());
 }
 
