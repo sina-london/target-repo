@@ -39,6 +39,7 @@ class PopularItem extends StatelessWidget {
                 anime['image'],
                 // height: MediaQuery.of(context).size.width * 0.4 * 1.5,
                 width: double.infinity,
+                height: MediaQuery.of(context).size.height * 0.3,
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) =>
                     const Icon(Icons.error),
@@ -57,7 +58,7 @@ class PopularItem extends StatelessWidget {
                     anime['title'],
                     style: const TextStyle(
                       fontSize: 16.0,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
