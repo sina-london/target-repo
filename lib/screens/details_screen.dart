@@ -1,39 +1,34 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
-import 'package:nekoflow/data/models/details_model.dart';
-import 'package:http/http.dart' as http;
+import 'package:nekoflow/data/models/info_model.dart';
+import 'package:nekoflow/data/models/search_model.dart';
+import 'package:nekoflow/data/services/anime_service.dart';
 import 'package:nekoflow/widgets/episodes_list.dart';
 
 class DetailsScreen extends StatefulWidget {
+  final String title;
   final String id;
   final String image;
-  final String title;
-
+  final String duration;
   const DetailsScreen(
-      {super.key, required this.id, required this.image, required this.title});
+      {super.key,
+      required this.title,
+      required this.id,
+      required this.image,
+      required this.duration});
 
   @override
   State<DetailsScreen> createState() => _DetailsScreenState();
 }
 
 class _DetailsScreenState extends State<DetailsScreen> {
+  late ScrollController _scrollController;
+  late AnimeService _animeService;
   ValueNotifier<bool> _isDescriptionExpanded = ValueNotifier(false);
-  static const String baseUrl =
-      "https://animaze-swart.vercel.app/anime/gogoanime/info";
-
-  AnimeDetails? info;
+  AnimeData? info;
   bool _isLoading = true;
   String? error;
-  final ScrollController _scrollController = ScrollController();
 
   static const int _collapsedLines = 3;
-
-  @override
-  void initState() {
-    super.initState();
-    fetchData();
-  }
 
   Future<void> fetchData() async {
     setState(() {
@@ -42,20 +37,14 @@ class _DetailsScreenState extends State<DetailsScreen> {
     });
 
     try {
-      final response = await http.get(Uri.parse("$baseUrl/${widget.id}"));
-      if (response.statusCode == 200) {
-        final jsonData = json.decode(response.body);
-        setState(() {
-          info = AnimeDetails.fromJson(jsonData);
-          _isLoading = false;
-        });
-      } else {
-        setState(() {
-          error = 'Failed to load anime details';
-          _isLoading = false;
-        });
-      }
+      AnimeInfo? result = await _animeService.fetchAnimeInfoById(id: widget.id);
+      print(result);
+      setState(() {
+        info = result?.data;
+        _isLoading = false;
+      });
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         error = 'Network error occurred';
         _isLoading = false;
@@ -64,80 +53,102 @@ class _DetailsScreenState extends State<DetailsScreen> {
   }
 
   Widget _buildHeaderSection() {
-    return Stack(
-      children: [
-        ShaderMask(
-          shaderCallback: (rect) {
-            return LinearGradient(
-              begin: Alignment.bottomCenter,
-              end: Alignment.topCenter,
-              colors: [
-                Colors.black,
-                Colors.black.withOpacity(0.2),
-                Colors.transparent
-              ],
-            ).createShader(rect);
-          },
-          blendMode: BlendMode.srcATop,
-          child: Image.network(
-            widget.image,
-            height: 400,
-            width: double.infinity,
-            fit: BoxFit.cover,
-            errorBuilder: (context, error, stackTrace) => Container(
-              height: 400,
-              color: Colors.grey[300],
-              child: Icon(Icons.error, size: 50, color: Colors.grey[600]),
+    return Padding(
+      padding: const EdgeInsets.only(top: 70.0),
+      child: Stack(
+        children: [
+          ShaderMask(
+            shaderCallback: (rect) {
+              return LinearGradient(
+                begin: Alignment.bottomCenter,
+                end: Alignment.topCenter,
+                colors: [
+                  const Color.fromARGB(255, 44, 41, 41),
+                  Colors.black.withOpacity(0.2),
+                  const Color.fromARGB(0, 178, 30, 30)
+                ],
+              ).createShader(rect);
+            },
+            blendMode: BlendMode.srcATop,
+            child: Center(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: Image.network(
+                  widget.image,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) => Container(
+                    height: 400,
+                    color: Colors.grey[300],
+                    child: Icon(Icons.error, size: 50, color: Colors.grey[600]),
+                  ),
+                ),
+              ),
             ),
           ),
-        ),
-        Positioned(
-          bottom: 0,
-          left: 0,
-          right: 0,
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Colors.transparent,
-                  Colors.black.withOpacity(0.8),
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.transparent,
+                    Colors.black.withOpacity(0.8),
+                  ],
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    widget.title,
+                    style: const TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  if (info != null) ...[
+                    const SizedBox(height: 8),
+                    Wrap(
+                      runSpacing: 6,
+                      spacing: 6,
+                      children: [
+                        _buildInfoChip(
+                          (info?.anime?.info?.stats?.episodesSub?.toString() ??
+                                  'N/A')
+                              .toUpperCase(),
+                        ),
+                      ],
+                    ),
+                  ],
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      if (info?.anime?.moreInfo?.duration != null)
+                        _buildQuickInfoItem(
+                          Icons.timelapse,
+                          'Duration',
+                          info!.anime!.moreInfo!.duration!,
+                        ),
+                      if (info?.anime?.moreInfo?.japanese != null)
+                        _buildQuickInfoItem(
+                          Icons.translate,
+                          'Other Name',
+                          info!.anime!.moreInfo!.japanese!,
+                        ),
+                    ],
+                  ),
                 ],
               ),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  widget.title,
-                  style: const TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-                if (info != null) ...[
-                  const SizedBox(
-                    height: 8,
-                  ),
-                  Wrap(
-                    runSpacing: 6,
-                    spacing: 6,
-                    children: [
-                      _buildInfoChip(info!.type),
-                      _buildInfoChip(info!.status),
-                      _buildInfoChip(info!.subOrDub.toUpperCase()),
-                      ...(info!.genres.map((e) => _buildInfoChip(e)).toList())
-                    ],
-                  )
-                ]
-              ],
-            ),
-          ),
-        )
-      ],
+          )
+        ],
+      ),
     );
   }
 
@@ -161,84 +172,46 @@ class _DetailsScreenState extends State<DetailsScreen> {
   }
 
   Widget _buildDetailsSection() {
-    if (info == null) return const SizedBox.shrink();
+    if (info == null) return const Text("No details available.");
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            _buildQuickInfoItem(
-              Icons.calendar_today,
-              'Released',
-              info!.releaseDate,
-            ),
-            _buildQuickInfoItem(
-              Icons.list,
-              'Episodes',
-              info!.totalEpisodes.toString(),
-            ),
-            if (info!.otherName.isNotEmpty)
-              _buildQuickInfoItem(
-                Icons.translate,
-                'Other Name',
-                info!.otherName,
-              ),
-          ],
-        ),
-        const SizedBox(height: 24),
-
-        _buildSectionTitle('Description'),
+        _buildSectionTitle('Details'),
         const SizedBox(height: 8),
         ValueListenableBuilder(
+          valueListenable: _isDescriptionExpanded,
+          builder: (context, isExpanded, child) {
+            return AnimatedCrossFade(
+              crossFadeState: _isDescriptionExpanded.value
+                  ? CrossFadeState.showSecond
+                  : CrossFadeState.showFirst,
+              duration: const Duration(milliseconds: 300),
+              firstChild: Text(
+                info?.anime?.info?.description ?? 'Description not available',
+                style: const TextStyle(fontSize: 16, height: 1.4),
+                maxLines: _collapsedLines,
+                overflow: TextOverflow.ellipsis,
+              ),
+              secondChild: Text(
+                info?.anime?.info?.description ?? 'Description not available',
+                style: const TextStyle(fontSize: 16, height: 1.4),
+              ),
+            );
+          },
+        ),
+        TextButton(
+          onPressed: () {
+            _isDescriptionExpanded.value = !_isDescriptionExpanded.value;
+          },
+          child: ValueListenableBuilder<bool>(
             valueListenable: _isDescriptionExpanded,
             builder: (context, isExpanded, child) {
-              return AnimatedCrossFade(
-                crossFadeState: _isDescriptionExpanded.value
-                    ? CrossFadeState.showSecond
-                    : CrossFadeState.showFirst,
-                duration: const Duration(milliseconds: 300),
-                firstChild: Text(
-                  info!.description,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    height: 1.4,
-                  ),
-                  maxLines: _collapsedLines,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                secondChild: Text(
-                  info!.description,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    height: 1.4,
-                  ),
-                ),
-              );
-            }),
-        TextButton(
-            onPressed: () {
-              _isDescriptionExpanded.value = !_isDescriptionExpanded.value;
+              return Text(isExpanded ? 'Show Less' : 'Show More');
             },
-            child: ValueListenableBuilder<bool>(
-              valueListenable: _isDescriptionExpanded,
-              builder: (context, isExpanded, child) {
-                return Text(
-                  isExpanded ? 'Show Less' : 'Show More',
-                  style: const TextStyle(color: Colors.black),
-                );
-              },
-            )),
-
-        const SizedBox(
-          height: 16,
+          ),
         ),
-
-        // Episodes
-        EpisodesList(
-          episodes: info!.episodes,
-          title: widget.title,
-        )
+        const SizedBox(height: 10),
+        EpisodesList(id: widget.id, title: widget.title)
       ],
     );
   }
@@ -247,12 +220,12 @@ class _DetailsScreenState extends State<DetailsScreen> {
     return Expanded(
       child: Column(
         children: [
-          Icon(icon, color: Theme.of(context).primaryColor),
+          Icon(icon),
           const SizedBox(height: 4),
           Text(
             label,
             style: TextStyle(
-              color: Colors.grey[600],
+              color: Theme.of(context).secondaryHeaderColor,
               fontSize: 12,
             ),
           ),
@@ -275,17 +248,31 @@ class _DetailsScreenState extends State<DetailsScreen> {
   Widget _buildSectionTitle(String title) {
     return Text(
       title,
-      style: const TextStyle(
-        fontSize: 20,
-        fontWeight: FontWeight.bold,
-      ),
+      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
     );
   }
 
   @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController();
+    _animeService = AnimeService();
+    fetchData();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    _animeService.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final screenSize = MediaQuery.of(context).size;
+    final screenHeight = screenSize.height;
     return Scaffold(
-      body: RefreshIndicator(
+      body: RefreshIndicator.adaptive(
         onRefresh: fetchData,
         child: _isLoading
             ? const Center(child: CircularProgressIndicator())
@@ -307,19 +294,24 @@ class _DetailsScreenState extends State<DetailsScreen> {
                     controller: _scrollController,
                     slivers: [
                       SliverAppBar(
-                        expandedHeight: 300,
-                        floating: true,
-                        pinned: true,
+                        expandedHeight: screenHeight * 0.6,
+                        stretch: true,
+                        floating: false,
+                        pinned: false,
                         flexibleSpace: FlexibleSpaceBar(
                           background: _buildHeaderSection(),
                         ),
                       ),
                       SliverToBoxAdapter(
-                          child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 20),
-                        child: _buildDetailsSection(),
-                      ))
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 15, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).primaryColorDark,
+                          ),
+                          child: _buildDetailsSection(),
+                        ),
+                      ),
                     ],
                   ),
       ),

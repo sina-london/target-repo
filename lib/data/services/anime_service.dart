@@ -1,14 +1,15 @@
 // This file is located at: lib/data/services/anime_service.dart
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:nekoflow/data/models/genres_model.dart';
+import 'package:nekoflow/data/models/episodes_model.dart';
+import 'package:nekoflow/data/models/home_model.dart';
+import 'package:nekoflow/data/models/info_model.dart';
 import 'package:nekoflow/data/models/search_model.dart';
-import 'package:nekoflow/data/models/search_result.dart';
 import 'package:nekoflow/data/models/watch_model.dart';
 
 class AnimeService {
   static const String baseUrl =
-      "https://animaze-swart.vercel.app/anime/zoro";
+      "https://aniwatch-api-instance.vercel.app/api/v2/hianime";
   final http.Client _client = http.Client();
 
   /// Cancels all pending requests.
@@ -16,12 +17,27 @@ class AnimeService {
     _client.close();
   }
 
-  Future<SearchResponseModel?> fetchTopAiring() async {
+  Future<HomeModel> fetchHome() async {
+    try {
+      final response = await _client.get(Uri.parse("$baseUrl/home"));
+      if (response.statusCode == 200) {
+        final jsonResponse = json.decode(response.body);
+        return HomeModel.fromJson(jsonResponse);
+      } else {
+        throw Exception('Failed to load top airing anime');
+      }
+    } catch (e) {
+      print("Error from service : $e");
+      throw Exception('Failed to load home');
+    }
+  }
+
+  Future<SearchModel?> fetchTopAiring() async {
     try {
       final response = await _client.get(Uri.parse("$baseUrl/top-airing"));
       if (response.statusCode == 200) {
         final jsonResponse = json.decode(response.body);
-        return SearchResponseModel.fromJson(jsonResponse);
+        return SearchModel.fromJson(jsonResponse);
       } else {
         throw Exception('Failed to load top airing anime');
       }
@@ -30,12 +46,12 @@ class AnimeService {
     }
   }
 
-  Future<SearchResponseModel?> fetchPopular() async {
+  Future<SearchModel?> fetchPopular() async {
     try {
       final response = await _client.get(Uri.parse("$baseUrl/most-popular"));
       if (response.statusCode == 200) {
-        final jsonResponse =  json.decode(response.body);
-        return SearchResponseModel.fromJson(jsonResponse);
+        final jsonResponse = json.decode(response.body);
+        return SearchModel.fromJson(jsonResponse);
       } else {
         throw Exception('Failed to load popular anime');
       }
@@ -44,12 +60,13 @@ class AnimeService {
     }
   }
 
-  Future<SearchResponseModel?> fetchFavourite() async {
+  Future<SearchModel?> fetchCompleted() async {
     try {
-      final response = await _client.get(Uri.parse("$baseUrl/most-favourite"));
+      final response =
+          await _client.get(Uri.parse("$baseUrl/latest-completed"));
       if (response.statusCode == 200) {
-        final jsonResponse =  json.decode(response.body);
-        return SearchResponseModel.fromJson(jsonResponse);
+        final jsonResponse = json.decode(response.body);
+        return SearchModel.fromJson(jsonResponse);
       } else {
         throw Exception('Failed to load movies');
       }
@@ -58,14 +75,28 @@ class AnimeService {
     }
   }
 
-  Future<ResultResponse> fetchByQuery(
-      {required String query, required int page}) async {
+  Future<AnimeInfo?> fetchAnimeInfoById({required String id}) async {
     try {
-      final response =
-          await _client.get(Uri.parse("$baseUrl/$query?page=$page"));
+      final response = await _client.get(Uri.parse("$baseUrl/anime/$id"));
       if (response.statusCode == 200) {
         final jsonResponse = json.decode(response.body);
-        return ResultResponse?.fromJson(jsonResponse);
+        return AnimeInfo.fromJson(jsonResponse);
+      } else {
+        throw Exception('Failed to load movies');
+      }
+    } catch (e) {
+      return null;
+    }
+  }
+
+  Future<SearchModel> fetchByQuery(
+      {required String query, int page = 1}) async {
+    try {
+      final response =
+          await _client.get(Uri.parse("$baseUrl/search?q=$query&page=$page"));
+      if (response.statusCode == 200) {
+        final jsonResponse = json.decode(response.body);
+        return SearchModel?.fromJson(jsonResponse['data']);
       } else {
         throw Exception(
             'Failed to load search results: ${response.statusCode}');
@@ -74,34 +105,36 @@ class AnimeService {
       rethrow;
     }
   }
-
-  Future<List<Genre>?> fetchGenres() async {
+  Future<List<Episode>> fetchEpisodes(
+      {required  String id}) async {
     try {
-      final response = await _client.get(Uri.parse("$baseUrl/genre/list"));
+      final response =
+          await _client.get(Uri.parse("$baseUrl/anime/$id/episodes"));
       if (response.statusCode == 200) {
         final jsonResponse = json.decode(response.body);
-        return (jsonResponse as List<dynamic>)
-            .map((e) => Genre.fromJson(e))
-            .toList();
+        return (jsonResponse['data']['episodes'] as List<dynamic>).map((episodeJson) => Episode.fromJson(episodeJson)).toList();
       } else {
-        throw Exception('Failed to load genres');
+        throw Exception(
+            'Failed to load search results: ${response.statusCode}');
       }
     } catch (e) {
-      return null;
+      rethrow;
     }
   }
+  
 
-  Future<WatchResponse?> fetchStream({required String id}) async {
+  Future<WatchResponseModel> fetchWatchById({required String id}) async {
     try {
       final response = await _client.get(Uri.parse("$baseUrl/watch/$id"));
       if (response.statusCode == 200) {
         final jsonResponse = json.decode(response.body);
-        return WatchResponse.fromJson(jsonResponse);
+        return WatchResponseModel.fromJson(jsonResponse);
       } else {
-        throw Exception('Failed to load stream data');
+        throw Exception(
+            'Failed to load search results: ${response.statusCode}');
       }
     } catch (e) {
-      return null;
+      rethrow;
     }
   }
 }
