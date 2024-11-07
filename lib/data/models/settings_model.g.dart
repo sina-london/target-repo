@@ -17,11 +17,11 @@ class SettingsModelAdapter extends TypeAdapter<SettingsModel> {
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
     return SettingsModel(
-      defaultQuality: fields[0] as String,
-      isDarkTheme: fields[1] as bool,
-      defaultOrientation: fields[2] as String,
-      layoutMode: fields[3] as String,
-      isLabelEnabled: fields[4] as bool,
+      defaultQuality: fields[0] as String?,
+      isDarkTheme: fields[1] as bool?,
+      defaultOrientation: fields[2] as String?,
+      layoutMode: fields[3] as String?,
+      isLabelEnabled: fields[4] as bool?,
     );
   }
 

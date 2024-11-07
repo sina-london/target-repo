@@ -3,24 +3,24 @@ import 'package:hive/hive.dart';
 part 'settings_model.g.dart';
 
 @HiveType(typeId: 0)
-class SettingsModel {
+class SettingsModel extends HiveObject {
   @HiveField(0)
-  final String defaultQuality;
+  String? defaultQuality;
   @HiveField(1)
-  final bool isDarkTheme;
+  bool? isDarkTheme;
   @HiveField(2)
-  final String defaultOrientation;
+  String? defaultOrientation;
   @HiveField(3)
-  final String layoutMode;
+  String? layoutMode;
   @HiveField(4)
-  final bool isLabelEnabled;
-  @HiveField(5)
+  bool? isLabelEnabled;
+
   SettingsModel({
-    required this.defaultQuality,
-    required this.isDarkTheme,
-    required this.defaultOrientation,
-    required this.layoutMode,
-    required this.isLabelEnabled,
+    this.defaultQuality = '720p',
+    this.isDarkTheme = false,
+    this.defaultOrientation = 'Portrait',
+    this.layoutMode = 'Grid',
+    this.isLabelEnabled = true,
   });
 
   // Factory method to create a SettingsModel object from JSON
@@ -34,7 +34,7 @@ class SettingsModel {
     );
   }
 
-  // Method to convert a Settings object to JSON
+  // Method to convert a SettingsModel object to JSON
   Map<String, dynamic> toJson() {
     return {
       'defaultQuality': defaultQuality,

@@ -29,7 +29,7 @@ class _EpisodesListState extends State<EpisodesList> {
     int totalEpisodes = episodes.length;
     int start = 1;
 
-    while (start <= totalEpisodes) {  
+    while (start <= totalEpisodes) {
       int end = (start + rangeSize - 1) > totalEpisodes
           ? totalEpisodes
           : (start + rangeSize - 1);
@@ -130,7 +130,7 @@ class _EpisodesListState extends State<EpisodesList> {
                 margin: EdgeInsets.only(bottom: 15.0),
                 decoration: BoxDecoration(
                   color: episode.isFiller
-                      ? Theme.of(context).hoverColor
+                      ? Theme.of(context).splashColor
                       : Theme.of(context).primaryColor,
                   borderRadius: BorderRadius.circular(12.0),
                   boxShadow: [
@@ -165,13 +165,14 @@ class _EpisodesListState extends State<EpisodesList> {
                       Icons.play_circle_fill,
                     ),
                     onPressed: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => StreamScreen(
-                                  title: widget.title,
-                                  id: episode.episodeId,
-                                  episodes: _episodes,
-                                ))),
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => StreamScreen(
+                          id: episode.episodeId,
+                          title: episode.title,
+                        ),
+                      ),
+                    ),
                   ),
                   onTap: () {
                     // Define what happens when an episode is tapped

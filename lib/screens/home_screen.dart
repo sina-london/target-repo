@@ -1,6 +1,5 @@
-// lib/screens/home_screen.dart
-
 import 'package:flutter/material.dart';
+import 'package:shimmer/shimmer.dart';
 import 'package:nekoflow/data/models/anime_interface.dart';
 import 'package:nekoflow/data/models/anime_model.dart';
 import 'package:nekoflow/data/models/home_model.dart';
@@ -87,24 +86,56 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Widget _buildShimmerLoading() {
+    final screenSize = MediaQuery.of(context).size;
+
+    return Shimmer.fromColors(
+      baseColor: Colors.grey[800]!,
+      highlightColor: Colors.white!,
+      child: SizedBox(
+        child: ListView.builder(
+          scrollDirection: Axis.horizontal,
+          itemCount: 5, // Placeholder count
+          itemBuilder: (context, index) {
+            return Container(
+              height: double.infinity,
+              width: screenSize.width * 0.4,
+              margin: EdgeInsets.only(right: 12),
+              decoration: BoxDecoration(
+                color: Colors.grey[800],
+                borderRadius: BorderRadius.circular(20),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
   Widget _buildContentSection(
-      {required String title, required List<Anime> animeList}) {
-    return !_isLoading
-        ? Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildSectionTitle(title: title),
-              SizedBox(height: 10),
-              SnappingScroller(
-                widthFactor: 0.48,
-                children: animeList.map((anime) => AnimeCard(anime: anime)).toList(),
-              )
-            ],
-          )
-        : const Center(
-            child: CircularProgressIndicator(),
-          );
+      {required String title,
+      required List<Anime> animeList,
+      required dynamic tag}) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionTitle(title: title),
+        SizedBox(height: 10),
+        SnappingScroller(
+          widthFactor: 0.48,
+          children: _isLoading
+              ? [
+                  _buildShimmerLoading(),
+                  _buildShimmerLoading(),
+                  _buildShimmerLoading()
+                ]
+              : animeList
+                  .map((anime) => AnimeCard(anime: anime, tag: tag))
+                  .toList(),
+        ),
+      ],
+    );
   }
 
   Widget _buildSectionTitle({required String title}) {
@@ -139,11 +170,18 @@ class _HomeScreenState extends State<HomeScreen> {
           child: ListView(
             children: [
               _buildHeaderSection(),
-              _buildContentSection(title: "Recommended", animeList: _popular),
+              _buildContentSection(
+                  title: "Recommended",
+                  animeList: _popular,
+                  tag: "recommended"),
               SizedBox(height: 50),
-              _buildContentSection(title: "Top Airing", animeList: _topAiring),
+              _buildContentSection(
+                  title: "Top Airing", animeList: _topAiring, tag: "topairing"),
               SizedBox(height: 50),
-              _buildContentSection(title: "Latest Completed", animeList: _completed),
+              _buildContentSection(
+                  title: "Latest Completed",
+                  animeList: _completed,
+                  tag: "latestcompleted"),
             ],
           ),
         ),

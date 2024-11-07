@@ -12,67 +12,67 @@ class SearchScreen extends StatefulWidget {
 }
 
 class _SearchScreenState extends State<SearchScreen> {
-  late TextEditingController _searchController;
-  late AnimeService _animeService;
+  final TextEditingController _searchController = TextEditingController();
+  final AnimeService _animeService = AnimeService();
   SearchModel? _searchResult;
   bool _isLoading = false;
+  String? _error;
 
   Future<void> _performSearch() async {
     if (_searchController.text.isEmpty) return;
     setState(() {
       _isLoading = true;
+      _error = null;
     });
+
     try {
-      SearchModel? result = await _animeService.fetchByQuery(
-          query: _searchController.text, page: 1);
+      final result = await _animeService.fetchByQuery(
+        query: _searchController.text,
+        page: 1,
+      );
       setState(() {
         _searchResult = result;
-        _isLoading = false;
       });
     } catch (e) {
-      if (!mounted) return;
+      setState(() {
+        _error = 'An error occurred. Please try again.';
+      });
+    } finally {
       setState(() {
         _isLoading = false;
       });
     }
   }
 
-  List<Widget> _buildResultSection() {
+  Widget _buildResultSection() {
     if (_isLoading) {
-      return [
-        Expanded(
-          child: Center(
-            child: CircularProgressIndicator(),
-          ),
-        )
-      ];
-    } else if (_searchResult == null) {
-      return [
-        SizedBox(
-          height: 100,
-          child: Center(child: Text("Search it up")),
-        )
-      ];
-    }
-    return [
-      SizedBox(
-        height: 15,
-      ),
-      Expanded(
-        child: ListView.builder(
-          itemCount: _searchResult!.animes.length,
-          itemBuilder: (context, index) =>
-              ResultCard(anime: _searchResult!.animes[index]),
+      return const Expanded(
+        child: Center(
+          child: CircularProgressIndicator(),
         ),
-      )
-    ];
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _searchController = TextEditingController();
-    _animeService = AnimeService();
+      );
+    }
+    if (_error != null) {
+      return Expanded(
+        child: Center(
+          child: Text(_error!),
+        ),
+      );
+    }
+    if (_searchResult == null) {
+      return const Expanded(
+        child: Center(
+          child: Text("Search it up"),
+        ),
+      );
+    }
+    return Expanded(
+      child: ListView.builder(
+        itemCount: _searchResult!.animes.length,
+        itemBuilder: (context, index) =>
+            ResultCard(anime: _searchResult!.animes[index]),
+      ),
+    );
   }
 
   @override
@@ -84,17 +84,18 @@ class _SearchScreenState extends State<SearchScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        toolbarHeight: 0,
-      ),
+      appBar: AppBar(toolbarHeight: 0),
       body: Padding(
         padding: const EdgeInsets.all(15.0),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Searchbar(controller: _searchController, onSearch: _performSearch),
-            ..._buildResultSection()
+            Searchbar(
+              controller: _searchController,
+              onSearch: _performSearch,
+            ),
+            const SizedBox(height: 15),
+            _buildResultSection(),
           ],
         ),
       ),
