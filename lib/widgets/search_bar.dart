@@ -1,4 +1,3 @@
-// This file is located at: lib/widgets/search_bar.dart
 import 'package:flutter/material.dart';
 
 class Searchbar extends StatelessWidget {
@@ -13,30 +12,39 @@ class Searchbar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-      decoration: BoxDecoration(
-        color: Theme.of(context).secondaryHeaderColor,
-        borderRadius: BorderRadius.circular(15),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            Icons.search,
-            size: 30,
-          ),
-          SizedBox(
-            width: 10,
-          ),
-          Expanded(
-            child: TextField(
-              controller: controller,
-              onEditingComplete: () => onSearch(),
-              decoration: InputDecoration(
-                  hintText: "Search Anime...", border: InputBorder.none),
+    return GestureDetector(
+      onTap: () {
+        FocusScope.of(context).unfocus(); // Unfocuses any focused widget
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        decoration: BoxDecoration(
+          color: Theme.of(context).secondaryHeaderColor,
+          borderRadius: BorderRadius.circular(15),
+        ),
+        child: Row(
+          children: [
+            const Icon(
+              Icons.search,
+              size: 30,
             ),
-          ),
-        ],
+            const SizedBox(width: 10),
+            Expanded(
+              child: TextField(
+                keyboardType: TextInputType.text,
+                controller: controller,
+                onEditingComplete: () {
+                  FocusScope.of(context).unfocus(); // Unfocus after submitting
+                  onSearch();
+                },
+                decoration: const InputDecoration(
+                  hintText: "Search Anime...",
+                  border: InputBorder.none,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

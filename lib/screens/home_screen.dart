@@ -67,9 +67,9 @@ class _HomeScreenState extends State<HomeScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: const <Widget>[
             Text(
-              "Sup Man, Whats on\nyour mind today?",
+              "Sup Man, Whats on your mind today?",
               style: TextStyle(
-                  fontSize: 30, fontWeight: FontWeight.bold, letterSpacing: 0),
+                  fontSize: 35, fontWeight: FontWeight.bold, letterSpacing: 0),
               textAlign: TextAlign.center,
             ),
             SizedBox(
@@ -142,14 +142,13 @@ class _HomeScreenState extends State<HomeScreen> {
     return Text(
       title,
       style: TextStyle(
-        fontSize: 24,
-        fontWeight: FontWeight.w500,
-        letterSpacing: 0,
+        fontSize: 28,
+        fontWeight: FontWeight.w600,
         foreground: Paint()
           ..shader = LinearGradient(
             colors: [
-              Color.fromARGB(255, 94, 96, 206),
-              Color.fromARGB(255, 83, 144, 217),
+              const Color.fromARGB(255, 209, 161, 251),
+              Color.fromARGB(255, 221, 105, 251),
             ],
           ).createShader(
             Rect.fromLTWH(0.0, 0.0, 200.0, 70.0),
