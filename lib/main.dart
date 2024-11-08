@@ -99,8 +99,8 @@ class _MainAppState extends State<MainApp> {
           enablePaddingAnimation: true,
           items: [
             CrystalNavigationBarItem(
-              icon: Icons.book,
-              unselectedIcon: Icons.book,
+              icon: Icons.settings,
+              unselectedIcon: Icons.settings,
               selectedColor: Colors.pink,
             ),
             CrystalNavigationBarItem(
