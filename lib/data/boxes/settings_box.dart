@@ -1,5 +1,5 @@
 import 'package:hive/hive.dart';
-import 'package:nekoflow/data/models/settings_model.dart';
+import 'package:nekoflow/data/models/settings/settings_model.dart';
 
 class SettingsBox {
   static Box<SettingsModel> getData() =>

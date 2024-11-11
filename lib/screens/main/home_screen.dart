@@ -8,7 +8,7 @@ import 'package:nekoflow/widgets/anime_card.dart';
 import 'package:nekoflow/widgets/snapping_scroll.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  const HomeScreen({Key? key}) : super(key: key);
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -20,37 +20,38 @@ class _HomeScreenState extends State<HomeScreen> {
   List<LatestCompletedAnime> _completed = [];
   List<MostPopularAnime> _popular = [];
   bool _isLoading = true;
-  String? error;
-
-  Future<void> fetchData() async {
-    setState(() {
-      _isLoading = true;
-      error = null;
-    });
-
-    try {
-      HomeModel results = await _animeService.fetchHome();
-
-      setState(() {
-        _topAiring = results.data.topAiringAnimes;
-        _popular = results.data.mostPopularAnimes;
-        _completed = results.data.latestCompletedAnimes;
-        _isLoading = false;
-      });
-    } catch (e) {
-      print("error fetching: $e");
-      if (!mounted) return;
-      setState(() {
-        error = 'Something went wrong';
-        _isLoading = false;
-      });
-    }
-  }
+  String? _error;
 
   @override
   void initState() {
     super.initState();
-    fetchData();
+    _fetchData();
+  }
+
+  Future<void> _fetchData() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
+    try {
+      final results = await _animeService.fetchHome();
+      if (mounted) {
+        setState(() {
+          _topAiring = results.data.topAiringAnimes;
+          _popular = results.data.mostPopularAnimes;
+          _completed = results.data.latestCompletedAnimes;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _error = 'Something went wrong';
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   @override
@@ -65,19 +66,22 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: const <Widget>[
+          children: const [
             Text(
-              "Sup Man, Whats on your mind today?",
+              "Sup Man, What's on your mind today?",
               style: TextStyle(
-                  fontSize: 35, fontWeight: FontWeight.bold, letterSpacing: 0),
+                fontSize: 35,
+                fontWeight: FontWeight.bold,
+              ),
               textAlign: TextAlign.center,
             ),
-            SizedBox(
-              height: 10,
-            ),
+            SizedBox(height: 10),
             Text(
               "Find your favourite anime and \nwatch it right away",
-              style: TextStyle(fontWeight: FontWeight.w500, color: Colors.grey),
+              style: TextStyle(
+                fontWeight: FontWeight.w500,
+                color: Colors.grey,
+              ),
               textAlign: TextAlign.center,
             ),
           ],
@@ -88,70 +92,64 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildShimmerLoading() {
     final screenSize = MediaQuery.of(context).size;
-
     return Shimmer.fromColors(
       baseColor: Colors.grey[800]!,
-      highlightColor: Colors.white!,
+      highlightColor: Colors.white,
       child: SizedBox(
+        height: screenSize.height * 0.25,
         child: ListView.builder(
           scrollDirection: Axis.horizontal,
-          itemCount: 5, // Placeholder count
-          itemBuilder: (context, index) {
-            return Container(
-              height: double.infinity,
-              width: screenSize.width * 0.4,
-              margin: EdgeInsets.only(right: 12),
-              decoration: BoxDecoration(
-                color: Colors.grey[800],
-                borderRadius: BorderRadius.circular(20),
-              ),
-            );
-          },
+          itemCount: 5,
+          itemBuilder: (_, __) => Container(
+            height: double.infinity,
+            width: screenSize.width * 0.4,
+            margin: const EdgeInsets.only(right: 12),
+            decoration: BoxDecoration(
+              color: Colors.grey[800],
+              borderRadius: BorderRadius.circular(20),
+            ),
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildContentSection(
-      {required String title,
-      required List<Anime> animeList,
-      required dynamic tag}) {
+  Widget _buildContentSection({
+    required String title,
+    required List<Anime> animeList,
+    required String tag,
+  }) {
     return Column(
-      mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionTitle(title: title),
-        SizedBox(height: 10),
-        SnappingScroller(
-          widthFactor: 0.48,
-          children: _isLoading
-              ? [
-                  _buildShimmerLoading(),
-                  _buildShimmerLoading(),
-                  _buildShimmerLoading()
-                ]
-              : animeList
-                  .map((anime) => AnimeCard(anime: anime, tag: tag))
-                  .toList(),
-        ),
+        _buildSectionTitle(title),
+        const SizedBox(height: 10),
+        _isLoading
+            ? _buildShimmerLoading()
+            : SnappingScroller(
+                widthFactor: 0.48,
+                children: animeList
+                    .map((anime) => AnimeCard(anime: anime, tag: tag))
+                    .toList(),
+              ),
       ],
     );
   }
 
-  Widget _buildSectionTitle({required String title}) {
+  Widget _buildSectionTitle(String title) {
     return Text(
       title,
       style: TextStyle(
         fontSize: 28,
         fontWeight: FontWeight.w600,
         foreground: Paint()
-          ..shader = LinearGradient(
+          ..shader = const LinearGradient(
             colors: [
-              const Color.fromARGB(255, 209, 161, 251),
+              Color.fromARGB(255, 209, 161, 251),
               Color.fromARGB(255, 221, 105, 251),
             ],
           ).createShader(
-            Rect.fromLTWH(0.0, 0.0, 200.0, 70.0),
+            const Rect.fromLTWH(0.0, 0.0, 200.0, 70.0),
           ),
       ),
     );
@@ -163,24 +161,29 @@ class _HomeScreenState extends State<HomeScreen> {
       extendBodyBehindAppBar: true,
       appBar: AppBar(toolbarHeight: 0),
       body: RefreshIndicator(
-        onRefresh: fetchData,
+        onRefresh: _fetchData,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20.0),
           child: ListView(
             children: [
               _buildHeaderSection(),
               _buildContentSection(
-                  title: "Recommended",
-                  animeList: _popular,
-                  tag: "recommended"),
-              SizedBox(height: 50),
+                title: "Recommended",
+                animeList: _popular,
+                tag: "recommended",
+              ),
+              const SizedBox(height: 50),
               _buildContentSection(
-                  title: "Top Airing", animeList: _topAiring, tag: "topairing"),
-              SizedBox(height: 50),
+                title: "Top Airing",
+                animeList: _topAiring,
+                tag: "topairing",
+              ),
+              const SizedBox(height: 50),
               _buildContentSection(
-                  title: "Latest Completed",
-                  animeList: _completed,
-                  tag: "latestcompleted"),
+                title: "Latest Completed",
+                animeList: _completed,
+                tag: "latestcompleted",
+              ),
             ],
           ),
         ),

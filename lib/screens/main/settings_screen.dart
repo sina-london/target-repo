@@ -28,16 +28,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
             trailing: Icon(Icons.navigate_next, size: 35),
             onTap: () => Navigator.push(
               context,
-            //   ModalBottomSheetRoute(
-            //       builder: (context) => ThemeScreen(),
-            //       isScrollControlled: true,
-            //       isDismissible: true,
-            //       enableDrag: true,
-            //       useSafeArea: true),
-            // ),
-            DialogRoute(context: context, builder: (context) => ThemeScreen())
+              ModalBottomSheetRoute(
+                  builder: (context) => ThemeScreen(),
+                  isScrollControlled: true,
+                  isDismissible: true,
+                  enableDrag: true,
+                  useSafeArea: true),
+            ),
           ),
-          )
         ],
       ),
     );
