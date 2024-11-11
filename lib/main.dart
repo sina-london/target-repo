@@ -4,8 +4,9 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:nekoflow/data/models/settings/settings_model.dart';
+import 'package:nekoflow/data/models/watchlist_model.dart';
 import 'package:nekoflow/screens/main/home_screen.dart';
-import 'package:nekoflow/screens/main/saved_screen.dart';
+import 'package:nekoflow/screens/main/watchlist_screen.dart';
 import 'package:nekoflow/screens/main/search_screen.dart';
 import 'package:nekoflow/screens/main/settings_screen.dart';
 
@@ -13,7 +14,9 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Hive.initFlutter();
   Hive.registerAdapter(SettingsModelAdapter());
+  Hive.registerAdapter(WatchlistModelAdapter());
   await Hive.openBox<SettingsModel>('user_settings');
+  await Hive.openBox<WatchlistModel>('user_watchlist');
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
   runApp(const MainApp());
 }
@@ -34,7 +37,7 @@ class _MainAppState extends State<MainApp> {
     SettingsScreen(),
     HomeScreen(),
     SearchScreen(),
-    SavedScreen()
+    WatchlistScreen()
   ];
 
   @override
