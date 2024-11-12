@@ -47,7 +47,7 @@ class _MainAppState extends State<MainApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      theme: ThemeManager.getTheme(ThemeType.greenForest),
+      theme: ThemeManager.getTheme(ThemeType.dark),
       home: Scaffold(
         extendBody: true,
         appBar: AppBar(toolbarHeight: 0),
