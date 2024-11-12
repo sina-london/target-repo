@@ -3,7 +3,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:nekoflow/data/models/episodes_model.dart';
 import 'package:nekoflow/data/models/watchlist/watchlist_model.dart';
 import 'package:nekoflow/data/services/anime_service.dart';
-import 'package:nekoflow/screens/main/stream_screen.dart';
+import 'package:nekoflow/screens/main/stream/stream_screen.dart';
 import 'package:shimmer/shimmer.dart';
 
 class EpisodesList extends StatefulWidget {

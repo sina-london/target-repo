@@ -1,10 +1,12 @@
 import 'dart:ui';
 
-import 'package:crystal_navigation_bar/crystal_navigation_bar.dart';
 import 'package:flutter/material.dart';
+import 'package:hive/hive.dart';
 import 'package:nekoflow/data/models/info_model.dart';
+import 'package:nekoflow/data/models/watchlist/watchlist_model.dart';
 import 'package:nekoflow/data/services/anime_service.dart';
 import 'package:nekoflow/widgets/episodes_list.dart';
+import 'package:nekoflow/widgets/favorite_button.dart';
 import 'package:shimmer/shimmer.dart';
 
 class DetailsScreen extends StatefulWidget {
@@ -28,7 +30,9 @@ class DetailsScreen extends StatefulWidget {
 class _DetailsScreenState extends State<DetailsScreen> {
   final ValueNotifier<bool> _isDescriptionExpanded = ValueNotifier(false);
   late final AnimeService _animeService = AnimeService();
+  late final Box<WatchlistModel> _watchlistBox;
   final ScrollController _scrollController = ScrollController();
+  bool _isFavorite = false;
   AnimeData? info;
   String? error;
 
@@ -43,9 +47,66 @@ class _DetailsScreenState extends State<DetailsScreen> {
     }
   }
 
+  Future<void> _toggleFavorite() async {
+    final watchlist = _watchlistBox.get('favorites') ??
+        WatchlistModel(
+          recentlyWatched: [],
+          continueWatching: [],
+          favorites: [],
+        );
+
+    final newItem = AnimeItem(
+      name: widget.title,
+      poster: widget.image,
+      id: widget.id,
+      type: info?.anime?.info?.stats?.type ?? 'N/A',
+    );
+
+    var favourites = watchlist.favorites ?? [];
+
+    // If the item is already in the favorites list, remove it
+    if (favourites.any((item) => item.id == newItem.id)) {
+      favourites.removeWhere((item) => item.id == newItem.id);
+      print("Removed from favorites");
+      _isFavorite = false;
+    } else {
+      // If the item is not in the list, add it
+      favourites = [
+        newItem,
+        ...favourites
+            .where((item) => item.id != newItem.id), // Avoid duplicates
+      ].take(10).toList();
+      print("Added to favorites");
+      _isFavorite = true;
+    }
+
+    // Update the favorites list in the watchlist
+    watchlist.favorites = favourites;
+
+    // Save the updated watchlist
+    await _watchlistBox.put('favorites', watchlist);
+
+    // Trigger UI update
+    setState(() {});
+  }
+
+  bool _checkFavourites() {
+    final watchlist = _watchlistBox.get('favorites') ??
+        WatchlistModel(
+          recentlyWatched: [],
+          continueWatching: [],
+          favorites: [],
+        );
+
+    var favourites = watchlist.favorites ?? [];
+
+    bool exists = favourites.any((anime) => anime.id == widget.id);
+    return exists;
+  }
+
   Widget _buildHeaderSection() {
     return Padding(
-      padding: const EdgeInsets.only(top: 70.0),
+      padding: const EdgeInsets.only(top: 85.0),
       child: Stack(
         children: [
           ShaderMask(
@@ -275,6 +336,13 @@ class _DetailsScreenState extends State<DetailsScreen> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    _watchlistBox = Hive.box<WatchlistModel>('user_watchlist');
+    _isFavorite = _checkFavourites();
+  }
+
+  @override
   void dispose() {
     _scrollController.dispose();
     _isDescriptionExpanded.dispose();
@@ -312,6 +380,15 @@ class _DetailsScreenState extends State<DetailsScreen> {
                 flexibleSpace: FlexibleSpaceBar(
                   background: _buildHeaderSection(),
                 ),
+                actions: [
+                  FavoriteButton(
+                    animeId: widget.id,
+                    title: widget.title,
+                    image: widget.image,
+                    type: info?.anime?.info?.stats?.type ?? 'N/A',
+                  ),
+                  SizedBox(width: 10)
+                ],
               ),
               SliverToBoxAdapter(
                 child: Container(
@@ -325,49 +402,53 @@ class _DetailsScreenState extends State<DetailsScreen> {
           );
         },
       ),
-      bottomNavigationBar: BottomAppBar(
-        height: 100,
-        color: Colors.transparent,
-        child: ClipRect(
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-            child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(
-                      0.2), // Semi-transparent color for frosted effect
-                  borderRadius:
-                      BorderRadius.circular(15), // Optional: rounded corners
-                ),
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 15.0), // Adjust padding as needed
-                child: Center(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            widget.title,
-                            style: TextStyle(fontSize: 18),
-                          ),
-                          Text('Episode 1')
-                        ],
-                      ),
-                      Container(
-                        child: Icon(
-                          Icons.play_circle_sharp,
-                          size: 35,
-                        ),
-                      )
-                    ],
-                  ),
-                )),
-          ),
-        ),
-      ),
+      // bottomNavigationBar: BottomAppBar(
+      //   height: 100,
+      //   color: Colors.transparent,
+      //   child: ClipRect(
+      //     child: BackdropFilter(
+      //       filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+      //       child: Container(
+      //         decoration: BoxDecoration(
+      //           color: Colors.white.withOpacity(
+      //               0.2), // Semi-transparent color for frosted effect
+      //           borderRadius:
+      //               BorderRadius.circular(15), // Optional: rounded corners
+      //         ),
+      //         padding: const EdgeInsets.symmetric(
+      //             horizontal: 15.0), // Adjust padding as needed
+      //         child: Center(
+      //           child: Row(
+      //             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      //             crossAxisAlignment: CrossAxisAlignment.center,
+      //             children: [
+      //               Expanded(
+      //                 child: Column(
+      //                   crossAxisAlignment: CrossAxisAlignment.start,
+      //                   mainAxisAlignment: MainAxisAlignment.center,
+      //                   children: [
+      //                     Text(
+      //                       widget.title,
+      //                       style: TextStyle(
+      //                           fontSize: 18, overflow: TextOverflow.ellipsis),
+      //                     ),
+      //                     Text('Episode 1')
+      //                   ],
+      //                 ),
+      //               ),
+      //               Container(
+      //                 child: Icon(
+      //                   Icons.play_circle_sharp,
+      //                   size: 35,
+      //                 ),
+      //               )
+      //             ],
+      //           ),
+      //         ),
+      //       ),
+      //     ),
+      //   ),
+      // ),
     );
   }
 }

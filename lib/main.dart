@@ -15,6 +15,7 @@ void main() async {
   Hive.registerAdapter(WatchlistModelAdapter());
   Hive.registerAdapter(RecentlyWatchedItemAdapter());
   Hive.registerAdapter(ContinueWatchingItemAdapter());
+  Hive.registerAdapter(AnimeItemAdapter());
   Hive.registerAdapter(OnboardingModelAdapter());
   await Hive.openBox<SettingsModel>('user_settings');
   await Hive.openBox<WatchlistModel>('user_watchlist');

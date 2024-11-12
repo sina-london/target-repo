@@ -1,9 +1,9 @@
 import 'package:crystal_navigation_bar/crystal_navigation_bar.dart';
 import 'package:flutter/material.dart';
-import 'package:nekoflow/screens/main/home_screen.dart';
-import 'package:nekoflow/screens/main/search_screen.dart';
-import 'package:nekoflow/screens/main/settings_screen.dart';
-import 'package:nekoflow/screens/main/watchlist_screen.dart';
+import 'package:nekoflow/screens/main/home/home_screen.dart';
+import 'package:nekoflow/screens/main/search/search_screen.dart';
+import 'package:nekoflow/screens/main/settings/settings_screen.dart';
+import 'package:nekoflow/screens/main/watchlist/watchlist_screen.dart';
 
 class AppRouter extends StatefulWidget {
 

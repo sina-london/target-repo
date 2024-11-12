@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:nekoflow/data/models/search_model.dart';
-import 'package:nekoflow/screens/main/details_screen.dart';
+import 'package:nekoflow/screens/main/details/details_screen.dart';
 
 class ResultCard extends StatelessWidget {
   final AnimeResult anime;

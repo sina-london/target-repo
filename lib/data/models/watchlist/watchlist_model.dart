@@ -2,6 +2,13 @@ import 'package:hive/hive.dart';
 
 part 'watchlist_model.g.dart';
 
+abstract class BaseAnimeCard {
+  String get name;
+  String get poster;
+  String get id;
+  String get type;
+}
+
 @HiveType(typeId: 1)
 class WatchlistModel extends HiveObject {
   @HiveField(0)
@@ -21,16 +28,20 @@ class WatchlistModel extends HiveObject {
 }
 
 @HiveType(typeId: 2)
-class RecentlyWatchedItem extends HiveObject {
+class RecentlyWatchedItem extends HiveObject implements BaseAnimeCard {
+  @override
   @HiveField(0)
   final String name;
 
+  @override
   @HiveField(1)
   final String poster;
 
+  @override
   @HiveField(2)
   final String type; // e.g., "TV", "OTV"
 
+  @override
   @HiveField(3)
   final String id;
 
@@ -69,19 +80,27 @@ class ContinueWatchingItem extends HiveObject {
 }
 
 @HiveType(typeId: 4)
-class AnimeItem extends HiveObject {
+class AnimeItem extends HiveObject implements BaseAnimeCard{
+  @override
   @HiveField(0)
   final String name;
 
+  @override
   @HiveField(1)
   final String poster;
 
+  @override
   @HiveField(2)
   final String id;
+
+  @override
+  @HiveField(3)
+  final String type;
 
   AnimeItem({
     required this.name,
     required this.poster,
     required this.id,
+    required this.type
   });
 }
