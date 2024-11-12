@@ -242,7 +242,7 @@ class AnimeMoreInfo {
       duration: json['duration'] ,
       status: json['status'] ,
       malscore: json['malscore'] ,
-      genres: List<String>.from(json['genres']) ?? [],
+      genres: List<String>.from(json['genres']),
       studios: json['studios'],
       producers: List<String>.from(json['producers']),
     );

@@ -1,3 +1,6 @@
+import 'dart:ui';
+
+import 'package:crystal_navigation_bar/crystal_navigation_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:nekoflow/data/models/info_model.dart';
 import 'package:nekoflow/data/services/anime_service.dart';
@@ -9,7 +12,7 @@ class DetailsScreen extends StatefulWidget {
   final String id;
   final String image;
   final dynamic tag;
-  
+
   const DetailsScreen({
     super.key,
     required this.title,
@@ -67,7 +70,8 @@ class _DetailsScreenState extends State<DetailsScreen> {
                     errorBuilder: (context, error, stackTrace) => Container(
                       height: 400,
                       color: Colors.grey[300],
-                      child: Icon(Icons.error, size: 50, color: Colors.grey[600]),
+                      child:
+                          Icon(Icons.error, size: 50, color: Colors.grey[600]),
                     ),
                   ),
                 ),
@@ -121,7 +125,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
             ),
           ),
           const SizedBox(height: 2),
-          value == null 
+          value == null
               ? Shimmer.fromColors(
                   baseColor: Colors.grey[800]!,
                   highlightColor: Colors.grey[600]!,
@@ -260,7 +264,12 @@ class _DetailsScreenState extends State<DetailsScreen> {
           ),
         ),
         const SizedBox(height: 10),
-        EpisodesList(id: widget.id, title: widget.title),
+        EpisodesList(
+          id: widget.id,
+          title: widget.title,
+          poster: widget.image,
+          type: info?.anime?.info?.stats?.type ?? 'N/A',
+        ),
       ],
     );
   }
@@ -277,17 +286,26 @@ class _DetailsScreenState extends State<DetailsScreen> {
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
+      extendBody: true,
       body: FutureBuilder<AnimeInfo?>(
         future: fetchData(),
         builder: (context, snapshot) {
-          final bool isLoading = snapshot.connectionState == ConnectionState.waiting;
+          final bool isLoading =
+              snapshot.connectionState == ConnectionState.waiting;
           info = snapshot.data?.data;
-          
+
           return CustomScrollView(
             controller: _scrollController,
             slivers: [
               SliverAppBar(
                 expandedHeight: screenHeight * 0.6,
+                leading: IconButton(
+                  onPressed: () => Navigator.pop(context),
+                  icon: Icon(
+                    Icons.navigate_before,
+                    size: 40,
+                  ),
+                ),
                 stretch: true,
                 floating: false,
                 pinned: false,
@@ -297,7 +315,8 @@ class _DetailsScreenState extends State<DetailsScreen> {
               ),
               SliverToBoxAdapter(
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
                   color: Theme.of(context).primaryColorDark,
                   child: _buildDetailsSection(isLoading: isLoading),
                 ),
@@ -305,6 +324,49 @@ class _DetailsScreenState extends State<DetailsScreen> {
             ],
           );
         },
+      ),
+      bottomNavigationBar: BottomAppBar(
+        height: 100,
+        color: Colors.transparent,
+        child: ClipRect(
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(
+                      0.2), // Semi-transparent color for frosted effect
+                  borderRadius:
+                      BorderRadius.circular(15), // Optional: rounded corners
+                ),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 15.0), // Adjust padding as needed
+                child: Center(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            widget.title,
+                            style: TextStyle(fontSize: 18),
+                          ),
+                          Text('Episode 1')
+                        ],
+                      ),
+                      Container(
+                        child: Icon(
+                          Icons.play_circle_sharp,
+                          size: 35,
+                        ),
+                      )
+                    ],
+                  ),
+                )),
+          ),
+        ),
       ),
     );
   }

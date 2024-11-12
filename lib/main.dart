@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:nekoflow/data/models/settings/settings_model.dart';
-import 'package:nekoflow/data/models/watchlist_model.dart';
+import 'package:nekoflow/data/models/watchlist/watchlist_model.dart';
 import 'package:nekoflow/screens/main/home_screen.dart';
 import 'package:nekoflow/screens/main/watchlist_screen.dart';
 import 'package:nekoflow/screens/main/search_screen.dart';
@@ -15,6 +15,8 @@ void main() async {
   await Hive.initFlutter();
   Hive.registerAdapter(SettingsModelAdapter());
   Hive.registerAdapter(WatchlistModelAdapter());
+  Hive.registerAdapter(RecentlyWatchedItemAdapter());
+  Hive.registerAdapter(ContinueWatchingItemAdapter());
   await Hive.openBox<SettingsModel>('user_settings');
   await Hive.openBox<WatchlistModel>('user_watchlist');
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);

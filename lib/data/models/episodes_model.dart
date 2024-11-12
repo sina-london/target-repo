@@ -26,10 +26,11 @@ class EpisodeInfo {
 
   factory EpisodeInfo.fromJson(Map<String, dynamic> json) {
     return EpisodeInfo(
-      totalEpisodes: json['totalEpisodes'] as int,
+      totalEpisodes: json['totalEpisodes'] ?? 0,
       episodes: (json['episodes'] as List)
-          .map((e) => Episode.fromJson(e as Map<String, dynamic>))
-          .toList(),
+              .map((e) => Episode.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
     );
   }
 }
@@ -49,10 +50,10 @@ class Episode {
 
   factory Episode.fromJson(Map<String, dynamic> json) {
     return Episode(
-      title: json['title'] as String,
-      episodeId: json['episodeId'] as String,
-      number: json['number'] as int,
-      isFiller: json['isFiller'] as bool,
+      title: json['title'] ?? '',
+      episodeId: json['episodeId'] ?? '',
+      number: json['number'] ?? 0,
+      isFiller: json['isFiller'] ?? false,
     );
   }
 }
@@ -77,15 +78,12 @@ class EpisodeServersModel {
     return EpisodeServersModel(
       episodeId: json['data']['episodeId'],
       episodeNo: json['data']['episodeNo'],
-      sub: (json['data']['sub'] as List)
-          .map((e) => Server.fromJson(e))
-          .toList(),
-      dub: (json['data']['dub'] as List)
-          .map((e) => Server.fromJson(e))
-          .toList(),
-      raw: (json['data']['raw'] as List)
-          .map((e) => Server.fromJson(e))
-          .toList(),
+      sub:
+          (json['data']['sub'] as List).map((e) => Server.fromJson(e)).toList(),
+      dub:
+          (json['data']['dub'] as List).map((e) => Server.fromJson(e)).toList(),
+      raw:
+          (json['data']['raw'] as List).map((e) => Server.fromJson(e)).toList(),
     );
   }
 }

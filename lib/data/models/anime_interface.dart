@@ -1,8 +1,13 @@
-// lib/data/models/anime_interface.dart
+class Anime {
+  final String id;
+  final String name;
+  final String poster;
+  final String type;
 
-abstract class Anime {
-  String get id;
-  String get name;
-  String get poster;
-  String get type;
+  Anime({
+    required this.id,
+    required this.name,
+    required this.poster,
+    required this.type,
+  });
 }
