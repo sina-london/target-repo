@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nekoflow/screens/main/settings/about/about_screen.dart';
 import 'package:nekoflow/screens/settings/theme_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -34,6 +35,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
               context,
               ModalBottomSheetRoute(
                   builder: (context) => ThemeScreen(),
+                  isScrollControlled: true,
+                  isDismissible: true,
+                  enableDrag: true,
+                  useSafeArea: true),
+            ),
+          ),
+          ListTile(
+            tileColor: Colors.transparent,
+            leading: Icon(Icons.info, size: 35, color: Theme.of(context).iconTheme.color,),
+            title: Text("About", style: TextStyle(fontSize: 20)),
+            subtitle: Text("Information about the developer"),
+            trailing: Icon(Icons.navigate_next, size: 35, color: Theme.of(context).iconTheme.color,),
+            onTap: () => Navigator.push(
+              context,
+              ModalBottomSheetRoute(
+                  builder: (context) => AboutScreen(),
                   isScrollControlled: true,
                   isDismissible: true,
                   enableDrag: true,

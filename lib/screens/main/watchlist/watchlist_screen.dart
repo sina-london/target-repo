@@ -82,7 +82,7 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
               const SizedBox(height: 8),
                _isLoading
                   ? const Center(child: CircularProgressIndicator())
-                  : _recentlyWatched.isEmpty
+                  : _favorites.isEmpty
                       ? const Center(
                           child: Text('No recently watched anime'),
                         )
