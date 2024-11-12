@@ -135,12 +135,9 @@ class _EpisodesListState extends State<EpisodesList> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        const Text(
+        Text(
           "Episodes",
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
+          style: Theme.of(context).textTheme.headlineMedium,
         ),
         ValueListenableBuilder<List<Map<String, List<Episode>>>>(
           valueListenable: _groupedEpisodes,
@@ -152,7 +149,7 @@ class _EpisodesListState extends State<EpisodesList> {
               builder: (context, selectedIndex, _) {
                 return DropdownButton<int>(
                   value: selectedIndex,
-                  icon: const Icon(Icons.view_list),
+                  icon: Icon(Icons.view_list, color: Theme.of(context).iconTheme.color,),
                   onChanged: (newIndex) {
                     if (newIndex != null) {
                       _selectedRangeIndex.value = newIndex;
@@ -161,7 +158,7 @@ class _EpisodesListState extends State<EpisodesList> {
                   items: groupedEpisodes.asMap().entries.map((entry) {
                     return DropdownMenuItem<int>(
                       value: entry.key,
-                      child: Text(entry.value.keys.first),
+                      child: Text(entry.value.keys.first, style: Theme.of(context).textTheme.labelMedium,),
                     );
                   }).toList(),
                 );

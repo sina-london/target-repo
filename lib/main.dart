@@ -1,4 +1,3 @@
-import 'package:crystal_navigation_bar/crystal_navigation_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -6,6 +5,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:nekoflow/data/models/onboarding/onboarding_model.dart';
 import 'package:nekoflow/data/models/settings/settings_model.dart';
 import 'package:nekoflow/data/models/watchlist/watchlist_model.dart';
+import 'package:nekoflow/data/theme/theme_manager.dart';
 import 'package:nekoflow/screens/onboarding/onboarding_screen.dart';
 
 void main() async {
@@ -32,7 +32,6 @@ class MainApp extends StatefulWidget {
 }
 
 class _MainAppState extends State<MainApp> {
-  bool _isDarkMode = true;
   late Box<SettingsModel> settingsBox;
 
   @override
@@ -42,42 +41,17 @@ class _MainAppState extends State<MainApp> {
 
     // Access the already-opened settings box
     settingsBox = Hive.box<SettingsModel>('user_settings');
-
-    // Listen for changes in the 'isDarkTheme' key
-    settingsBox.listenable().addListener(() {
-      setState(() {
-        _isDarkMode = settingsBox
-                .get('isDarkTheme',
-                    defaultValue: SettingsModel(isDarkTheme: true))
-                ?.isDarkTheme ??
-            true;
-      });
-    });
-
-    // Initialize the _isDarkMode based on the current value in the box
-    _isDarkMode = settingsBox
-            .get('isDarkTheme', defaultValue: SettingsModel(isDarkTheme: true))
-            ?.isDarkTheme ??
-        true;
   }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      theme: ThemeData.light().copyWith(
-        textTheme: GoogleFonts.poppinsTextTheme(),
-      ),
-      darkTheme: ThemeData.dark().copyWith(
-        textTheme: GoogleFonts.poppinsTextTheme().apply(
-          bodyColor: Colors.white,
-        ),
-      ),
-      themeMode: _isDarkMode ? ThemeMode.dark : ThemeMode.light,
+      theme: ThemeManager.getTheme(ThemeType.greenForest),
       home: Scaffold(
         extendBody: true,
         appBar: AppBar(toolbarHeight: 0),
-        body: OnboardingScreen(), 
+        body: OnboardingScreen(),
       ),
     );
   }

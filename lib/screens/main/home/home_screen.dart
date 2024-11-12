@@ -65,22 +65,16 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: const [
+          children: [
             Text(
               "Sup Man, What's on your mind today?",
-              style: TextStyle(
-                fontSize: 35,
-                fontWeight: FontWeight.bold,
-              ),
+              style: Theme.of(context).textTheme.headlineLarge,
               textAlign: TextAlign.center,
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             Text(
               "Find your favourite anime and \nwatch it right away",
-              style: TextStyle(
-                fontWeight: FontWeight.w500,
-                color: Colors.grey,
-              ),
+              style: Theme.of(context).textTheme.titleSmall,
               textAlign: TextAlign.center,
             ),
           ],
@@ -92,8 +86,8 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildShimmerLoading() {
     final screenSize = MediaQuery.of(context).size;
     return Shimmer.fromColors(
-      baseColor: Colors.grey[800]!,
-      highlightColor: Colors.white,
+      baseColor: Theme.of(context).colorScheme.surface.withOpacity(0.5),
+      highlightColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
       child: SizedBox(
         height: screenSize.height * 0.25,
         child: ListView.builder(
@@ -104,7 +98,7 @@ class _HomeScreenState extends State<HomeScreen> {
             width: screenSize.width * 0.4,
             margin: const EdgeInsets.only(right: 12),
             decoration: BoxDecoration(
-              color: Colors.grey[800],
+              color: Theme.of(context).colorScheme.surface,
               borderRadius: BorderRadius.circular(20),
             ),
           ),
@@ -138,19 +132,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildSectionTitle(String title) {
     return Text(
       title,
-      style: TextStyle(
-        fontSize: 28,
-        fontWeight: FontWeight.w600,
-        foreground: Paint()
-          ..shader = const LinearGradient(
-            colors: [
-              Color.fromARGB(255, 209, 161, 251),
-              Color.fromARGB(255, 221, 105, 251),
-            ],
-          ).createShader(
-            const Rect.fromLTWH(0.0, 0.0, 200.0, 70.0),
-          ),
-      ),
+      style: Theme.of(context).textTheme.titleLarge
     );
   }
 

@@ -18,7 +18,7 @@ class SettingsModelAdapter extends TypeAdapter<SettingsModel> {
     };
     return SettingsModel(
       defaultQuality: fields[0] as String?,
-      isDarkTheme: fields[1] as bool?,
+      theme: fields[1] as ThemeType?,
       defaultOrientation: fields[2] as String?,
       layoutMode: fields[3] as String?,
       isLabelEnabled: fields[4] as bool?,
@@ -32,7 +32,7 @@ class SettingsModelAdapter extends TypeAdapter<SettingsModel> {
       ..writeByte(0)
       ..write(obj.defaultQuality)
       ..writeByte(1)
-      ..write(obj.isDarkTheme)
+      ..write(obj.theme)
       ..writeByte(2)
       ..write(obj.defaultOrientation)
       ..writeByte(3)
