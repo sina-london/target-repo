@@ -33,7 +33,8 @@ class ResultCard extends StatelessWidget {
     );
   }
 
-  Widget _buildShimmerPlaceholder({required double width, required double height}) {
+  Widget _buildShimmerPlaceholder(
+      {required double width, required double height}) {
     return Shimmer.fromColors(
       baseColor: Colors.grey[300]!,
       highlightColor: Colors.grey[100]!,
@@ -49,139 +50,138 @@ class ResultCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
 
-    return GestureDetector(
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => DetailsScreen(
-            title: anime.name,
-            id: anime.id,
-            image: anime.poster,
-            tag: "result",
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => DetailsScreen(
+              title: anime.name,
+              id: anime.id,
+              image: anime.poster.replaceAll(RegExp(r'(\d+)x(\d+)'), '600x800'),
+              tag: "result",
+            ),
           ),
         ),
-      ),
-      child: Stack(
-        children: [
-          Container(
-            margin: const EdgeInsets.only(bottom: 15),
-            padding: const EdgeInsets.all(5),
-            decoration: BoxDecoration(
-              color: Theme.of(context).hoverColor,
-              borderRadius: BorderRadius.circular(15),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Hero(
-                  tag: "poster-${anime.id}-result",
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(15),
-                    child: Image.network(
-                      anime.poster,
-                      height: screenSize.width * 0.3,
-                      width: screenSize.width * 0.25,
-                      fit: BoxFit.cover,
-                      loadingBuilder: (context, child, loadingProgress) {
-                        if (loadingProgress == null) return child;
-                        return _buildShimmerPlaceholder(
+        splashColor: Colors.pink.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(15),
+        child: Stack(
+          children: [
+            Container(
+              margin: const EdgeInsets.only(bottom: 15),
+              padding: const EdgeInsets.all(5),
+              decoration: BoxDecoration(
+                color: Theme.of(context).hoverColor,
+                borderRadius: BorderRadius.circular(15),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Hero(
+                    tag: "poster-${anime.id}-result",
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(15),
+                      child: Image.network(
+                        anime.poster.replaceAll(RegExp(r'(\d+)x(\d+)'), '600x800'),
+                        height: screenSize.width * 0.35,
+                        width: screenSize.width * 0.25,
+                        fit: BoxFit.cover,
+                        loadingBuilder: (context, child, loadingProgress) {
+                          if (loadingProgress == null) return child;
+                          return _buildShimmerPlaceholder(
+                            width: screenSize.width * 0.25,
+                            height: screenSize.width * 0.3,
+                          );
+                        },
+                        errorBuilder: (context, error, stackTrace) =>
+                            _buildShimmerPlaceholder(
                           width: screenSize.width * 0.25,
                           height: screenSize.width * 0.3,
-                        );
-                      },
-                      errorBuilder: (context, error, stackTrace) => _buildShimmerPlaceholder(
-                        width: screenSize.width * 0.25,
-                        height: screenSize.width * 0.4,
+                        ),
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        anime.name,
-                        maxLines: 3,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontSize: 16),
-                      ),
-                      if (anime.japaneseTitle != null)
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
                         Text(
-                          anime.japaneseTitle!,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey,
-                          ),
+                          anime.name,
+                          maxLines: 3,
                           overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontSize: 16),
                         ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          _buildBadge(
-                            label: anime.type,
-                            color: Colors.grey,
+                        if (anime.japaneseTitle != null)
+                          Text(
+                            anime.japaneseTitle!,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey,
+                            ),
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          const SizedBox(width: 8),
-                          if (anime.nsfw == true)
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
                             _buildBadge(
-                              label: 'NSFW',
-                              color: Colors.red,
+                              label: anime.type,
+                              color: Colors.grey,
                             ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          if (anime.episodes.sub != null)
-                            _buildBadge(
-                              label: anime.episodes.sub.toString(),
-                              color: Colors.lightGreen,
-                              icon: Icons.subtitles,
-                            ),
-                          const SizedBox(width: 8),
-                          if (anime.episodes.dub != null)
-                            _buildBadge(
-                              label: anime.episodes.dub.toString(),
-                              color: Colors.lightBlue,
-                              icon: Icons.mic,
-                            ),
-                          // const SizedBox(width: 8),
-                          // if (anime.episodes != null)
-                          //   _buildBadge(
-                          //     label: '${anime.episodes} eps',
-                          //     color: Colors.grey,
-                          //     icon: Icons.theaters,
-                          //   ),
-                        ],
-                      ),
-                    ],
+                            const SizedBox(width: 8),
+                            if (anime.nsfw == true)
+                              _buildBadge(
+                                label: 'NSFW',
+                                color: Colors.red,
+                              ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            if (anime.episodes.sub != null)
+                              _buildBadge(
+                                label: anime.episodes.sub.toString(),
+                                color: Colors.lightGreen,
+                                icon: Icons.subtitles,
+                              ),
+                            const SizedBox(width: 8),
+                            if (anime.episodes.dub != null)
+                              _buildBadge(
+                                label: anime.episodes.dub.toString(),
+                                color: Colors.lightBlue,
+                                icon: Icons.mic,
+                              ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Positioned(
+              bottom: 25,
+              right: 10,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).primaryColor,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Text(
+                  'Watch Now',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
-              ],
-            ),
-          ),
-          Positioned(
-            bottom: 25,
-            right: 10,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: Theme.of(context).primaryColor,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Text(
-                'Watch Now',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
