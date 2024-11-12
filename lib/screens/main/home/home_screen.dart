@@ -7,7 +7,8 @@ import 'package:nekoflow/widgets/anime_card.dart';
 import 'package:nekoflow/widgets/snapping_scroll.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final String userName;
+  const HomeScreen({super.key, this.userName = 'Guest'});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -67,7 +68,7 @@ class _HomeScreenState extends State<HomeScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              "Sup Man, What's on your mind today?",
+              "Hello ${widget.userName}, What's on your mind today?",
               style: Theme.of(context).textTheme.headlineLarge,
               textAlign: TextAlign.center,
             ),
