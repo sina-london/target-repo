@@ -20,7 +20,7 @@ class DetailsScreen extends StatefulWidget {
     required this.id,
     required this.image,
     required this.tag,
-    this.type = 'N/A'
+    this.type = 'N/A',
   });
 
   @override
@@ -30,7 +30,7 @@ class DetailsScreen extends StatefulWidget {
 class _DetailsScreenState extends State<DetailsScreen> {
   final ValueNotifier<bool> _isDescriptionExpanded = ValueNotifier(false);
   late final AnimeService _animeService = AnimeService();
-  late final Box<WatchlistModel> _watchlistBox;
+  late final Box<WatchlistModel> _watchlistBox = Hive.box<WatchlistModel>('user_watchlist');
   final ScrollController _scrollController = ScrollController();
   AnimeData? info;
   String? error;
@@ -39,64 +39,9 @@ class _DetailsScreenState extends State<DetailsScreen> {
     try {
       return await _animeService.fetchAnimeInfoById(id: widget.id);
     } catch (_) {
-      setState(() {
-        error = 'Network error occurred';
-      });
+      setState(() => error = 'Network error occurred');
       return null;
     }
-  }
-
-  Future<void> _toggleFavorite() async {
-    final watchlist = _watchlistBox.get('favorites') ??
-        WatchlistModel(
-          recentlyWatched: [],
-          continueWatching: [],
-          favorites: [],
-        );
-
-    final newItem = AnimeItem(
-      name: widget.title,
-      poster: widget.image,
-      id: widget.id,
-      type: info?.anime?.info?.stats?.type ?? 'N/A',
-    );
-
-    var favourites = watchlist.favorites ?? [];
-
-    // If the item is already in the favorites list, remove it
-    if (favourites.any((item) => item.id == newItem.id)) {
-      favourites.removeWhere((item) => item.id == newItem.id);
-    } else {
-      // If the item is not in the list, add it
-      favourites = [
-        newItem,
-        ...favourites
-            .where((item) => item.id != newItem.id), // Avoid duplicates
-      ].take(10).toList();
-    }
-
-    // Update the favorites list in the watchlist
-    watchlist.favorites = favourites;
-
-    // Save the updated watchlist
-    await _watchlistBox.put('favorites', watchlist);
-
-    // Trigger UI update
-    setState(() {});
-  }
-
-  bool _checkFavourites() {
-    final watchlist = _watchlistBox.get('favorites') ??
-        WatchlistModel(
-          recentlyWatched: [],
-          continueWatching: [],
-          favorites: [],
-        );
-
-    var favourites = watchlist.favorites ?? [];
-
-    bool exists = favourites.any((anime) => anime.id == widget.id);
-    return exists;
   }
 
   Widget _buildHeaderSection() {
@@ -123,11 +68,10 @@ class _DetailsScreenState extends State<DetailsScreen> {
                   child: Image.network(
                     widget.image,
                     fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => Container(
+                    errorBuilder: (_, __, ___) => Container(
                       height: 400,
                       color: Colors.grey[300],
-                      child:
-                          Icon(Icons.error, size: 50, color: Colors.grey[600]),
+                      child: Icon(Icons.error, size: 50, color: Colors.grey[600]),
                     ),
                   ),
                 ),
@@ -138,23 +82,20 @@ class _DetailsScreenState extends State<DetailsScreen> {
             bottom: 0,
             left: 0,
             right: 0,
-            child: Container(
+            child: Padding(
               padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Colors.transparent, Colors.black.withOpacity(0.8)],
+              child: Text(
+                widget.title,
+                style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                  color: Colors.white,
+                  shadows: [
+                    BoxShadow(
+                      color: Theme.of(context).shadowColor,
+                      offset: Offset(1, 2),
+                      blurRadius: 10,
+                    )
+                  ],
                 ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    widget.title,
-                    style: Theme.of(context).textTheme.headlineLarge?.copyWith(color: Colors.white),
-                  ),
-                ],
               ),
             ),
           ),
@@ -197,114 +138,45 @@ class _DetailsScreenState extends State<DetailsScreen> {
   }
 
   Widget _buildDetailsSection({bool isLoading = false}) {
-    ThemeData _themeContext = Theme.of(context);
-    if (isLoading) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              _buildQuickInfoItem(Icons.timelapse, "Duration", null),
-              _buildQuickInfoItem(Icons.translate, "Translate", null),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Details',
-            style: _themeContext.textTheme.headlineMedium,
-          ),
-          const SizedBox(height: 8),
-          Shimmer.fromColors(
-            baseColor: Colors.grey[800]!,
-            highlightColor: Colors.grey[600]!,
-            child: Column(
-              children: [
-                Container(
-                  width: double.infinity,
-                  height: 16,
-                  margin: EdgeInsets.symmetric(vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[800],
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                ),
-                Container(
-                  width: double.infinity,
-                  height: 16,
-                  margin: EdgeInsets.symmetric(vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[800],
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                ),
-                Container(
-                  width: double.infinity,
-                  height: 16,
-                  margin: EdgeInsets.symmetric(vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[800],
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      );
-    }
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
-            _buildQuickInfoItem(
-              Icons.timelapse,
-              "Duration",
-              info?.anime?.moreInfo?.duration,
-            ),
-            _buildQuickInfoItem(
-              Icons.translate,
-              "Translate",
-              info?.anime?.moreInfo?.japanese,
-            ),
+            _buildQuickInfoItem(Icons.timelapse, "Duration", isLoading ? null : info?.anime?.moreInfo?.duration),
+            _buildQuickInfoItem(Icons.translate, "Japanese", isLoading ? null : info?.anime?.moreInfo?.japanese),
           ],
         ),
         const SizedBox(height: 16),
         Text(
           'Details',
-          style: _themeContext.textTheme.headlineMedium,
+          style: Theme.of(context).textTheme.headlineMedium,
         ),
         const SizedBox(height: 8),
-        ValueListenableBuilder(
+        ValueListenableBuilder<bool>(
           valueListenable: _isDescriptionExpanded,
-          builder: (context, isExpanded, child) {
+          builder: (_, isExpanded, __) {
             return AnimatedCrossFade(
-              crossFadeState: isExpanded
-                  ? CrossFadeState.showSecond
-                  : CrossFadeState.showFirst,
+              crossFadeState: isExpanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
               duration: const Duration(milliseconds: 300),
               firstChild: Text(
                 info?.anime?.info?.description ?? 'Description not available',
-                style: _themeContext.textTheme.bodyMedium,
+                style: Theme.of(context).textTheme.bodyMedium,
                 maxLines: 3,
                 overflow: TextOverflow.ellipsis,
               ),
               secondChild: Text(
                 info?.anime?.info?.description ?? 'Description not available',
-                style: _themeContext.textTheme.bodyMedium,
+                style: Theme.of(context).textTheme.bodyMedium,
               ),
             );
           },
         ),
         TextButton(
-          onPressed: () =>
-              _isDescriptionExpanded.value = !_isDescriptionExpanded.value,
+          onPressed: () => _isDescriptionExpanded.value = !_isDescriptionExpanded.value,
           child: ValueListenableBuilder<bool>(
             valueListenable: _isDescriptionExpanded,
-            builder: (context, isExpanded, child) {
-              return Text(isExpanded ? 'Show Less' : 'Show More', style: _themeContext.textTheme.labelMedium,);
-            },
+            builder: (_, isExpanded, __) => Text(isExpanded ? 'Show Less' : 'Show More'),
           ),
         ),
         const SizedBox(height: 10),
@@ -321,7 +193,6 @@ class _DetailsScreenState extends State<DetailsScreen> {
   @override
   void initState() {
     super.initState();
-    _watchlistBox = Hive.box<WatchlistModel>('user_watchlist');
   }
 
   @override
@@ -336,12 +207,11 @@ class _DetailsScreenState extends State<DetailsScreen> {
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
-      extendBody: true,
+      backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
       body: FutureBuilder<AnimeInfo?>(
         future: fetchData(),
         builder: (context, snapshot) {
-          final bool isLoading =
-              snapshot.connectionState == ConnectionState.waiting;
+          final bool isLoading = snapshot.connectionState == ConnectionState.waiting;
           info = snapshot.data?.data;
 
           return CustomScrollView(
@@ -351,14 +221,8 @@ class _DetailsScreenState extends State<DetailsScreen> {
                 expandedHeight: screenHeight * 0.6,
                 leading: IconButton(
                   onPressed: () => Navigator.pop(context),
-                  icon: Icon(
-                    Icons.navigate_before,
-                    size: 40,
-                  ),
+                  icon: const Icon(Icons.navigate_before, size: 40),
                 ),
-                stretch: true,
-                floating: false,
-                pinned: false,
                 flexibleSpace: FlexibleSpaceBar(
                   background: _buildHeaderSection(),
                 ),
@@ -369,14 +233,19 @@ class _DetailsScreenState extends State<DetailsScreen> {
                     image: widget.image,
                     type: widget.type,
                   ),
-                  SizedBox(width: 10)
+                  const SizedBox(width: 10)
                 ],
               ),
               SliverToBoxAdapter(
                 child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
-                  color: Theme.of(context).cardColor,
+                  padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).cardColor,
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(50),
+                      topRight: Radius.circular(50),
+                    ),
+                  ),
                   child: _buildDetailsSection(isLoading: isLoading),
                 ),
               ),
@@ -384,53 +253,6 @@ class _DetailsScreenState extends State<DetailsScreen> {
           );
         },
       ),
-      // bottomNavigationBar: BottomAppBar(
-      //   height: 100,
-      //   color: Colors.transparent,
-      //   child: ClipRect(
-      //     child: BackdropFilter(
-      //       filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-      //       child: Container(
-      //         decoration: BoxDecoration(
-      //           color: Colors.white.withOpacity(
-      //               0.2), // Semi-transparent color for frosted effect
-      //           borderRadius:
-      //               BorderRadius.circular(15), // Optional: rounded corners
-      //         ),
-      //         padding: const EdgeInsets.symmetric(
-      //             horizontal: 15.0), // Adjust padding as needed
-      //         child: Center(
-      //           child: Row(
-      //             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      //             crossAxisAlignment: CrossAxisAlignment.center,
-      //             children: [
-      //               Expanded(
-      //                 child: Column(
-      //                   crossAxisAlignment: CrossAxisAlignment.start,
-      //                   mainAxisAlignment: MainAxisAlignment.center,
-      //                   children: [
-      //                     Text(
-      //                       widget.title,
-      //                       style: TextStyle(
-      //                           fontSize: 18, overflow: TextOverflow.ellipsis),
-      //                     ),
-      //                     Text('Episode 1')
-      //                   ],
-      //                 ),
-      //               ),
-      //               Container(
-      //                 child: Icon(
-      //                   Icons.play_circle_sharp,
-      //                   size: 35,
-      //                 ),
-      //               )
-      //             ],
-      //           ),
-      //         ),
-      //       ),
-      //     ),
-      //   ),
-      // ),
     );
   }
 }

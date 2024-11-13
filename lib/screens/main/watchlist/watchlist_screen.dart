@@ -70,7 +70,7 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
                       ? const Center(
                           child: Text('No recently watched anime'),
                         )
-                      : _buildAnimeList(_recentlyWatched),
+                      : _buildAnimeList(_recentlyWatched, "recentlyWatched"),
               const SizedBox(height: 24),
               // _buildSectionTitle("Continue Watching"),
               // const SizedBox(height: 8),
@@ -84,7 +84,7 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
                       ? const Center(
                           child: Text('No recently watched anime'),
                         )
-                      : _buildAnimeList(_favorites),
+                      : _buildAnimeList(_favorites, "favorites"),
             ],
           ),
         ),
@@ -107,7 +107,7 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
     );
   }
 
-  Widget _buildAnimeList(List<BaseAnimeCard> items) {
+  Widget _buildAnimeList(List<BaseAnimeCard> items, String tag) {
     return SizedBox(
       height: 220,
       child: ListView.builder(
@@ -122,7 +122,7 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
                 poster: anime.poster,
                 type: anime.type,
               ),
-              tag: 'tag');
+              tag: tag);
         },
       ),
     );
