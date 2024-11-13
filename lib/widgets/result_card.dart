@@ -111,14 +111,14 @@ class ResultCard extends StatelessWidget {
                           anime.name,
                           maxLines: 3,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontSize: 16),
+                          style: Theme.of(context).textTheme.bodyLarge,
                         ),
                         if (anime.japaneseTitle != null)
                           Text(
                             anime.japaneseTitle!,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 14,
-                              color: Colors.grey,
+                              color: Theme.of(context).hintColor,
                             ),
                             overflow: TextOverflow.ellipsis,
                           ),

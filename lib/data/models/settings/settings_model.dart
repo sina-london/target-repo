@@ -8,7 +8,7 @@ class SettingsModel extends HiveObject {
   @HiveField(0)
   String? defaultQuality;
   @HiveField(1)
-  ThemeType? theme;
+  String? theme;
   @HiveField(2)
   String? defaultOrientation;
   @HiveField(3)
@@ -18,7 +18,7 @@ class SettingsModel extends HiveObject {
 
   SettingsModel({
     this.defaultQuality = '720p',
-    this.theme = ThemeType.light,
+    this.theme = 'light',
     this.defaultOrientation = 'Portrait',
     this.layoutMode = 'Grid',
     this.isLabelEnabled = true,
@@ -28,7 +28,7 @@ class SettingsModel extends HiveObject {
   factory SettingsModel.fromJson(Map<String, dynamic> json) {
     return SettingsModel(
       defaultQuality: json['defaultQuality'] as String,
-      theme: json['theme'] as ThemeType,
+      theme: json['theme'] as String,
       defaultOrientation: json['defaultOrientation'] as String,
       layoutMode: json['layoutMode'] as String,
       isLabelEnabled: json['isLabelEnabled'] as bool,

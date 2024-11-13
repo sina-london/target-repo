@@ -96,7 +96,7 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(title, style: Theme.of(context).textTheme.titleLarge),
+        Text(title, style: Theme.of(context).textTheme.headlineMedium),
         IconButton(
             onPressed: () {},
             icon: Icon(
