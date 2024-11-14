@@ -160,9 +160,9 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               _buildHeaderSection(),
               _buildContentSection(
-                title: "Recommended",
+                title: "Popular",
                 animeList: _popular,
-                tag: "recommended",
+                tag: "popular",
               ),
               const SizedBox(height: 50),
               _buildContentSection(

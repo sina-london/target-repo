@@ -33,6 +33,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
   late final Box<WatchlistModel> _watchlistBox =
       Hive.box<WatchlistModel>('user_watchlist');
   final ScrollController _scrollController = ScrollController();
+  ContinueWatchingItem? continueWatchingItem;
   AnimeData? info;
   String? error;
 
@@ -42,6 +43,17 @@ class _DetailsScreenState extends State<DetailsScreen> {
     } catch (_) {
       setState(() => error = 'Network error occurred');
       return null;
+    }
+  }
+
+  Future<void> _loadContnueWatching() async {
+    final watchlist = _watchlistBox.get('continueWatching',
+            defaultValue: WatchlistModel(continueWatching: [])) ??
+        WatchlistModel(continueWatching: []);
+    // continueWatchingItem = watchlist.continueWatching
+    if (watchlist.continueWatching!.isNotEmpty) {
+      continueWatchingItem = watchlist.continueWatching
+          ?.singleWhere((item) => item.id == widget.id);
     }
   }
 
@@ -213,6 +225,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
   @override
   void initState() {
     super.initState();
+    _loadContnueWatching();
   }
 
   @override
@@ -276,6 +289,10 @@ class _DetailsScreenState extends State<DetailsScreen> {
             ],
           );
         },
+      ),
+      bottomNavigationBar: BottomAppBar(
+        child: Text(
+            continueWatchingItem != null ? continueWatchingItem!.name : ""),
       ),
     );
   }

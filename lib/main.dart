@@ -54,7 +54,6 @@ class _MainAppState extends State<MainApp> {
   @override
   void initState() {
     super.initState();
-    _theme = ThemeType.light;
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
 
     settingsBox = Hive.box<SettingsModel>('user_settings');

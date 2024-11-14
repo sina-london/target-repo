@@ -15,6 +15,7 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
   late Box<WatchlistModel> _watchlistBox;
   List<RecentlyWatchedItem> _recentlyWatched = [];
   List<AnimeItem> _favorites = [];
+  List<ContinueWatchingItem> _continueWatching = [];
   bool _isLoading = true;
 
   @override
@@ -32,9 +33,11 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
 
       final recentWatchlist = _watchlistBox.get('recentlyWatched');
       final favouriteWatchlist = _watchlistBox.get('favorites');
+      final continueWatchlist = _watchlistBox.get('continueWatching');
       setState(() {
         _recentlyWatched = recentWatchlist?.recentlyWatched ?? [];
         _favorites = favouriteWatchlist?.favorites ?? [];
+        _continueWatching = continueWatchlist?.continueWatching ?? [];
       });
     } catch (e) {
       debugPrint('Error loading watchlist: $e');
@@ -70,21 +73,27 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
                       ? const Center(
                           child: Text('No recently watched anime'),
                         )
-                      : _buildAnimeList(_recentlyWatched, "recentlyWatched"),
+                      : _buildAnimeList(_recentlyWatched, "recent"),
               const SizedBox(height: 24),
-              // _buildSectionTitle("Continue Watching"),
-              // const SizedBox(height: 8),
-              // _buildHorizontalList([]),
-              // const SizedBox(height: 24),
+              _buildSectionTitle("Continue Watching"),
+              const SizedBox(height: 8),
+              _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : _continueWatching.isEmpty
+                      ? const Center(
+                          child: Text('No Anime to continue'),
+                        )
+                      : _buildAnimeList(_continueWatching, "continue"),
+              const SizedBox(height: 24),
               _buildSectionTitle("Favorites"),
               const SizedBox(height: 8),
               _isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : _favorites.isEmpty
                       ? const Center(
-                          child: Text('No recently watched anime'),
+                          child: Text('No favorites anime'),
                         )
-                      : _buildAnimeList(_favorites, "favorites"),
+                      : _buildAnimeList(_favorites, "favorite"),
             ],
           ),
         ),
@@ -120,7 +129,7 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
                 id: anime.id,
                 name: anime.name,
                 poster: anime.poster,
-                type: anime.type,
+                type: anime.type ?? 'N/A',
               ),
               tag: tag);
         },
