@@ -316,16 +316,24 @@ class _DetailsScreenState extends State<DetailsScreen> {
                       50), // Clip to match container's rounded corners
                   child: BackdropFilter(
                     filter: ImageFilter.blur(
-                        sigmaX: 3.0, sigmaY: 3.0), // Apply blur effect
+                        sigmaX: 5.0, sigmaY: 5.0), // Apply blur effect
                     child: Container(
-                      color: themeData.textTheme.bodyMedium?.color
-                          ?.withOpacity(0.1),
+                      color: themeData.secondaryHeaderColor.withOpacity(0.6),
                       child: ListTile(
                         contentPadding:
                             EdgeInsets.symmetric(vertical: 0, horizontal: 15),
                         title: Text(
-                            "EP : ${continueWatchingItem!.episode}", style: TextStyle(fontWeight: FontWeight.bold),),
-                            subtitle: Text(continueWatchingItem!.name, maxLines: 1,),
+                          "EP : ${continueWatchingItem!.episode}",
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                             ),
+                        ),
+                        subtitle: Text(
+                          continueWatchingItem!.name,
+                          style: TextStyle(
+                              ),
+                          maxLines: 1,
+                        ),
                         trailing: IconButton(
                             onPressed: () => Navigator.push(
                                 context,
