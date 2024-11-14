@@ -107,6 +107,7 @@ class _EpisodesListState extends State<EpisodesList> {
       MaterialPageRoute(
         builder: (context) => StreamScreen(
           id: widget.id,
+          name: widget.title,
           episodeId: episode.episodeId,
           poster: widget.poster,
           episode: episode.number,

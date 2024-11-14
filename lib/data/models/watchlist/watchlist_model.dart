@@ -6,7 +6,7 @@ abstract class BaseAnimeCard {
   String get name;
   String get poster;
   String get id;
-  String? get type;
+  String get type;
 }
 
 @HiveType(typeId: 1)
@@ -39,7 +39,7 @@ class RecentlyWatchedItem extends HiveObject implements BaseAnimeCard {
 
   @override
   @HiveField(2)
-  final String? type; // e.g., "TV", "OTV"
+  final String type; // e.g., "TV", "OTV"
 
   @override
   @HiveField(3)
@@ -78,7 +78,7 @@ class ContinueWatchingItem extends HiveObject implements BaseAnimeCard {
 
   @override
   @HiveField(6)
-  final String? type;
+  final String type;
 
   ContinueWatchingItem({
     required this.id,

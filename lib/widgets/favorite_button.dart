@@ -70,6 +70,7 @@ class _FavoriteButtonState extends State<FavoriteButton> {
       onPressed: _toggleFavorite,
       icon: Icon(
         _isFavorite ? Icons.favorite : Icons.favorite_outline,
+        color: Theme.of(context).colorScheme.secondary,
       ),
     );
   }
