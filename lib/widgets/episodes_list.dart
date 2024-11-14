@@ -111,7 +111,6 @@ class _EpisodesListState extends State<EpisodesList> {
           poster: widget.poster,
           episode: episode.number,
           title: episode.title,
-          episodes: _episodes.value,
         ),
       ),
     );

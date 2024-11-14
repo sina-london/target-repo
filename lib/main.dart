@@ -6,6 +6,7 @@ import 'package:nekoflow/data/models/onboarding/onboarding_model.dart';
 import 'package:nekoflow/data/models/settings/settings_model.dart';
 import 'package:nekoflow/data/models/watchlist/watchlist_model.dart';
 import 'package:nekoflow/data/theme/theme_manager.dart';
+import 'package:nekoflow/routes/app_router.dart';
 import 'package:nekoflow/screens/onboarding/onboarding_screen.dart';
 
 void main() async {
@@ -76,7 +77,7 @@ class _MainAppState extends State<MainApp> {
           home: Scaffold(
             extendBody: true,
             appBar: AppBar(toolbarHeight: 0),
-            body: OnboardingScreen(),
+            body: AppRouter(userName: 'Guest'),
           ),
         );
       },
