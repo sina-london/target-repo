@@ -84,7 +84,7 @@ dev_dependencies:
 ```bash
 git clone https://github.com/Darkx-dev/ShonenX.git
 cd ShonenX
-```
+``` 
 
 2. **Install dependencies**
 ```bash
