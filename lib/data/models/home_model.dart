@@ -18,7 +18,7 @@ class HomeModel {
 }
 
 class HomeData {
-  // final List<SpotlightAnime> spotlightAnimes;
+  final List<SpotlightAnime> spotlightAnimes;
   // final List<TrendingAnime> trendingAnimes;
   // final List<LatestEpisodeAnime> latestEpisodeAnimes;
   // final List<UpcomingAnime> topUpcomingAnimes;
@@ -30,7 +30,7 @@ class HomeData {
   // final List<String> genres;
 
   HomeData({
-    // required this.spotlightAnimes,
+    required this.spotlightAnimes,
     // required this.trendingAnimes,
     // required this.latestEpisodeAnimes,
     // required this.topUpcomingAnimes,
@@ -44,9 +44,9 @@ class HomeData {
 
   factory HomeData.fromJson(Map<String, dynamic> json) {
     return HomeData(
-      // spotlightAnimes: (json['spotlightAnimes'] as List<dynamic>)
-      //     .map((e) => SpotlightAnime.fromJson(e))
-      //     .toList(),
+      spotlightAnimes: (json['spotlightAnimes'] as List<dynamic>)
+          .map((e) => SpotlightAnime.fromJson(e))
+          .toList(),
       // trendingAnimes: (json['trendingAnimes'] as List<dynamic>)
       //     .map((e) => TrendingAnime.fromJson(e))
       //     .toList(),

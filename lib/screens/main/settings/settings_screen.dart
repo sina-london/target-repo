@@ -1,15 +1,50 @@
 import 'package:flutter/material.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:nekoflow/screens/main/settings/about/about_screen.dart';
 import 'package:nekoflow/screens/settings/theme_screen.dart';
 
-class SettingsScreen extends StatefulWidget {
+class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
 
-  @override
-  State<SettingsScreen> createState() => _SettingsScreenState();
-}
+  // Helper method for creating list tiles
+  Widget _buildListTile({
+    required BuildContext context,
+    required IconData leadingIcon,
+    required String title,
+    required String subtitle,
+    required Widget destination,
+  }) {
+    final theme = Theme.of(context);
+    return ListTile(
+      tileColor: Colors.transparent,
+      leading: Icon(
+        leadingIcon,
+        size: 33,
+        color: theme.colorScheme.secondary,
+      ),
+      title: Text(
+        title,
+        style: const TextStyle(fontSize: 20),
+      ),
+      subtitle: Text(subtitle),
+      trailing: Icon(
+        HugeIcons.strokeRoundedArrowRightDouble,
+        color: theme.iconTheme.color,
+        size: 30,
+      ),
+      onTap: () => Navigator.push(
+        context,
+        ModalBottomSheetRoute(
+          builder: (context) => destination,
+          isScrollControlled: true,
+          isDismissible: true,
+          enableDrag: true,
+          useSafeArea: true,
+        ),
+      ),
+    );
+  }
 
-class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -24,52 +59,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
       body: ListView(
         children: [
-          ListTile(
-            tileColor: Colors.transparent,
-            leading: Icon(
-              Icons.color_lens,
-              size: 35,
-              color: Theme.of(context).colorScheme.primary,
-            ),
-            title: Text("Theme", style: TextStyle(fontSize: 20)),
-            subtitle: Text("Change the app theme"),
-            trailing: Icon(
-              Icons.navigate_next,
-              size: 35,
-            ),
-            onTap: () => Navigator.push(
-              context,
-              ModalBottomSheetRoute(
-                  builder: (context) => ThemeScreen(),
-                  isScrollControlled: true,
-                  isDismissible: true,
-                  enableDrag: true,
-                  useSafeArea: true),
-            ),
+          _buildListTile(
+            context: context,
+            leadingIcon: Icons.color_lens,
+            title: "Theme",
+            subtitle: "Change the app theme",
+            destination: const ThemeScreen(),
           ),
-          ListTile(
-            tileColor: Colors.transparent,
-            leading: Icon(
-              Icons.info,
-              size: 35,
-              color: Theme.of(context).colorScheme.primary,
-            ),
-            title: Text("About", style: TextStyle(fontSize: 20)),
-            subtitle: Text("Information about the developer"),
-            trailing: Icon(
-              Icons.navigate_next,
-              size: 35,
-            ),
-            onTap: () => Navigator.push(
-              context,
-              ModalBottomSheetRoute(
-                builder: (context) => AboutScreen(),
-                isScrollControlled: true,
-                isDismissible: true,
-                enableDrag: true,
-                useSafeArea: true,
-              ),
-            ),
+          _buildListTile(
+            context: context,
+            leadingIcon: HugeIcons.strokeRoundedInformationCircle,
+            title: "About",
+            subtitle: "Information about the developer",
+            destination: const AboutScreen(),
           ),
         ],
       ),

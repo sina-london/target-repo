@@ -241,7 +241,7 @@ class _StreamScreenState extends State<StreamScreen> {
 
     // Find index of existing item with same title
     final existingIndex =
-        continueWatchingList.indexWhere((item) => item?.id == widget.id);
+        continueWatchingList.indexWhere((item) => item.id == widget.id);
 
     if (existingIndex != -1) {
       // Update existing item instead of adding new one

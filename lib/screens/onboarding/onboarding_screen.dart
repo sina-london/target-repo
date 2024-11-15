@@ -9,7 +9,7 @@ class OnboardingScreen extends StatefulWidget {
 }
 
 class _OnboardingScreenState extends State<OnboardingScreen> {
-  PageController _pageController = PageController();
+  final PageController _pageController = PageController();
   int _currentPage = 0;
   String _userName = '';
   final _nameController = TextEditingController();
@@ -143,7 +143,7 @@ class OnboardingPage extends StatelessWidget {
   final String description;
   final String image;
 
-  const OnboardingPage({
+  const OnboardingPage({super.key, 
     required this.title,
     required this.description,
     required this.image,
@@ -191,7 +191,7 @@ class OnboardingPage extends StatelessWidget {
 class NameInputPage extends StatefulWidget {
   final ValueChanged<String> onUserNameChanged;
 
-  const NameInputPage({required this.onUserNameChanged});
+  const NameInputPage({super.key, required this.onUserNameChanged});
 
   @override
   State<NameInputPage> createState() => _NameInputPageState();

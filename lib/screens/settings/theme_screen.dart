@@ -170,5 +170,5 @@ class _ThemeScreenState extends State<ThemeScreen> {
 }
 
 extension StringCasingExtension on String {
-  String capitalize() => this.isNotEmpty ? '${this[0].toUpperCase()}${substring(1).toLowerCase()}' : '';
+  String capitalize() => isNotEmpty ? '${this[0].toUpperCase()}${substring(1).toLowerCase()}' : '';
 }

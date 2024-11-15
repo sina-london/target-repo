@@ -1,7 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'package:hive/hive.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:nekoflow/data/models/info_model.dart';
 import 'package:nekoflow/data/models/watchlist/watchlist_model.dart';
 import 'package:nekoflow/data/services/anime_service.dart';
@@ -11,7 +11,7 @@ import 'package:nekoflow/widgets/favorite_button.dart';
 import 'package:shimmer/shimmer.dart';
 
 class DetailsScreen extends StatefulWidget {
-  final String title;
+  final String name;
   final String id;
   final String image;
   final String type;
@@ -19,7 +19,7 @@ class DetailsScreen extends StatefulWidget {
 
   const DetailsScreen({
     super.key,
-    required this.title,
+    required this.name,
     required this.id,
     required this.image,
     required this.tag,
@@ -40,29 +40,41 @@ class _DetailsScreenState extends State<DetailsScreen> {
   AnimeData? info;
   String? error;
 
+  @override
+  void initState() {
+    super.initState();
+    _loadContinueWatching();
+  }
+
+  void _loadContinueWatching() {
+    // Directly react to changes in the watchlist using the Listenable.
+    _watchlistBox.listenable().addListener(() {
+      final watchlist = _watchlistBox.get(
+        'continueWatching',
+        defaultValue: WatchlistModel(continueWatching: []),
+      );
+      if (watchlist?.continueWatching?.isNotEmpty ?? false) {
+        try {
+          setState(() {
+            continueWatchingItem = watchlist?.continueWatching?.singleWhere(
+              (item) => item.id == widget.id,
+            );
+          });
+        } catch (e) {
+          setState(() {
+            continueWatchingItem = null; // Handle case when no match is found
+          });
+        }
+      }
+    });
+  }
+
   Future<AnimeInfo?> fetchData() async {
     try {
       return await _animeService.fetchAnimeInfoById(id: widget.id);
     } catch (_) {
       setState(() => error = 'Network error occurred');
       return null;
-    }
-  }
-
-  Future<void> _loadContnueWatching() async {
-    final watchlist = _watchlistBox.get('continueWatching',
-            defaultValue: WatchlistModel(continueWatching: [])) ??
-        WatchlistModel(continueWatching: []);
-    // continueWatchingItem = watchlist.continueWatching
-    if (watchlist.continueWatching!.isNotEmpty) {
-      try {
-        continueWatchingItem = watchlist.continueWatching?.singleWhere(
-          (item) => item.id == widget.id,
-        );
-      } catch (e) {
-        continueWatchingItem =
-            null; // Handle the case when no matching item is found
-      }
     }
   }
 
@@ -88,17 +100,55 @@ class _DetailsScreenState extends State<DetailsScreen> {
                 margin: EdgeInsets.only(bottom: 60),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(20),
-                  child: Image.network(
-                    widget.image,
-                    fit: BoxFit.cover,
-                    height: MediaQuery.of(context).size.width,
-                    errorBuilder: (_, __, ___) => Container(
-                      height: 400,
-                      color: Colors.grey[300],
-                      child:
-                          Icon(Icons.error, size: 50, color: Colors.grey[600]),
-                    ),
-                  ),
+                  child: info != null && widget.tag == 'spotlight'
+                      ? Image.network(
+                          info!.anime!.info!.poster,
+                          fit: BoxFit.cover,
+                          height: MediaQuery.of(context).size.width,
+                          width: 300,
+                          loadingBuilder: (context, child, loadingProgress) {
+                            if (loadingProgress == null) return child;
+                            return Shimmer.fromColors(
+                              baseColor: Theme.of(context).colorScheme.primary,
+                              highlightColor:
+                                  Theme.of(context).colorScheme.secondary,
+                              child: Container(
+                                height: 400,
+                                color: Colors.grey[300],
+                              ),
+                            );
+                          },
+                          errorBuilder: (_, __, ___) => Container(
+                            height: 400,
+                            color: Colors.grey[300],
+                            child: Icon(Icons.error,
+                                size: 50, color: Colors.grey[600]),
+                          ),
+                        )
+                      : Image.network(
+                          widget.image,
+                          fit: BoxFit.cover,
+                          height: MediaQuery.of(context).size.width,
+                          width: 300,
+                          loadingBuilder: (context, child, loadingProgress) {
+                            if (loadingProgress == null) return child;
+                            return Shimmer.fromColors(
+                              baseColor: Theme.of(context).colorScheme.primary,
+                              highlightColor:
+                                  Theme.of(context).colorScheme.secondary,
+                              child: Container(
+                                height: 400,
+                                color: Colors.grey[300],
+                              ),
+                            );
+                          },
+                          errorBuilder: (_, __, ___) => Container(
+                            height: 400,
+                            color: Colors.grey[300],
+                            child: Icon(Icons.error,
+                                size: 50, color: Colors.grey[600]),
+                          ),
+                        ),
                 ),
               ),
             ),
@@ -110,7 +160,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Text(
-                widget.title,
+                widget.name,
                 style: Theme.of(context).textTheme.headlineLarge?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -174,6 +224,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
         Text('Details', style: themeData.textTheme.headlineMedium),
         const SizedBox(height: 8),
         ValueListenableBuilder<bool>(
+          // ValueListenable to handle expanded description
           valueListenable: _isDescriptionExpanded,
           builder: (_, isExpanded, __) {
             return AnimatedCrossFade(
@@ -215,18 +266,12 @@ class _DetailsScreenState extends State<DetailsScreen> {
         const SizedBox(height: 10),
         EpisodesList(
           id: widget.id,
-          title: widget.title,
-          poster: widget.image,
+          name: widget.name,
+          poster: info?.anime?.info?.poster ?? widget.image,
           type: info?.anime?.info?.stats?.type ?? 'N/A',
         ),
       ],
     );
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _loadContnueWatching();
   }
 
   @override
@@ -241,6 +286,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
     ThemeData themeData = Theme.of(context);
+
     return Scaffold(
       extendBody: true,
       backgroundColor: themeData.colorScheme.primary,
@@ -259,7 +305,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
                 expandedHeight: screenHeight * 0.6,
                 leading: IconButton(
                   onPressed: () => Navigator.pop(context),
-                  icon: Icon(
+                  icon: const Icon(
                     Icons.navigate_before,
                     size: 40,
                   ),
@@ -270,17 +316,19 @@ class _DetailsScreenState extends State<DetailsScreen> {
                 actions: [
                   FavoriteButton(
                     animeId: widget.id,
-                    title: widget.title,
+                    title: widget.name,
                     image: widget.image,
                     type: widget.type,
                   ),
-                  const SizedBox(width: 10)
+                  const SizedBox(width: 10),
                 ],
               ),
               SliverToBoxAdapter(
                 child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 15,
+                    vertical: 10,
+                  ),
                   decoration: BoxDecoration(
                     color: themeData.scaffoldBackgroundColor,
                     borderRadius: const BorderRadius.only(
@@ -295,60 +343,80 @@ class _DetailsScreenState extends State<DetailsScreen> {
           );
         },
       ),
-      bottomNavigationBar: continueWatchingItem == null
-          ? SizedBox.shrink()
-          : BottomAppBar(
-              height: 100,
-              color: Colors.transparent, // Make BottomAppBar transparent
-              padding: EdgeInsets.symmetric(horizontal: 15, vertical: 15),
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(15),
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(
-                      50), // Clip to match container's rounded corners
-                  child: BackdropFilter(
-                    filter: ImageFilter.blur(
-                        sigmaX: 5.0, sigmaY: 5.0), // Apply blur effect
-                    child: Container(
-                      color: themeData.secondaryHeaderColor.withOpacity(0.6),
-                      child: ListTile(
-                        contentPadding:
-                            EdgeInsets.symmetric(vertical: 0, horizontal: 15),
-                        title: Text(
-                          "EP : ${continueWatchingItem!.episode}",
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
+      bottomNavigationBar: ValueListenableBuilder<Box<WatchlistModel>>(
+        valueListenable: _watchlistBox.listenable(),
+        builder: (context, box, _) {
+          final watchlist = box.get('continueWatching',
+              defaultValue: WatchlistModel(continueWatching: []));
+          if (watchlist?.continueWatching == null ||
+              watchlist!.continueWatching!.isEmpty) {
+            return const SizedBox.shrink();
+          }
+
+          try {
+            continueWatchingItem = watchlist.continueWatching?.singleWhere(
+              (item) => item.id == widget.id,
+            );
+          } catch (e) {
+            continueWatchingItem =
+                null; // Handle the case where no match is found
+          }
+
+          if (continueWatchingItem == null) return const SizedBox.shrink();
+
+          return BottomAppBar(
+            height: 100,
+            color: Colors.transparent,
+            padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(15),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(50),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
+                  child: Container(
+                    color: themeData.secondaryHeaderColor.withOpacity(0.6),
+                    child: ListTile(
+                      contentPadding: const EdgeInsets.symmetric(
+                          vertical: 0, horizontal: 15),
+                      title: Text(
+                        "EP : ${continueWatchingItem!.episode}",
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      subtitle: Text(
+                        continueWatchingItem!.name,
+                        maxLines: 1,
+                      ),
+                      trailing: IconButton(
+                        onPressed: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => StreamScreen(
+                              name: continueWatchingItem!.name,
+                              title: widget.name,
+                              id: widget.id,
+                              episodeId: continueWatchingItem!.episodeId,
+                              poster: widget.image,
+                              episode: continueWatchingItem!.episode,
+                            ),
                           ),
                         ),
-                        subtitle: Text(
-                          continueWatchingItem!.name,
-                          style: TextStyle(),
-                          maxLines: 1,
+                        icon: const Icon(
+                          Icons.play_circle,
                         ),
-                        trailing: IconButton(
-                            onPressed: () => Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => StreamScreen(
-                                        name: continueWatchingItem!.name,
-                                        title: widget.title,
-                                        id: widget.id,
-                                        episodeId:
-                                            continueWatchingItem!.episodeId,
-                                        poster: widget.image,
-                                        episode:
-                                            continueWatchingItem!.episode))),
-                            icon: Icon(
-                              Icons.play_circle,
-                            )),
                       ),
                     ),
                   ),
                 ),
               ),
             ),
+          );
+        },
+      ),
     );
   }
 }

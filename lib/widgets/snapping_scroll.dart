@@ -43,7 +43,7 @@ class _SnappingScrollerState extends State<SnappingScroller> {
         controller: _pageController,
         itemCount: widget.children.length,
         padEnds: false,
-        physics: PageScrollPhysics(),
+        physics: BouncingScrollPhysics(),
         onPageChanged: (index) => setState(() => _currentPage = index),
         itemBuilder: (context, index) => widget.children[index],
       ),

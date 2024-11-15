@@ -1,55 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:nekoflow/data/models/anime_interface.dart';
 import 'package:nekoflow/data/models/watchlist/watchlist_model.dart';
 import 'package:nekoflow/widgets/anime_card.dart';
 
-class WatchlistScreen extends StatefulWidget {
+class WatchlistScreen extends StatelessWidget {
   const WatchlistScreen({super.key});
 
   @override
-  State<WatchlistScreen> createState() => _WatchlistScreenState();
-}
-
-class _WatchlistScreenState extends State<WatchlistScreen> {
-  late Box<WatchlistModel> _watchlistBox;
-  List<RecentlyWatchedItem> _recentlyWatched = [];
-  List<AnimeItem> _favorites = [];
-  List<ContinueWatchingItem> _continueWatching = [];
-  bool _isLoading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _watchlistBox = Hive.box<WatchlistModel>("user_watchlist");
-    _loadWatchlist();
-  }
-
-  Future<void> _loadWatchlist() async {
-    try {
-      setState(() {
-        _isLoading = true;
-      });
-
-      final recentWatchlist = _watchlistBox.get('recentlyWatched');
-      final favouriteWatchlist = _watchlistBox.get('favorites');
-      final continueWatchlist = _watchlistBox.get('continueWatching');
-      setState(() {
-        _recentlyWatched = recentWatchlist?.recentlyWatched ?? [];
-        _favorites = favouriteWatchlist?.favorites ?? [];
-        _continueWatching = continueWatchlist?.continueWatching ?? [];
-      });
-    } catch (e) {
-      debugPrint('Error loading watchlist: $e');
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
+    final watchlistBox = Hive.box<WatchlistModel>("user_watchlist");
+
     return Scaffold(
       extendBody: true,
       appBar: AppBar(
@@ -59,59 +19,80 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
           style: Theme.of(context).textTheme.headlineLarge,
         ),
       ),
-      body: RefreshIndicator(
-        onRefresh: _loadWatchlist,
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: ListView(
-            children: [
-              _buildSectionTitle("Recently Watched"),
-              const SizedBox(height: 8),
-              _isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : _recentlyWatched.isEmpty
-                      ? const Center(
-                          child: Text('No recently watched anime'),
-                        )
-                      : _buildAnimeList(_recentlyWatched, "recent"),
-              const SizedBox(height: 24),
-              _buildSectionTitle("Continue Watching"),
-              const SizedBox(height: 8),
-              _isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : _continueWatching.isEmpty
-                      ? const Center(
-                          child: Text('No Anime to continue'),
-                        )
-                      : _buildAnimeList(_continueWatching, "continue"),
-              const SizedBox(height: 24),
-              _buildSectionTitle("Favorites"),
-              const SizedBox(height: 8),
-              _isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : _favorites.isEmpty
-                      ? const Center(
-                          child: Text('No favorites anime'),
-                        )
-                      : _buildAnimeList(_favorites, "favorite"),
-            ],
-          ),
-        ),
+      body: ValueListenableBuilder(
+        valueListenable: watchlistBox.listenable(),
+        builder: (context, Box<WatchlistModel> box, _) {
+          final recentlyWatched = box.get('recentlyWatched')?.recentlyWatched ?? [];
+          final favorites = box.get('favorites')?.favorites ?? [];
+          final continueWatching = box.get('continueWatching')?.continueWatching ?? [];
+
+          return RefreshIndicator(
+            onRefresh: () async {
+              // Optional: Refresh logic if needed.
+            },
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: ListView(
+                children: [
+                  _buildSection(
+                    context,
+                    title: "Recently Watched",
+                    items: recentlyWatched,
+                    emptyMessage: "No recently watched anime",
+                    tag: "recent",
+                  ),
+                  _buildSection(
+                    context,
+                    title: "Continue Watching",
+                    items: continueWatching,
+                    emptyMessage: "No Anime to continue",
+                    tag: "continue",
+                  ),
+                  _buildSection(
+                    context,
+                    title: "Favorites",
+                    items: favorites,
+                    emptyMessage: "No favorites anime",
+                    tag: "favorite",
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
       ),
     );
   }
 
-  Widget _buildSectionTitle(String title) {
+  Widget _buildSection(
+    BuildContext context, {
+    required String title,
+    required List<BaseAnimeCard> items,
+    required String emptyMessage,
+    required String tag,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionTitle(context, title),
+        const SizedBox(height: 8),
+        items.isEmpty
+            ? Center(child: Text(emptyMessage))
+            : _buildAnimeList(items, tag),
+        const SizedBox(height: 24),
+      ],
+    );
+  }
+
+  Widget _buildSectionTitle(BuildContext context, String title) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(title, style: Theme.of(context).textTheme.headlineMedium),
         IconButton(
-            onPressed: () {},
-            icon: Icon(
-              Icons.navigate_next,
-              size: 35,
-            ))
+          onPressed: () {},
+          icon: const Icon(Icons.navigate_next, size: 35),
+        ),
       ],
     );
   }
@@ -124,53 +105,7 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
         itemCount: items.length,
         itemBuilder: (context, index) {
           final anime = items[index];
-          return AnimeCard(
-              anime: Anime(
-                id: anime.id,
-                name: anime.name,
-                poster: anime.poster,
-                type: anime.type ?? 'N/A',
-              ),
-              tag: tag);
-        },
-      ),
-    );
-  }
-
-  Widget _buildHorizontalList(List<String> items) {
-    return SizedBox(
-      height: 220,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: items.length,
-        itemBuilder: (context, index) {
-          return Container(
-            width: 150,
-            margin: const EdgeInsets.only(right: 12),
-            decoration: BoxDecoration(
-              color: Colors.grey[300],
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.movie,
-                  size: 50,
-                  color: Colors.grey[700],
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  items[index],
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
-          );
+          return AnimeCard(anime: anime, tag: tag);
         },
       ),
     );
