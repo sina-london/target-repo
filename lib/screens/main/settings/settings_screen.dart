@@ -15,7 +15,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Scaffold(
       extendBody: true,
       appBar: AppBar(
-        
         backgroundColor: Colors.transparent,
         toolbarHeight: 200,
         title: Text(
@@ -27,10 +26,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
         children: [
           ListTile(
             tileColor: Colors.transparent,
-            leading: Icon(Icons.color_lens, size: 35, color: Theme.of(context).iconTheme.color,),
+            leading: Icon(
+              Icons.color_lens,
+              size: 35,
+              color: Theme.of(context).colorScheme.primary,
+            ),
             title: Text("Theme", style: TextStyle(fontSize: 20)),
             subtitle: Text("Change the app theme"),
-            trailing: Icon(Icons.navigate_next, size: 35, color: Theme.of(context).iconTheme.color,),
+            trailing: Icon(
+              Icons.navigate_next,
+              size: 35,
+            ),
             onTap: () => Navigator.push(
               context,
               ModalBottomSheetRoute(
@@ -43,18 +49,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           ListTile(
             tileColor: Colors.transparent,
-            leading: Icon(Icons.info, size: 35, color: Theme.of(context).iconTheme.color,),
+            leading: Icon(
+              Icons.info,
+              size: 35,
+              color: Theme.of(context).colorScheme.primary,
+            ),
             title: Text("About", style: TextStyle(fontSize: 20)),
             subtitle: Text("Information about the developer"),
-            trailing: Icon(Icons.navigate_next, size: 35, color: Theme.of(context).iconTheme.color,),
+            trailing: Icon(
+              Icons.navigate_next,
+              size: 35,
+            ),
             onTap: () => Navigator.push(
               context,
               ModalBottomSheetRoute(
-                  builder: (context) => AboutScreen(),
-                  isScrollControlled: true,
-                  isDismissible: true,
-                  enableDrag: true,
-                  useSafeArea: true),
+                builder: (context) => AboutScreen(),
+                isScrollControlled: true,
+                isDismissible: true,
+                enableDrag: true,
+                useSafeArea: true,
+              ),
             ),
           ),
         ],

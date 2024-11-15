@@ -10,12 +10,10 @@ class AnimeCard extends StatelessWidget {
   static const EdgeInsets _cardMargin = EdgeInsets.only(right: 12);
   static const EdgeInsets _chipPadding = EdgeInsets.symmetric(horizontal: 6, vertical: 3);
   static const TextStyle _titleStyle = TextStyle(
-    color: Colors.white,
     fontSize: 16,
     fontWeight: FontWeight.bold,
   );
   static const TextStyle _typeStyle = TextStyle(
-    color: Colors.white,
     fontSize: 12,
     fontWeight: FontWeight.bold,
   );
@@ -147,7 +145,7 @@ class AnimeCard extends StatelessWidget {
       child: Container(
         padding: _chipPadding,
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.secondary,
+          color: Theme.of(context).colorScheme.primary,
           borderRadius: BorderRadius.circular(8),
         ),
         child: Row(
@@ -155,7 +153,6 @@ class AnimeCard extends StatelessWidget {
           children: [
             const Icon(
               Icons.play_arrow_rounded,
-              color: Colors.white,
               size: 16,
             ),
             const SizedBox(width: 4),

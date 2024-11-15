@@ -123,7 +123,6 @@ class _EpisodesListState extends State<EpisodesList> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildHeader(),
-        const SizedBox(height: 16),
         ValueListenableBuilder<bool>(
           valueListenable: _isLoading,
           builder: (context, isLoading, _) {
@@ -221,16 +220,15 @@ class _EpisodesListState extends State<EpisodesList> {
   }
 
   Widget _buildEpisodeTile(Episode episode) {
+    ThemeData themeData = Theme.of(context);
     return Container(
       margin: const EdgeInsets.only(bottom: 15.0),
       decoration: BoxDecoration(
-        color: episode.isFiller
-            ? Theme.of(context).splashColor
-            : Theme.of(context).primaryColor,
         borderRadius: BorderRadius.circular(12.0),
+        color: themeData.colorScheme.primary,
         boxShadow: [
           BoxShadow(
-            color: Theme.of(context).shadowColor.withOpacity(0.3),
+            color: Theme.of(context).shadowColor,
             spreadRadius: 1,
             blurRadius: 2,
             offset: const Offset(0, 3),
@@ -241,23 +239,21 @@ class _EpisodesListState extends State<EpisodesList> {
         contentPadding: const EdgeInsets.symmetric(horizontal: 16),
         title: Text(
           "EP : ${episode.number}${episode.isFiller ? " : FILLER" : ""}",
-          style: const TextStyle(
-            color: Colors.white,
+          style: TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 16,
           ),
         ),
         subtitle: Text(
           episode.title,
-          style: const TextStyle(
-            color: Colors.white70,
+          style: TextStyle(
             fontSize: 14,
+            fontWeight: FontWeight.w500
           ),
         ),
         trailing: IconButton(
-          icon: const Icon(
+          icon: Icon(
             Icons.play_circle_fill,
-            color: Colors.white,
           ),
           onPressed: () => _navigateToStreamScreen(episode),
         ),
