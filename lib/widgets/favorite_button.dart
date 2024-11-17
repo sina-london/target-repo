@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:hive/hive.dart';
+import 'package:nekoflow/data/boxes/watchlist_box.dart';
 import 'package:nekoflow/data/models/watchlist/watchlist_model.dart';
 
 class FavoriteButton extends StatefulWidget {
@@ -13,7 +13,7 @@ class FavoriteButton extends StatefulWidget {
     required this.animeId,
     required this.title,
     required this.image,
-    required this.type
+    required this.type,
   });
 
   @override
@@ -21,47 +21,34 @@ class FavoriteButton extends StatefulWidget {
 }
 
 class _FavoriteButtonState extends State<FavoriteButton> {
-  late final Box<WatchlistModel> _watchlistBox;
+  late final WatchlistBox _watchlistBox;
   bool _isFavorite = false;
 
   @override
   void initState() {
     super.initState();
-    _watchlistBox = Hive.box<WatchlistModel>('user_watchlist');
-    _isFavorite = _checkFavourites();
+    _initializeState();
   }
 
-  bool _checkFavourites() {
-    final watchlist = _watchlistBox.get('favorites') ?? WatchlistModel(
-      recentlyWatched: [],
-      continueWatching: [],
-      favorites: [],
-    );
-    var favourites = watchlist.favorites ?? [];
-    return favourites.any((anime) => anime.id == widget.animeId);
+  Future<void> _initializeState() async {
+    _watchlistBox = WatchlistBox();
+    await _watchlistBox.init();
+    _isFavorite = _watchlistBox.isFavorite(widget.animeId);
   }
 
   Future<void> _toggleFavorite() async {
-    final watchlist = _watchlistBox.get('favorites') ?? WatchlistModel(
-      recentlyWatched: [],
-      continueWatching: [],
-      favorites: [],
+    final animeItem = AnimeItem(
+      id: widget.animeId,
+      name: widget.title,
+      poster: widget.image,
+      type: widget.type,
     );
 
-    final newItem = AnimeItem(name: widget.title, poster: widget.image, id: widget.animeId, type: widget.type);
-    var favourites = watchlist.favorites ?? [];
-
-    if (favourites.any((item) => item.id == newItem.id)) {
-      favourites.removeWhere((item) => item.id == newItem.id);
-      _isFavorite = false;
-    } else {
-      favourites = [newItem, ...favourites.where((item) => item.id != newItem.id)].take(10).toList();
-      _isFavorite = true;
-    }
-
-    watchlist.favorites = favourites;
-    await _watchlistBox.put('favorites', watchlist);
-    setState(() {});  // Only update the favorite button
+    // Toggle favorite status
+    await _watchlistBox.toggleFavorite(animeItem);
+    setState(() {
+      _isFavorite = !_isFavorite;
+    });
   }
 
   @override

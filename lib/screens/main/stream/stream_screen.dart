@@ -58,7 +58,7 @@ class _StreamScreenState extends State<StreamScreen> {
     _initializeState();
   }
 
-  void _initializeState() async {
+  Future<void> _initializeState() async {
     _watchlistBox = WatchlistBox();
     await _watchlistBox.init();
     _selectedEpisodeId = widget.episodeId;
