@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:nekoflow/data/boxes/watchlist_box.dart';
 import 'package:nekoflow/data/models/info_model.dart';
 import 'package:nekoflow/data/models/watchlist/watchlist_model.dart';
 import 'package:nekoflow/data/services/anime_service.dart';
@@ -31,10 +32,9 @@ class DetailsScreen extends StatefulWidget {
 }
 
 class _DetailsScreenState extends State<DetailsScreen> {
-  final ValueNotifier<bool> _isDescriptionExpanded = ValueNotifier(false);
+   final ValueNotifier<bool> _isDescriptionExpanded = ValueNotifier(false);
   late final AnimeService _animeService = AnimeService();
-  late final Box<WatchlistModel> _watchlistBox =
-      Hive.box<WatchlistModel>('user_watchlist');
+  late final WatchlistBox _watchlistBox;
   final ScrollController _scrollController = ScrollController();
   ContinueWatchingItem? continueWatchingItem;
   AnimeData? info;
@@ -43,30 +43,18 @@ class _DetailsScreenState extends State<DetailsScreen> {
   @override
   void initState() {
     super.initState();
+    _initWatchlistBox();
+  }
+
+  Future<void> _initWatchlistBox() async {
+    _watchlistBox = WatchlistBox();
+    await _watchlistBox.init();
     _loadContinueWatching();
   }
 
   void _loadContinueWatching() {
-    // Directly react to changes in the watchlist using the Listenable.
-    _watchlistBox.listenable().addListener(() {
-      final watchlist = _watchlistBox.get(
-        'continueWatching',
-        defaultValue: WatchlistModel(continueWatching: []),
-      );
-      if (watchlist?.continueWatching?.isNotEmpty ?? false) {
-        try {
-          setState(() {
-            continueWatchingItem = watchlist?.continueWatching?.singleWhere(
-              (item) => item.id == widget.id,
-            );
-          });
-        } catch (e) {
-          setState(() {
-            continueWatchingItem = null; // Handle case when no match is found
-          });
-        }
-      }
-    });
+    continueWatchingItem = _watchlistBox.getContinueWatchingById(widget.id);
+    setState(() {});
   }
 
   Future<AnimeInfo?> fetchData() async {
@@ -344,25 +332,14 @@ class _DetailsScreenState extends State<DetailsScreen> {
         },
       ),
       bottomNavigationBar: ValueListenableBuilder<Box<WatchlistModel>>(
-        valueListenable: _watchlistBox.listenable(),
+        valueListenable: _watchlistBox.listenToContinueWatching(),
         builder: (context, box, _) {
-          final watchlist = box.get('continueWatching',
-              defaultValue: WatchlistModel(continueWatching: []));
-          if (watchlist?.continueWatching == null ||
-              watchlist!.continueWatching!.isEmpty) {
+          // Get the continue watching item
+          continueWatchingItem = _watchlistBox.getContinueWatchingById(widget.id);
+
+          if (continueWatchingItem == null) {
             return const SizedBox.shrink();
           }
-
-          try {
-            continueWatchingItem = watchlist.continueWatching?.singleWhere(
-              (item) => item.id == widget.id,
-            );
-          } catch (e) {
-            continueWatchingItem =
-                null; // Handle the case where no match is found
-          }
-
-          if (continueWatchingItem == null) return const SizedBox.shrink();
 
           return BottomAppBar(
             height: 100,

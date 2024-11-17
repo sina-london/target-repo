@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:hive/hive.dart';
+import 'package:nekoflow/data/boxes/watchlist_box.dart';
 import 'package:nekoflow/data/models/episodes_model.dart';
 import 'package:nekoflow/data/models/stream_model.dart';
 import 'package:nekoflow/data/models/watchlist/watchlist_model.dart';
@@ -22,7 +24,7 @@ class StreamScreen extends StatefulWidget {
     required this.episodeId,
     required this.poster,
     required this.episode,
-    required this.name
+    required this.name,
   });
 
   @override
@@ -37,7 +39,7 @@ class _StreamScreenState extends State<StreamScreen> {
   final Map<String, EpisodeServersModel> _serversCache = {};
   final Map<String, EpisodeStreamingLinksModel> _linksCache = {};
 
-  late final Box<WatchlistModel?>? _watchlistBox;
+  late final WatchlistBox _watchlistBox;
   late String _selectedEpisodeId;
 
   BetterPlayerController? _playerController;
@@ -56,10 +58,18 @@ class _StreamScreenState extends State<StreamScreen> {
     _initializeState();
   }
 
-  void _initializeState() {
-    _watchlistBox = Hive.box<WatchlistModel>('user_watchlist');
+  void _initializeState() async {
+    _watchlistBox = WatchlistBox();
+    await _watchlistBox.init();
     _selectedEpisodeId = widget.episodeId;
     _initializeData();
+
+    // Restore previous position if exists
+    final continueWatchingItem =
+        _watchlistBox.getContinueWatchingById(widget.id);
+    if (continueWatchingItem != null) {
+      _currentPosition = continueWatchingItem.timestamp;
+    }
   }
 
   Future<void> _initializeData() async {
@@ -76,6 +86,7 @@ class _StreamScreenState extends State<StreamScreen> {
   }
 
   Future<void> _fetchEpisodeServers(String episodeId) async {
+    if (!mounted) return;
     try {
       if (_serversCache.containsKey(episodeId)) {
         _episodeServers = _serversCache[episodeId];
@@ -127,12 +138,12 @@ class _StreamScreenState extends State<StreamScreen> {
   }
 
   Future<void> _initializePlayer() async {
+    if (!mounted) return;
     if (_isPlayerInitializing ||
         _streamingLinks == null ||
         _streamingLinks!.sources.isEmpty) {
       return;
     }
-
     setState(() => _isPlayerInitializing = true);
 
     try {
@@ -141,9 +152,7 @@ class _StreamScreenState extends State<StreamScreen> {
     } catch (e) {
       debugPrint("Error initializing player: $e");
     } finally {
-      if (mounted) {
-        setState(() => _isPlayerInitializing = false);
-      }
+      setState(() => _isPlayerInitializing = false);
     }
   }
 
@@ -166,7 +175,7 @@ class _StreamScreenState extends State<StreamScreen> {
     );
 
     _setupSubtitles(subtitleSources);
-    _setupPositionListener();
+    _setupListener();
   }
 
   List<BetterPlayerSubtitlesSource> _createSubtitleSources() {
@@ -186,7 +195,15 @@ class _StreamScreenState extends State<StreamScreen> {
     return const BetterPlayerConfiguration(
       autoPlay: true,
       autoDetectFullscreenAspectRatio: true,
-      fit: BoxFit.contain,
+      fit: BoxFit.scaleDown,
+      deviceOrientationsOnFullScreen: [
+        DeviceOrientation.landscapeLeft,
+        DeviceOrientation.landscapeRight
+      ],
+      deviceOrientationsAfterFullScreen: [
+        DeviceOrientation.portraitUp,
+        DeviceOrientation.portraitDown
+      ],
       controlsConfiguration: BetterPlayerControlsConfiguration(
         playIcon: Icons.play_arrow,
         pauseIcon: Icons.pause,
@@ -208,57 +225,72 @@ class _StreamScreenState extends State<StreamScreen> {
     }
   }
 
-  void _setupPositionListener() {
+  void _setupListener() {
     _playerController?.addEventsListener(_onPlayerEvent);
   }
 
   void _onPlayerEvent(BetterPlayerEvent event) async {
-    if (event.betterPlayerEventType != BetterPlayerEventType.progress) return;
+    if (event.betterPlayerEventType == BetterPlayerEventType.initialized) {
+      // Set initial position if exists
+      if (_currentPosition != '0:00:00.000000') {
+        final parts = _currentPosition.split(':');
+        if (parts.length >= 3) {
+          final hours = int.parse(parts[0]);
+          final minutes = int.parse(parts[1]);
+          final seconds = double.parse(parts[2]);
+          final duration = Duration(
+            hours: hours,
+            minutes: minutes,
+            seconds: seconds.floor(),
+            milliseconds: ((seconds - seconds.floor()) * 1000).round(),
+          );
+          _playerController?.seekTo(duration);
+        }
+      }
+      // Save on progress
+      if (event.betterPlayerEventType == BetterPlayerEventType.progress) {
+        final position =
+            _playerController?.videoPlayerController?.value.position;
+        if (position == null || position.inSeconds == 0) return;
 
-    final position = _playerController?.videoPlayerController?.value.position;
-    if (position == null || position.inSeconds == 0) return;
+        setState(() {
+          _currentPosition = position.toString();
+        });
 
-    _currentPosition = position.toString();
-    await _updateWatchlist();
-  }
+        // Update continue watching
+        final continueWatchingItem = ContinueWatchingItem(
+          id: widget.id,
+          name: widget.name,
+          poster: widget.poster,
+          episode: widget.episode,
+          episodeId: widget.episodeId,
+          timestamp: _currentPosition,
+          type: 'anime', // Todo: Add appropriate type here
+        );
+        await _watchlistBox.addToContinueWatching(continueWatchingItem);
 
-  Future<void> _updateWatchlist() async {
-    if (_watchlistBox == null) return;
-
-    final watchlist = _watchlistBox.get('continueWatching') ??
-        WatchlistModel(continueWatching: []);
-
-    final newItem = ContinueWatchingItem(
-      id: widget.id,
-      name: widget.name,
-      poster: widget.poster,
-      episode: widget.episode,
-      episodeId: widget.episodeId,
-      timestamp: _currentPosition,
-    );
-
-    var continueWatchingList = watchlist.continueWatching ?? [];
-
-    // Find index of existing item with same title
-    final existingIndex =
-        continueWatchingList.indexWhere((item) => item.id == widget.id);
-
-    if (existingIndex != -1) {
-      // Update existing item instead of adding new one
-      continueWatchingList = List.from(continueWatchingList)
-        ..removeAt(existingIndex);
+        // Add to recently watched after 5% of video progress
+        final duration =
+            _playerController?.videoPlayerController?.value.duration;
+        if (duration != null &&
+            position.inSeconds > duration.inSeconds * 0.05) {
+          final recentlyWatchedItem = RecentlyWatchedItem(
+            id: widget.id,
+            name: widget.name,
+            poster: widget.poster,
+            type: 'anime', // Add appropriate type here
+          );
+          await _watchlistBox.addToRecentlyWatched(recentlyWatchedItem);
+        }
+      }
     }
-
-    // Add updated/new item at the beginning
-    watchlist.continueWatching = [newItem, ...continueWatchingList];
-
-    await _watchlistBox.put('continueWatching', watchlist);
   }
 
   @override
   void dispose() {
     _disposeCurrentPlayer();
     _animeService.dispose();
+    _watchlistBox.dispose();
     super.dispose();
   }
 
