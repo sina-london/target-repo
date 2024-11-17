@@ -26,11 +26,11 @@ class SettingsModel extends HiveObject {
   // Factory method to create a SettingsModel object from JSON
   factory SettingsModel.fromJson(Map<String, dynamic> json) {
     return SettingsModel(
-      defaultQuality: json['defaultQuality'] as String,
-      theme: json['theme'] as String,
-      defaultOrientation: json['defaultOrientation'] as String,
-      layoutMode: json['layoutMode'] as String,
-      isLabelEnabled: json['isLabelEnabled'] as bool,
+      defaultQuality: json['defaultQuality'] as String?,
+      theme: json['theme'] as String?,
+      defaultOrientation: json['defaultOrientation'] as String?,
+      layoutMode: json['layoutMode'] as String?,
+      isLabelEnabled: json['isLabelEnabled'] as bool?,
     );
   }
 
@@ -43,5 +43,22 @@ class SettingsModel extends HiveObject {
       'layoutMode': layoutMode,
       'isLabelEnabled': isLabelEnabled,
     };
+  }
+
+  // CopyWith method for partial updates
+  SettingsModel copyWith({
+    String? defaultQuality,
+    String? theme,
+    String? defaultOrientation,
+    String? layoutMode,
+    bool? isLabelEnabled,
+  }) {
+    return SettingsModel(
+      defaultQuality: defaultQuality ?? this.defaultQuality,
+      theme: theme ?? this.theme,
+      defaultOrientation: defaultOrientation ?? this.defaultOrientation,
+      layoutMode: layoutMode ?? this.layoutMode,
+      isLabelEnabled: isLabelEnabled ?? this.isLabelEnabled,
+    );
   }
 }

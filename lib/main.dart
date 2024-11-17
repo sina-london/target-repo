@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:nekoflow/data/boxes/settings_box.dart';
 import 'package:nekoflow/data/models/onboarding/onboarding_model.dart';
 import 'package:nekoflow/data/models/settings/settings_model.dart';
 import 'package:nekoflow/data/models/watchlist/watchlist_model.dart';
@@ -35,18 +36,14 @@ class MainApp extends StatefulWidget {
 }
 
 class _MainAppState extends State<MainApp> {
-  late Box<SettingsModel> settingsBox;
+  late SettingsBox _settingsBox;
   ThemeType _theme = ThemeType.dark;
 
   Future<void> _loadTheme() async {
-    final userTheme = settingsBox.get('theme') ??
-        SettingsModel(theme: _theme.toString().split('.').last.toLowerCase());
-    String? themeName = userTheme.theme;
-
+    final userTheme = _settingsBox.getTheme();
+    print("MAIN: $userTheme");
     setState(() {
-      _theme = ThemeManager.getThemeType(
-              themeName ?? _theme.toString().split('.').last.toLowerCase()) ??
-          ThemeType.dark;
+      _theme = ThemeManager.getThemeType(userTheme!) ?? ThemeType.dark;
     });
   }
 
@@ -54,21 +51,22 @@ class _MainAppState extends State<MainApp> {
   void initState() {
     super.initState();
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-
-    settingsBox = Hive.box<SettingsModel>('user_settings');
+    _initializeBox();
     _loadTheme();
   }
+
+   Future<void> _initializeBox() async {
+    _settingsBox = SettingsBox(); // Initialize SettingsBox
+    await _settingsBox.init(); // Open the Settings box
+  }
+
 
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder(
-      valueListenable: settingsBox.listenable(keys: ['theme']),
+      valueListenable: _settingsBox.listenable(),
       builder: (context, Box<SettingsModel> box, child) {
-        // Update theme when 'theme' value changes in settingsBox
-        _theme = ThemeManager.getThemeType(
-                box.get('theme')?.theme ?? _theme.toString()) ??
-            ThemeType.dark;
-
+        _theme = ThemeManager.getThemeType(_settingsBox.getTheme()!) ?? _theme;
         return MaterialApp(
           debugShowCheckedModeBanner: false,
           theme: ThemeManager.getTheme(_theme),

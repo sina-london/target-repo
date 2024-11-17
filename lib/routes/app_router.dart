@@ -1,10 +1,10 @@
-import 'package:crystal_navigation_bar/crystal_navigation_bar.dart';
 import 'package:flutter/material.dart';
-import 'package:hugeicons/hugeicons.dart';
 import 'package:nekoflow/screens/main/home/home_screen.dart';
 import 'package:nekoflow/screens/main/search/search_screen.dart';
 import 'package:nekoflow/screens/main/settings/settings_screen.dart';
 import 'package:nekoflow/screens/main/watchlist/watchlist_screen.dart';
+import 'package:crystal_navigation_bar/crystal_navigation_bar.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 class AppRouter extends StatefulWidget {
   final String userName;
@@ -25,6 +25,11 @@ class _AppRouterState extends State<AppRouter> {
     const Placeholder(), // Placeholder for dynamic SearchScreen
     const WatchlistScreen(),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
