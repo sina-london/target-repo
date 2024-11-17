@@ -21,7 +21,7 @@ class AnimeCard extends StatelessWidget {
           image: _getHighResImage(anime.poster),
           name: anime.name,
           tag: tag,
-          type: anime.type ,
+          type: anime.type,
         ),
       ),
     );
@@ -63,7 +63,7 @@ class AnimeCard extends StatelessWidget {
             children: [
               _buildGradientOverlay(),
               _buildTitle(context),
-              _buildTypeChip(context),
+              if (anime.type != null) _buildTypeChip(context),
             ],
           ),
         ),
@@ -99,7 +99,7 @@ class AnimeCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
         ),
         child: Text(
-          anime.type,
+          anime.type!,
           style: const TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.bold,

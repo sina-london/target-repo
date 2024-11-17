@@ -16,8 +16,9 @@ class StreamScreen extends StatefulWidget {
   final String poster;
   final int episode;
   final String name;
+  String? type;
 
-  const StreamScreen({
+  StreamScreen({
     super.key,
     required this.title,
     required this.id,
@@ -25,6 +26,7 @@ class StreamScreen extends StatefulWidget {
     required this.poster,
     required this.episode,
     required this.name,
+    this.type
   });
 
   @override
@@ -278,7 +280,7 @@ class _StreamScreenState extends State<StreamScreen> {
             id: widget.id,
             name: widget.name,
             poster: widget.poster,
-            type: 'anime', // Add appropriate type here
+            type: widget.type, // Add appropriate type here
           );
           await _watchlistBox.addToRecentlyWatched(recentlyWatchedItem);
         }

@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:nekoflow/data/boxes/watchlist_box.dart';
 import 'package:nekoflow/data/models/info_model.dart';
 import 'package:nekoflow/data/models/watchlist/watchlist_model.dart';
@@ -15,16 +16,16 @@ class DetailsScreen extends StatefulWidget {
   final String name;
   final String id;
   final String image;
-  final String type;
   final dynamic tag;
+  String? type;
 
-  const DetailsScreen({
+  DetailsScreen({
     super.key,
     required this.name,
     required this.id,
     required this.image,
     required this.tag,
-    this.type = 'N/A',
+    this.type,
   });
 
   @override
@@ -32,7 +33,7 @@ class DetailsScreen extends StatefulWidget {
 }
 
 class _DetailsScreenState extends State<DetailsScreen> {
-   final ValueNotifier<bool> _isDescriptionExpanded = ValueNotifier(false);
+  final ValueNotifier<bool> _isDescriptionExpanded = ValueNotifier(false);
   late final AnimeService _animeService = AnimeService();
   late final WatchlistBox _watchlistBox;
   final ScrollController _scrollController = ScrollController();
@@ -278,71 +279,84 @@ class _DetailsScreenState extends State<DetailsScreen> {
     return Scaffold(
       extendBody: true,
       backgroundColor: themeData.colorScheme.primary,
-      body: FutureBuilder<AnimeInfo?>(
-        future: fetchData(),
-        builder: (context, snapshot) {
-          final bool isLoading =
-              snapshot.connectionState == ConnectionState.waiting;
-          info = snapshot.data?.data;
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              themeData.colorScheme.primary,
+              themeData.colorScheme.secondary, // End color
+            ],
+            begin: Alignment.centerLeft,
+            end: Alignment.topRight,
+          ),
+        ),
+        child: FutureBuilder<AnimeInfo?>(
+          future: fetchData(),
+          builder: (context, snapshot) {
+            final bool isLoading =
+                snapshot.connectionState == ConnectionState.waiting;
+            info = snapshot.data?.data;
 
-          return CustomScrollView(
-            controller: _scrollController,
-            slivers: [
-              SliverAppBar(
-                backgroundColor: Colors.transparent,
-                expandedHeight: screenHeight * 0.6,
-                leading: IconButton(
-                  onPressed: () => Navigator.pop(context),
-                  icon: const Icon(
-                    Icons.navigate_before,
-                    size: 40,
-                  ),
-                ),
-                flexibleSpace: FlexibleSpaceBar(
-                  background: _buildHeaderSection(),
-                ),
-                actions: [
-                  FavoriteButton(
-                    animeId: widget.id,
-                    title: widget.name,
-                    image: widget.image,
-                    type: widget.type,
-                  ),
-                  const SizedBox(width: 10),
-                ],
-              ),
-              SliverToBoxAdapter(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 15,
-                    vertical: 10,
-                  ),
-                  decoration: BoxDecoration(
-                    color: themeData.scaffoldBackgroundColor,
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(50),
-                      topRight: Radius.circular(50),
+            return CustomScrollView(
+              controller: _scrollController,
+              slivers: [
+                SliverAppBar(
+                  backgroundColor: Colors.transparent,
+                  expandedHeight: screenHeight * 0.6,
+                  leading: IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(
+                      Icons.navigate_before,
+                      size: 40,
                     ),
                   ),
-                  child: _buildDetailsSection(isLoading: isLoading),
+                  flexibleSpace: FlexibleSpaceBar(
+                    background: _buildHeaderSection(),
+                  ),
+                  actions: [
+                    FavoriteButton(
+                      animeId: widget.id,
+                      title: widget.name,
+                      image: widget.image,
+                      type: widget.type,
+                    ),
+                    const SizedBox(width: 10),
+                  ],
                 ),
-              ),
-            ],
-          );
-        },
+                SliverToBoxAdapter(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 15,
+                      vertical: 10,
+                    ),
+                    decoration: BoxDecoration(
+                      color: themeData.scaffoldBackgroundColor,
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(50),
+                        topRight: Radius.circular(50),
+                      ),
+                    ),
+                    child: _buildDetailsSection(isLoading: isLoading),
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
       ),
       bottomNavigationBar: ValueListenableBuilder<Box<WatchlistModel>>(
         valueListenable: _watchlistBox.listenToContinueWatching(),
         builder: (context, box, _) {
           // Get the continue watching item
-          continueWatchingItem = _watchlistBox.getContinueWatchingById(widget.id);
+          continueWatchingItem =
+              _watchlistBox.getContinueWatchingById(widget.id);
 
           if (continueWatchingItem == null) {
             return const SizedBox.shrink();
           }
 
           return BottomAppBar(
-            height: 100,
+            height: 90,
             color: Colors.transparent,
             padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
             child: Container(
@@ -352,38 +366,43 @@ class _DetailsScreenState extends State<DetailsScreen> {
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(50),
                 child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
+                  filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
                   child: Container(
-                    color: themeData.secondaryHeaderColor.withOpacity(0.6),
+                    color: themeData.colorScheme.tertiary.withOpacity(0.2),
                     child: ListTile(
                       contentPadding: const EdgeInsets.symmetric(
                           vertical: 0, horizontal: 15),
                       title: Text(
-                        "EP : ${continueWatchingItem!.episode}",
+                        "Episode : ${continueWatchingItem!.episode}",
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      subtitle: Text(
-                        continueWatchingItem!.name,
-                        maxLines: 1,
-                      ),
+                      // subtitle: Text(
+                      //   continueWatchingItem!.name,
+                      //   maxLines: 1,
+                      // ),
                       trailing: IconButton(
                         onPressed: () => Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder: (context) => StreamScreen(
-                              name: continueWatchingItem!.name,
-                              title: widget.name,
-                              id: widget.id,
-                              episodeId: continueWatchingItem!.episodeId,
-                              poster: widget.image,
-                              episode: continueWatchingItem!.episode,
-                            ),
+                                name: continueWatchingItem!.name,
+                                title: widget.name,
+                                id: widget.id,
+                                episodeId: continueWatchingItem!.episodeId,
+                                poster: widget.image,
+                                episode: continueWatchingItem!.episode,
+                                type: widget.type),
                           ),
                         ),
-                        icon: const Icon(
-                          Icons.play_circle,
+                        icon: TextButton.icon(
+                          onPressed: () {
+                            
+                          },
+                          label: Text("${continueWatchingItem!.timestamp.split(':')[0]}:${continueWatchingItem!.timestamp.split(':')[1]}", style: themeData.textTheme.labelMedium,),
+                          icon: Icon(Icons.play_circle),
+                          iconAlignment: IconAlignment.end,
                         ),
                       ),
                     ),

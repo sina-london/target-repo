@@ -134,12 +134,11 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
               ),
         ),
         if (hasItems)
-          TextButton.icon(
+          IconButton(
             onPressed: () {
               // Navigate to full section view
             },
-            icon: const Text('See All'),
-            label: const Icon(Icons.chevron_right),
+            icon: const Icon(Icons.chevron_right),
           ),
       ],
     );
