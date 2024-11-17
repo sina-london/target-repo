@@ -299,7 +299,7 @@ class _StreamScreenState extends State<StreamScreen> {
   // UI Builders
   Widget _buildShimmerLoading(double height) {
     return Shimmer.fromColors(
-      baseColor: Theme.of(context).colorScheme.primary,
+      baseColor: Theme.of(context).colorScheme.primary.withOpacity(0.5),
       highlightColor: Theme.of(context).colorScheme.secondary,
       child: Container(
         height: height,

@@ -99,7 +99,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final screenSize = MediaQuery.of(context).size;
 
     return Shimmer.fromColors(
-      baseColor: theme.colorScheme.primary,
+      baseColor: theme.colorScheme.primary.withOpacity(0.5),
       highlightColor: theme.colorScheme.secondary,
       child: SizedBox(
         height: screenSize.width * 0.6,
