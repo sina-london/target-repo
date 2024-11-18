@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:nekoflow/data/models/watchlist/watchlist_model.dart';
 import 'package:nekoflow/screens/main/details/details_screen.dart';
+import 'package:nekoflow/widgets/spotlight_card.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:nekoflow/data/models/anime_model.dart';
 import 'package:nekoflow/data/services/anime_service.dart';
@@ -121,95 +122,39 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget? _buildSpotlightSection({
-    required String title,
-    required List<SpotlightAnime> animeList,
-    required String tag,
-    required ThemeData theme,
-  }) {
-    if (animeList.isEmpty && !_isLoading) return null;
+ Widget? _buildSpotlightSection({
+  required String title,
+  required List<SpotlightAnime> animeList,
+  required String tag,
+  required ThemeData theme,
+}) {
+  if (animeList.isEmpty && !_isLoading) return null;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (title.isNotEmpty) ...[
-          Text(
-            title,
-            style: theme.textTheme.headlineMedium,
-          ),
-          const SizedBox(height: 10),
-        ],
-        _isLoading
-            ? _buildShimmerLoading(theme, 0.9)
-            : SnappingScroller(
-                widthFactor: 1,
-                children: animeList
-                    .map((anime) => GestureDetector(
-                          onTap: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => DetailsScreen(
-                                  name: anime.name,
-                                  id: anime.id,
-                                  image: anime.poster,
-                                  tag: tag),
-                            ),
-                          ),
-                          child: Container(
-                            width: double.infinity,
-                            height: 200,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(15),
-                              image: DecorationImage(
-                                image: NetworkImage(anime.poster),
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                            child: Container(
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [
-                                    Theme.of(context).colorScheme.surface,
-                                    Theme.of(context)
-                                        .colorScheme
-                                        .surface
-                                        .withOpacity(0.1),
-                                  ],
-                                  begin: Alignment.bottomCenter,
-                                  end: Alignment.topCenter,
-                                ),
-                              ),
-                              padding: const EdgeInsets.all(16.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisAlignment: MainAxisAlignment.end,
-                                children: [
-                                  Text(
-                                    anime.name,
-                                    style: const TextStyle(
-                                      fontSize: 24.0,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8.0),
-                                  Text(
-                                    anime.description,
-                                    style: const TextStyle(
-                                      fontSize: 16.0,
-                                    ),
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ))
-                    .toList(),
-              ),
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      if (title.isNotEmpty) ...[
+        Text(
+          title,
+          style: theme.textTheme.headlineMedium,
+        ),
+        const SizedBox(height: 10),
       ],
-    );
-  }
+      _isLoading
+          ? _buildShimmerLoading(theme, 0.9)
+          : SnappingScroller(
+              widthFactor: 1,
+              children: animeList
+                  .map((anime) => SpotlightCard(
+                        anime: anime,
+                        tag: tag,
+                      ))
+                  .toList(),
+            ),
+    ],
+  );
+}
+
 
   Widget? _buildContentSection({
     required String title,
