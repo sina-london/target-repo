@@ -2,7 +2,6 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:hugeicons/hugeicons.dart';
 import 'package:nekoflow/data/boxes/watchlist_box.dart';
 import 'package:nekoflow/data/models/info_model.dart';
 import 'package:nekoflow/data/models/watchlist/watchlist_model.dart';
@@ -17,9 +16,9 @@ class DetailsScreen extends StatefulWidget {
   final String id;
   final String image;
   final dynamic tag;
-  String? type;
+  final String? type;
 
-  DetailsScreen({
+  const DetailsScreen({
     super.key,
     required this.name,
     required this.id,
@@ -55,6 +54,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
 
   void _loadContinueWatching() {
     continueWatchingItem = _watchlistBox.getContinueWatchingById(widget.id);
+    print("DETAIL : $continueWatchingItem");
     setState(() {});
   }
 
@@ -358,7 +358,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
           }
 
           return BottomAppBar(
-            height: 90,
+            height: 100,
             color: Colors.transparent,
             padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
             child: Container(
@@ -380,10 +380,11 @@ class _DetailsScreenState extends State<DetailsScreen> {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      // subtitle: Text(
-                      //   continueWatchingItem!.name,
-                      //   maxLines: 1,
-                      // ),
+                      subtitle: Text(
+                        continueWatchingItem!.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                       trailing: IconButton(
                         onPressed: () => Navigator.push(
                           context,

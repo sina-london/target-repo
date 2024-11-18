@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:nekoflow/data/boxes/settings_box.dart';
+import 'package:nekoflow/data/boxes/watchlist_box.dart';
 import 'package:nekoflow/data/models/onboarding/onboarding_model.dart';
 import 'package:nekoflow/data/models/settings/settings_model.dart';
 import 'package:nekoflow/data/models/watchlist/watchlist_model.dart';
@@ -12,6 +13,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Hive.initFlutter();
 
+  // Register Adapters
   Hive.registerAdapter(SettingsModelAdapter());
   Hive.registerAdapter(WatchlistModelAdapter());
   Hive.registerAdapter(RecentlyWatchedItemAdapter());
@@ -19,12 +21,14 @@ void main() async {
   Hive.registerAdapter(AnimeItemAdapter());
   Hive.registerAdapter(OnboardingModelAdapter());
 
-  await Hive.openBox<SettingsModel>('user_settings');
-  await Hive.openBox<WatchlistModel>('user_watchlist');
-  await Hive.openBox<OnboardingModel>('onboarding');
+// Await all boxes to be opened
+  await Future.wait([
+    Hive.openBox<WatchlistModel>("watchlist"),
+    Hive.openBox<SettingsModel>("settings"),
+    Hive.openBox<OnboardingModel>("onboarding"),
+  ]);
 
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-
   runApp(const MainApp());
 }
 
@@ -41,7 +45,7 @@ class _MainAppState extends State<MainApp> {
 
   Future<void> _loadTheme() async {
     final userTheme = _settingsBox.getTheme();
-    print("MAIN: $userTheme");
+    debugPrint("MAIN: $userTheme");
     setState(() {
       _theme = ThemeManager.getThemeType(userTheme!) ?? ThemeType.dark;
     });
@@ -55,18 +59,18 @@ class _MainAppState extends State<MainApp> {
     _loadTheme();
   }
 
-   Future<void> _initializeBox() async {
+  Future<void> _initializeBox() async {
     _settingsBox = SettingsBox(); // Initialize SettingsBox
     await _settingsBox.init(); // Open the Settings box
   }
-
 
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder(
       valueListenable: _settingsBox.listenable(),
       builder: (context, Box<SettingsModel> box, child) {
-        _theme = ThemeManager.getThemeType(_settingsBox.getTheme()!) ?? _theme;
+        _theme = ThemeManager.getThemeType(_settingsBox.getTheme() ?? 'dark') ??
+            _theme;
         return MaterialApp(
           debugShowCheckedModeBanner: false,
           theme: ThemeManager.getTheme(_theme),

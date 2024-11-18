@@ -38,7 +38,7 @@ class _StorageScreenState extends State<StorageScreen> {
             ),
           ),
           title: Text(
-            "Theme",
+            "Storage",
             style: themeData.textTheme.headlineLarge?.copyWith(
               fontSize: 35,
               fontWeight: FontWeight.bold,

@@ -3,7 +3,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:nekoflow/data/models/watchlist/watchlist_model.dart';
 
 class WatchlistBox {
-  static const String boxName = 'user_watchlist';
+  static const String boxName = 'watchlist';
   late Box<WatchlistModel> _box;
   WatchlistModel? _watchlistModel;
 
@@ -25,7 +25,6 @@ class WatchlistBox {
 
     // Initialize the box
   Future<void> init() async {
-    // Instead of opening the box, just get the reference to the already opened box
     _box = Hive.box<WatchlistModel>(boxName);
     _watchlistModel = _box.get(0) ?? 
         WatchlistModel(
@@ -68,6 +67,7 @@ class WatchlistBox {
 
   // Continue Watching Methods
   Future<void> addToContinueWatching(ContinueWatchingItem item) async {
+    debugPrint("addToContinueWatching() : ${item.name}");
     var continueWatching = _watchlistModel?.continueWatching ?? [];
     int existingIndex = continueWatching.indexWhere((element) => element.id == item.id);
     if (existingIndex != -1) {
@@ -95,6 +95,7 @@ class WatchlistBox {
         episodeId: item.episodeId,
         timestamp: timestamp,
         type: item.type,
+        title: item.title
       );
       await addToContinueWatching(updatedItem);
     }
@@ -105,6 +106,7 @@ class WatchlistBox {
     if (item != null) {
       var updatedItem = ContinueWatchingItem(
         id: item.id,
+        title: item.title,
         name: item.name,
         poster: item.poster,
         episode: episode,
@@ -121,6 +123,7 @@ class WatchlistBox {
   }
 
   ContinueWatchingItem? getContinueWatchingById(String id) {
+    debugPrint("getContinueWatchingById() : ${_watchlistModel?.continueWatching}");
     try {
       return _watchlistModel?.continueWatching?.firstWhere(
         (item) => item.id == id,
@@ -256,6 +259,7 @@ class WatchlistBox {
       }).toList(),
       'continueWatching': _watchlistModel?.continueWatching?.map((e) => {
         'name': e.name,
+        'title': e.title,
         'poster': e.poster,
         'type': e.type,
         'id': e.id,
@@ -282,6 +286,7 @@ class WatchlistBox {
       )).toList(),
       continueWatching: (data['continueWatching'] as List?)?.map((e) => ContinueWatchingItem(
         name: e['name'],
+        title: e['title'],
         poster: e['poster'],
         type: e['type'],
         id: e['id'],

@@ -1,8 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 import 'package:nekoflow/data/models/episodes_model.dart';
-import 'package:nekoflow/data/models/watchlist/watchlist_model.dart';
 import 'package:nekoflow/data/services/anime_service.dart';
 import 'package:nekoflow/screens/main/stream/stream_screen.dart';
 import 'package:shimmer/shimmer.dart';
@@ -37,13 +35,12 @@ class _EpisodesListState extends State<EpisodesList> {
   final ValueNotifier<bool> _isGridLayout =
       ValueNotifier<bool>(false); // Layout toggle
 
-  late final Box<WatchlistModel> _watchlistBox;
+  // late final Box<WatchlistModel> _watchlistBox;
   late final AnimeService _animeService;
 
   @override
   void initState() {
     super.initState();
-    _watchlistBox = Hive.box<WatchlistModel>('user_watchlist');
     _animeService = AnimeService();
     _fetchData();
   }
@@ -85,7 +82,7 @@ class _EpisodesListState extends State<EpisodesList> {
   void _navigateToStreamScreen(Episode episode) {
     Navigator.push(
       context,
-      CupertinoPageRoute(
+      MaterialPageRoute(
         builder: (context) => StreamScreen(
           id: widget.id,
           name: widget.name,

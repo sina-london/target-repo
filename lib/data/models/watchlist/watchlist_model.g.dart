@@ -59,7 +59,7 @@ class RecentlyWatchedItemAdapter extends TypeAdapter<RecentlyWatchedItem> {
     return RecentlyWatchedItem(
       name: fields[0] as String,
       poster: fields[1] as String,
-      type: fields[2] as String,
+      type: fields[2] as String?,
       id: fields[3] as String,
     );
   }
@@ -106,14 +106,17 @@ class ContinueWatchingItemAdapter extends TypeAdapter<ContinueWatchingItem> {
       episode: fields[2] as int,
       episodeId: fields[3] as String,
       timestamp: fields[4] as String,
-      type: fields[6] as String,
+      title: fields[7] as String,
+      isCompleted: fields[8] as bool?,
+      duration: fields[9] as String,
+      type: fields[6] as String?,
     );
   }
 
   @override
   void write(BinaryWriter writer, ContinueWatchingItem obj) {
     writer
-      ..writeByte(7)
+      ..writeByte(10)
       ..writeByte(0)
       ..write(obj.name)
       ..writeByte(1)
@@ -127,7 +130,13 @@ class ContinueWatchingItemAdapter extends TypeAdapter<ContinueWatchingItem> {
       ..writeByte(5)
       ..write(obj.id)
       ..writeByte(6)
-      ..write(obj.type);
+      ..write(obj.type)
+      ..writeByte(7)
+      ..write(obj.title)
+      ..writeByte(8)
+      ..write(obj.isCompleted)
+      ..writeByte(9)
+      ..write(obj.duration);
   }
 
   @override
@@ -155,7 +164,7 @@ class AnimeItemAdapter extends TypeAdapter<AnimeItem> {
       name: fields[0] as String,
       poster: fields[1] as String,
       id: fields[2] as String,
-      type: fields[3] as String,
+      type: fields[3] as String?,
     );
   }
 
