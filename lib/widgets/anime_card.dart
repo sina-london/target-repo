@@ -42,32 +42,35 @@ class AnimeCard extends StatelessWidget {
       onTap: () => _navigateToDetails(context),
       splashColor: Colors.pink.withOpacity(0.2),
       borderRadius: BorderRadius.circular(16),
-      child: Container(
-        width: cardWidth,
-        height: cardHeight,
-        margin: const EdgeInsets.only(right: 10),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 10,
-              offset: const Offset(0, 5),
-            ),
-          ],
-          image: DecorationImage(
-            image: CachedNetworkImageProvider(_getHighResImage(anime.poster)),
-            fit: BoxFit.cover,
-          ),
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(16),
-          child: Stack(
-            children: [
-              _buildGradientOverlay(),
-              _buildTitle(context),
-              if (anime.type != null) _buildTypeChip(context),
+      child: Hero(
+        tag: 'poster-${anime.id}-$tag',
+        child: Container(
+          width: cardWidth,
+          height: cardHeight,
+          margin: const EdgeInsets.only(right: 10),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 10,
+                offset: const Offset(0, 5),
+              ),
             ],
+            image: DecorationImage(
+              image: CachedNetworkImageProvider(_getHighResImage(anime.poster)),
+              fit: BoxFit.cover,
+            ),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: Stack(
+              children: [
+                _buildGradientOverlay(),
+                _buildTitle(context),
+                if (anime.type != null) _buildTypeChip(context),
+              ],
+            ),
           ),
         ),
       ),

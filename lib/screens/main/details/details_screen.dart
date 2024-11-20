@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:nekoflow/data/boxes/watchlist_box.dart';
@@ -7,6 +8,7 @@ import 'package:nekoflow/data/models/info_model.dart';
 import 'package:nekoflow/data/models/watchlist/watchlist_model.dart';
 import 'package:nekoflow/data/services/anime_service.dart';
 import 'package:nekoflow/screens/main/stream/stream_screen.dart';
+import 'package:nekoflow/utils/converter.dart';
 import 'package:nekoflow/widgets/episodes_list.dart';
 import 'package:nekoflow/widgets/favorite_button.dart';
 import 'package:shimmer/shimmer.dart';
@@ -54,7 +56,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
 
   void _loadContinueWatching() {
     continueWatchingItem = _watchlistBox.getContinueWatchingById(widget.id);
-    print("DETAIL : $continueWatchingItem");
+    debugPrint("DETAIL : $continueWatchingItem");
     setState(() {});
   }
 
@@ -90,13 +92,13 @@ class _DetailsScreenState extends State<DetailsScreen> {
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(20),
                   child: info != null && widget.tag == 'spotlight'
-                      ? Image.network(
-                          info!.anime!.info!.poster,
+                      ? CachedNetworkImage(
+                          imageUrl: getHighResImage(info!.anime!.info!.poster),
                           fit: BoxFit.cover,
                           height: MediaQuery.of(context).size.width,
                           width: 300,
-                          loadingBuilder: (context, child, loadingProgress) {
-                            if (loadingProgress == null) return child;
+                          progressIndicatorBuilder:
+                              (context, child, loadingProgress) {
                             return Shimmer.fromColors(
                               baseColor: Theme.of(context).colorScheme.primary,
                               highlightColor:
@@ -108,20 +110,20 @@ class _DetailsScreenState extends State<DetailsScreen> {
                               ),
                             );
                           },
-                          errorBuilder: (_, __, ___) => Container(
+                          errorWidget: (_, __, ___) => Container(
                             height: 400,
                             color: Colors.grey[300],
                             child: Icon(Icons.error,
                                 size: 50, color: Colors.grey[600]),
                           ),
                         )
-                      : Image.network(
-                          widget.image,
+                      : CachedNetworkImage(
+                          imageUrl: getHighResImage(widget.image),
                           fit: BoxFit.cover,
                           height: MediaQuery.of(context).size.width,
                           width: 300,
-                          loadingBuilder: (context, child, loadingProgress) {
-                            if (loadingProgress == null) return child;
+                          progressIndicatorBuilder:
+                              (context, child, loadingProgress) {
                             return Shimmer.fromColors(
                               baseColor: Theme.of(context).colorScheme.primary,
                               highlightColor:
@@ -132,7 +134,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
                               ),
                             );
                           },
-                          errorBuilder: (_, __, ___) => Container(
+                          errorWidget: (_, __, ___) => Container(
                             height: 400,
                             color: Colors.grey[300],
                             child: Icon(Icons.error,
@@ -400,10 +402,11 @@ class _DetailsScreenState extends State<DetailsScreen> {
                           ),
                         ),
                         icon: TextButton.icon(
-                          onPressed: () {
-                            
-                          },
-                          label: Text("${continueWatchingItem!.timestamp.split(':')[0]}:${continueWatchingItem!.timestamp.split(':')[1]}", style: themeData.textTheme.labelMedium,),
+                          onPressed: () {},
+                          label: Text(
+                            "${continueWatchingItem!.timestamp.split(':')[0]}:${continueWatchingItem!.timestamp.split(':')[1]}",
+                            style: themeData.textTheme.labelMedium,
+                          ),
                           icon: Icon(Icons.play_circle),
                           iconAlignment: IconAlignment.end,
                         ),
