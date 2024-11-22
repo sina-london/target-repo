@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:nekoflow/data/boxes/user_box.dart';
 import 'package:nekoflow/routes/app_router.dart';
+import 'package:nekoflow/screens/onboarding/loading_screen.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -10,8 +12,11 @@ class OnboardingScreen extends StatefulWidget {
 
 class _OnboardingScreenState extends State<OnboardingScreen> {
   final PageController _pageController = PageController();
+  final TextEditingController _nameController = TextEditingController();
   int _currentPage = 0;
   String name = '';
+  late UserBox _userBox;
+  bool _isLoading = true;
 
   final List<Map<String, String>> onboardingData = [
     {
@@ -26,15 +31,78 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     },
     {
       "title": "Track Your Journey",
-      "description": "Keep track of your watchlist and continue where you left off",
+      "description":
+          "Keep track of your watchlist and continue where you left off",
       "image": "lib/assets/images/onboarding/watchlist.png",
     },
-    // {
-    //   "title": "Join the Community",
-    //   "description": "Connect with fellow anime fans and share your thoughts",
-    //   "image": "lib/assets/images/onboarding/community.png",
-    // },
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeBoxAndCheckStatus();
+  }
+
+  Future<void> _initializeBoxAndCheckStatus() async {
+    try {
+      _userBox = UserBox();
+      await _userBox.init();
+
+      final user = _userBox.getUser();
+      debugPrint(user.name);
+
+      if (user.name != null && mounted) {
+        // If onboarding is completed, navigate to AppRouter
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (context) => AppRouter(name: user.name ?? ''),
+          ),
+        );
+      } else {
+        // If onboarding is not completed, show onboarding screens
+        setState(() {
+          _isLoading = false;
+          if (user.name != null) {
+            name = user.name!;
+          }
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to initialize. Please restart the app.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _completeOnboarding() async {
+    if (name.trim().isEmpty) return;
+
+    try {
+      await _userBox.updateUser(name: name.trim());
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => AppRouter(name: name.trim()),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to save user data. Please try again.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
 
   void _nextPage() {
     if (_currentPage < onboardingData.length) {
@@ -43,17 +111,16 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         curve: Curves.easeInOut,
       );
     } else {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => AppRouter(name: name.trim()),
-        ),
-      );
+      _completeOnboarding();
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const LoadingScreen();
+    }
+
     return Scaffold(
       body: SafeArea(
         child: PageView.builder(
@@ -135,10 +202,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               color: Colors.white70,
               height: 1.4,
             ),
-            // textAlign: TextAlign.center,
           ),
           const SizedBox(height: 32),
           TextField(
+            controller: _nameController,
             onChanged: (value) => setState(() => name = value),
             style: const TextStyle(color: Colors.white, fontSize: 18),
             decoration: InputDecoration(
@@ -165,7 +232,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // Progress indicators
           Row(
             children: List.generate(
               onboardingData.length + 1,
@@ -182,16 +248,17 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ),
             ),
           ),
-          // Next/Get Started button
           TextButton(
-            onPressed: name.trim().isNotEmpty || _currentPage < onboardingData.length
-                ? _nextPage
-                : null,
+            onPressed:
+                name.trim().isNotEmpty || _currentPage < onboardingData.length
+                    ? _nextPage
+                    : null,
             child: Text(
               _currentPage < onboardingData.length ? 'Next' : 'Get Started',
               style: TextStyle(
                 fontSize: 18,
-                color: (name.trim().isNotEmpty || _currentPage < onboardingData.length)
+                color: (name.trim().isNotEmpty ||
+                        _currentPage < onboardingData.length)
                     ? Colors.white
                     : Colors.white.withOpacity(0.5),
                 fontWeight: FontWeight.bold,
@@ -206,6 +273,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   void dispose() {
     _pageController.dispose();
+    _nameController.dispose();
     super.dispose();
   }
 }
