@@ -67,7 +67,7 @@ class WatchlistBox {
 
   // Continue Watching Methods
   Future<void> addToContinueWatching(ContinueWatchingItem item) async {
-    debugPrint("addToContinueWatching() : ${item.name}");
+    debugPrint("addToContinueWatching() : ${item.duration}");
     var continueWatching = _watchlistModel?.continueWatching ?? [];
     int existingIndex = continueWatching.indexWhere((element) => element.id == item.id);
     if (existingIndex != -1) {

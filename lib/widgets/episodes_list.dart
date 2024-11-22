@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:nekoflow/data/models/episodes_model.dart';
-import 'package:nekoflow/data/services/anime_service.dart';
 import 'package:nekoflow/screens/main/stream/stream_screen.dart';
 import 'package:shimmer/shimmer.dart';
 
@@ -8,8 +7,10 @@ class EpisodesList extends StatefulWidget {
   final String id;
   final String name;
   final String poster;
-  final int rangeSize;
   final String type;
+  final ValueNotifier<List<Episode>> episodes;
+  final ValueNotifier<bool> isLoading;
+  final int rangeSize;
 
   const EpisodesList({
     super.key,
@@ -17,6 +18,8 @@ class EpisodesList extends StatefulWidget {
     required this.poster,
     required this.name,
     required this.type,
+    required this.episodes,
+    required this.isLoading,
     this.rangeSize = 50,
   });
 
@@ -25,60 +28,10 @@ class EpisodesList extends StatefulWidget {
 }
 
 class _EpisodesListState extends State<EpisodesList> {
-  final ValueNotifier<List<Episode>> _episodes =
-      ValueNotifier<List<Episode>>([]);
-  final ValueNotifier<List<Map<String, List<Episode>>>> _groupedEpisodes =
-      ValueNotifier<List<Map<String, List<Episode>>>>([]);
-  final ValueNotifier<bool> _isLoading = ValueNotifier<bool>(true);
-  final ValueNotifier<int> _selectedRangeIndex = ValueNotifier<int>(0);
-  final ValueNotifier<bool> _isGridLayout =
-      ValueNotifier<bool>(false); // Layout toggle
+  bool _isGridLayout = false;
+  int _selectedRangeIndex = 0;
 
-  // late final Box<WatchlistModel> _watchlistBox;
-  late final AnimeService _animeService;
-
-  @override
-  void initState() {
-    super.initState();
-    _animeService = AnimeService();
-    _fetchData();
-  }
-
-  Future<void> _fetchData() async {
-    try {
-      final result = await _animeService.fetchEpisodes(id: widget.id);
-      if (!mounted) return;
-      _episodes.value = result;
-      _groupedEpisodes.value = _groupEpisodesByRange(result, widget.rangeSize);
-    } catch (e) {
-      // Handle error
-    } finally {
-      if (mounted) {
-        _isLoading.value = false;
-      }
-    }
-  }
-
-  List<Map<String, List<Episode>>> _groupEpisodesByRange(
-      List<Episode> episodes, int rangeSize) {
-    return List.generate(
-      (episodes.length / rangeSize).ceil(),
-      (index) {
-        final start = index * rangeSize + 1;
-        final end = (start + rangeSize - 1).clamp(1, episodes.length);
-        return {
-          '$start - $end': episodes.sublist(
-            index * rangeSize,
-            (index + 1) * rangeSize > episodes.length
-                ? episodes.length
-                : (index + 1) * rangeSize,
-          )
-        };
-      },
-    );
-  }
-
-  void _navigateToStreamScreen(Episode episode) {
+  void _navigateToStreamScreen(BuildContext context, Episode episode) {
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -94,84 +47,72 @@ class _EpisodesListState extends State<EpisodesList> {
     );
   }
 
+  List<Map<String, List<Episode>>> _getGroupedEpisodes(List<Episode> episodes) {
+    if (episodes.isEmpty) return [];
+    return List.generate(
+      (episodes.length / widget.rangeSize).ceil(),
+      (index) {
+        final start = index * widget.rangeSize + 1;
+        final end = (start + widget.rangeSize - 1).clamp(1, episodes.length);
+        return {
+          '$start - $end': episodes.sublist(
+            index * widget.rangeSize,
+            (index + 1) * widget.rangeSize > episodes.length
+                ? episodes.length
+                : (index + 1) * widget.rangeSize,
+          )
+        };
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildHeader(),
-        ValueListenableBuilder<bool>(
-          valueListenable: _isLoading,
-          builder: (context, isLoading, _) {
-            return isLoading ? _buildShimmerList() : _buildEpisodesView();
-          },
-        ),
-        SizedBox(height: 25,)
-      ],
-    );
-  }
+    return ValueListenableBuilder<bool>(
+      valueListenable: widget.isLoading,
+      builder: (context, isLoading, _) {
+        return ValueListenableBuilder<List<Episode>>(
+          valueListenable: widget.episodes,
+          builder: (context, episodes, _) {
+            final groupedEpisodes = _getGroupedEpisodes(episodes);
 
-  Widget _buildHeader() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          "Episodes",
-          style: Theme.of(context).textTheme.headlineMedium,
-        ),
-        Row(
-          children: [
-            IconButton(
-              icon: ValueListenableBuilder<bool>(
-                valueListenable: _isGridLayout,
-                builder: (context, isGrid, _) {
-                  return Icon(
-                    isGrid ? Icons.view_list : Icons.grid_view,
-                  );
-                },
-              ),
-              onPressed: () => _isGridLayout.value = !_isGridLayout.value,
-            ),
-            ValueListenableBuilder<List<Map<String, List<Episode>>>>(
-              valueListenable: _groupedEpisodes,
-              builder: (context, groupedEpisodes, _) {
-                if (groupedEpisodes.isEmpty) return const SizedBox.shrink();
-
-                return ValueListenableBuilder<int>(
-                  valueListenable: _selectedRangeIndex,
-                  builder: (context, selectedIndex, _) {
-                    return DropdownButton<int>(
-                      value: selectedIndex,
-                      icon: Icon(
-                        Icons.view_list,
-                        color: Theme.of(context).iconTheme.color,
-                      ),
-                      onChanged: (newIndex) {
-                        if (newIndex != null) {
-                          _selectedRangeIndex.value = newIndex;
-                        }
-                      },
-                      items: groupedEpisodes.asMap().entries.map((entry) {
-                        return DropdownMenuItem<int>(
-                          value: entry.key,
-                          child: Text(
-                            entry.value.keys.first,
-                            style: Theme.of(context).textTheme.labelMedium,
-                          ),
-                        );
-                      }).toList(),
-                    );
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _EpisodesHeader(
+                  episodes: episodes,
+                  rangeSize: widget.rangeSize,
+                  groupedEpisodes: groupedEpisodes,
+                  isGridLayout: _isGridLayout,
+                  selectedRangeIndex: _selectedRangeIndex,
+                  onLayoutChanged: (isGrid) {
+                    setState(() => _isGridLayout = isGrid);
                   },
-                );
-              },
-            ),
-          ],
-        ),
-      ],
+                  onRangeChanged: (index) {
+                    setState(() => _selectedRangeIndex = index);
+                  },
+                ),
+                isLoading
+                    ? _buildShimmerList(context)
+                    : _EpisodesView(
+                        episodes: episodes,
+                        groupedEpisodes: groupedEpisodes,
+                        rangeSize: widget.rangeSize,
+                        isGridLayout: _isGridLayout,
+                        selectedRangeIndex: _selectedRangeIndex,
+                        onEpisodeSelected: (episode) =>
+                            _navigateToStreamScreen(context, episode),
+                      ),
+                const SizedBox(height: 25),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 
-  Widget _buildShimmerList() {
+  Widget _buildShimmerList(BuildContext context) {
     return Shimmer.fromColors(
       baseColor: Theme.of(context).colorScheme.primary.withOpacity(0.5),
       highlightColor: Theme.of(context).colorScheme.secondary,
@@ -192,74 +133,200 @@ class _EpisodesListState extends State<EpisodesList> {
       ),
     );
   }
+}
 
-  Widget _buildEpisodesView() {
-    return ValueListenableBuilder<bool>(
-      valueListenable: _isGridLayout,
-      builder: (context, isGrid, _) {
-        return isGrid ? _buildGridEpisodes() : _buildListEpisodes();
-      },
-    );
-  }
+class _EpisodesHeader extends StatelessWidget {
+  final List<Episode> episodes;
+  final List<Map<String, List<Episode>>> groupedEpisodes;
+  final int rangeSize;
+  final bool isGridLayout;
+  final int selectedRangeIndex;
+  final ValueChanged<bool> onLayoutChanged;
+  final ValueChanged<int> onRangeChanged;
 
-  Widget _buildListEpisodes() {
-    return ValueListenableBuilder<List<Map<String, List<Episode>>>>(
-      valueListenable: _groupedEpisodes,
-      builder: (context, groupedEpisodes, _) {
-        if (groupedEpisodes.isEmpty) {
-          return const Center(child: Text('No episodes available'));
-        }
+  const _EpisodesHeader({
+    required this.episodes,
+    required this.groupedEpisodes,
+    required this.rangeSize,
+    required this.isGridLayout,
+    required this.selectedRangeIndex,
+    required this.onLayoutChanged,
+    required this.onRangeChanged,
+  });
 
-        return ValueListenableBuilder<int>(
-          valueListenable: _selectedRangeIndex,
-          builder: (context, selectedIndex, _) {
-            final episodes = groupedEpisodes[selectedIndex].values.first;
-            return ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: episodes.length,
-              itemBuilder: (context, index) =>
-                  _buildEpisodeTile(episodes[index]),
-            );
-          },
-        );
-      },
-    );
-  }
-
-  Widget _buildGridEpisodes() {
-    return ValueListenableBuilder<List<Map<String, List<Episode>>>>(
-      valueListenable: _groupedEpisodes,
-      builder: (context, groupedEpisodes, _) {
-        if (groupedEpisodes.isEmpty) {
-          return const Center(child: Text('No episodes available'));
-        }
-
-        return ValueListenableBuilder<int>(
-          valueListenable: _selectedRangeIndex,
-          builder: (context, selectedIndex, _) {
-            final episodes = groupedEpisodes[selectedIndex].values.first;
-            return GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 5,
-                crossAxisSpacing: 8,
-                mainAxisSpacing: 8,
-                childAspectRatio: 1,
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          "Episodes",
+          style: Theme.of(context).textTheme.headlineMedium,
+        ),
+        Row(
+          children: [
+            if (groupedEpisodes.isNotEmpty)
+              DropdownButton<int>(
+                value: selectedRangeIndex,
+                onChanged: (newIndex) {
+                  if (newIndex != null) {
+                    onRangeChanged(newIndex);
+                  }
+                },
+                items: groupedEpisodes.asMap().entries.map((entry) {
+                  return DropdownMenuItem<int>(
+                    value: entry.key,
+                    child: Text(
+                      entry.value.keys.first,
+                      style: Theme.of(context).textTheme.labelMedium,
+                    ),
+                  );
+                }).toList(),
               ),
-              itemCount: episodes.length,
-              itemBuilder: (context, index) => _buildEpisodeGridTile(
-                episodes[index],
+            IconButton(
+              icon: Icon(
+                isGridLayout ? Icons.view_list : Icons.grid_view,
               ),
-            );
-          },
-        );
-      },
+              onPressed: () => onLayoutChanged(!isGridLayout),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _EpisodesView extends StatelessWidget {
+  final List<Episode> episodes;
+  final List<Map<String, List<Episode>>> groupedEpisodes;
+  final int rangeSize;
+  final bool isGridLayout;
+  final int selectedRangeIndex;
+  final ValueChanged<Episode> onEpisodeSelected;
+
+  const _EpisodesView({
+    required this.episodes,
+    required this.groupedEpisodes,
+    required this.rangeSize,
+    required this.isGridLayout,
+    required this.selectedRangeIndex,
+    required this.onEpisodeSelected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (groupedEpisodes.isEmpty) {
+      return const Center(child: Text('No episodes available'));
+    }
+
+    final currentEpisodes = groupedEpisodes[selectedRangeIndex].values.first;
+
+    return isGridLayout
+        ? _buildGridView(context, currentEpisodes)
+        : _buildListView(context, currentEpisodes);
+  }
+
+  Widget _buildListView(BuildContext context, List<Episode> episodes) {
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: episodes.length,
+      itemBuilder: (context, index) => _EpisodeTile(
+        episode: episodes[index],
+        onTap: () => onEpisodeSelected(episodes[index]),
+      ),
     );
   }
 
-  Widget _buildEpisodeTile(Episode episode) {
+  Widget _buildGridView(BuildContext context, List<Episode> episodes) {
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 5,
+        crossAxisSpacing: 8,
+        mainAxisSpacing: 8,
+        childAspectRatio: 1,
+      ),
+      itemCount: episodes.length,
+      itemBuilder: (context, index) => _EpisodeGridTile(
+        episode: episodes[index],
+        onTap: () => onEpisodeSelected(episodes[index]),
+      ),
+    );
+  }
+}
+
+// Previous code remains the same until _EpisodesView...
+
+class _EpisodeGridTile extends StatelessWidget {
+  final Episode episode;
+  final VoidCallback onTap;
+
+  const _EpisodeGridTile({
+    required this.episode,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    ThemeData themeData = Theme.of(context);
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(8.0),
+          gradient: LinearGradient(
+            colors: [
+              !episode.isFiller
+                  ? themeData.colorScheme.primary.withOpacity(0.5)
+                  : themeData.colorScheme.tertiary,
+              !episode.isFiller
+                  ? themeData.colorScheme.secondary.withOpacity(0.8)
+                  : themeData.colorScheme.tertiary,
+            ],
+            begin: Alignment.bottomLeft,
+            end: Alignment.topRight,
+          ),
+        ),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                "${episode.number}",
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                textAlign: TextAlign.center,
+              ),
+              if (episode.isFiller)
+                Text(
+                  "FILLER",
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                  textAlign: TextAlign.center,
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _EpisodeTile extends StatelessWidget {
+  final Episode episode;
+  final VoidCallback onTap;
+
+  const _EpisodeTile({
+    required this.episode,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     ThemeData themeData = Theme.of(context);
     return Container(
       margin: const EdgeInsets.only(bottom: 15.0),
@@ -269,10 +336,10 @@ class _EpisodesListState extends State<EpisodesList> {
           colors: [
             !episode.isFiller
                 ? themeData.colorScheme.primary.withOpacity(0.4)
-                : themeData.colorScheme.tertiary, // Start color
+                : themeData.colorScheme.tertiary,
             !episode.isFiller
                 ? themeData.colorScheme.secondary.withOpacity(0.7)
-                : themeData.colorScheme.tertiary, // End color
+                : themeData.colorScheme.tertiary,
           ],
           begin: Alignment.bottomLeft,
           end: Alignment.topRight,
@@ -290,50 +357,18 @@ class _EpisodesListState extends State<EpisodesList> {
         contentPadding: const EdgeInsets.symmetric(horizontal: 16),
         title: Text(
           "EP : ${episode.number}${episode.isFiller ? " : FILLER" : ""}",
-          style: TextStyle(
+          style: const TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 16,
           ),
         ),
         subtitle: Text(
           episode.title,
-          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
         ),
         trailing: IconButton(
-          icon: Icon(
-            Icons.play_circle_fill,
-          ),
-          onPressed: () => _navigateToStreamScreen(episode),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildEpisodeGridTile(Episode episode) {
-    ThemeData themeData = Theme.of(context);
-    return GestureDetector(
-      onTap: () => _navigateToStreamScreen(episode),
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(8.0),
-          gradient: LinearGradient(
-          colors: [
-            !episode.isFiller
-                ? themeData.colorScheme.primary.withOpacity(0.5)
-                : themeData.colorScheme.tertiary, // Start color
-            !episode.isFiller
-                ? themeData.colorScheme.secondary.withOpacity(0.8)
-                : themeData.colorScheme.tertiary, // End color
-          ],
-          begin: Alignment.bottomLeft,
-          end: Alignment.topRight,
-        ),
-        ),
-        child: Center(
-          child: Text(
-            "${episode.number}",
-            textAlign: TextAlign.center,
-          ),
+          icon: const Icon(Icons.play_circle_fill),
+          onPressed: onTap,
         ),
       ),
     );
