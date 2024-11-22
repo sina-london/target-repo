@@ -66,7 +66,7 @@ class SettingsScreen extends StatelessWidget {
             leadingIcon: HugeIcons.strokeRoundedCircleArrowDataTransferHorizontal,
             title: "Profile (SOON)",
             subtitle: "Information about you",
-            destination: const ProfileScreen(name: "Roshan" ,),
+            destination: const ProfileScreen(),
           ),
           _buildListTile(
             context: context,
