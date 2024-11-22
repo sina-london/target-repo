@@ -11,9 +11,9 @@ class HomeScreen extends StatefulWidget {
   static const double _horizontalPadding = 20.0;
   static const double _sectionSpacing = 50.0;
 
-  final String userName;
+  final String name;
 
-  const HomeScreen({super.key, this.userName = 'Guest'});
+  const HomeScreen({super.key, this.name = 'Guest'});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -79,7 +79,7 @@ class _HomeScreenState extends State<HomeScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
-            "Hello ${widget.userName}, What's on your mind today?",
+            "Hello ${widget.name}, What's on your mind today?",
             style: theme.textTheme.headlineLarge
                 ?.copyWith(fontWeight: FontWeight.bold),
             textAlign: TextAlign.center,

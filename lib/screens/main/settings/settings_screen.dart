@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:nekoflow/screens/main/settings/about/about_screen.dart';
+import 'package:nekoflow/screens/main/settings/profile/profile_screen.dart';
 import 'package:nekoflow/screens/main/settings/storage/storage_screen.dart';
 import 'package:nekoflow/screens/settings/theme_screen.dart';
 
@@ -62,6 +63,13 @@ class SettingsScreen extends StatelessWidget {
         children: [
           _buildListTile(
             context: context,
+            leadingIcon: HugeIcons.strokeRoundedCircleArrowDataTransferHorizontal,
+            title: "Profile (SOON)",
+            subtitle: "Information about you",
+            destination: const ProfileScreen(name: "Roshan" ,),
+          ),
+          _buildListTile(
+            context: context,
             leadingIcon: Icons.color_lens,
             title: "Theme",
             subtitle: "Change the app theme",
@@ -81,6 +89,7 @@ class SettingsScreen extends StatelessWidget {
             subtitle: "Export and import your data",
             destination: const StorageScreen(),
           ),
+          
         ],
       ),
     );
