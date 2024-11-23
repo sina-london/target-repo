@@ -13,6 +13,7 @@ class BottomPlayerBar extends StatelessWidget {
   final String image;
   final String? type;
   final String? nextEpisode;
+  final String? nextEpisodeTitle;
 
   const BottomPlayerBar({
     super.key,
@@ -21,7 +22,8 @@ class BottomPlayerBar extends StatelessWidget {
     required this.id,
     required this.image,
     required this.type,
-    this.nextEpisode
+    this.nextEpisode,
+    this.nextEpisodeTitle
   });
 
  double _calculateProgress() {
@@ -70,13 +72,13 @@ class BottomPlayerBar extends StatelessWidget {
     }
   }
 
-  void _navigateToPlayer(BuildContext context, String episodeId) {
+  void _navigateToPlayer(BuildContext context, String episodeId, String episodeTitle) {
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => StreamScreen(
           name: item.name,
-          title: title,
+          title: episodeTitle,
           id: id,
           episodeId: episodeId,
           poster: image,
@@ -185,11 +187,11 @@ class BottomPlayerBar extends StatelessWidget {
                   children: [
                     IconButton(
                       icon: HugeIcon(icon: HugeIcons.strokeRoundedPlay, color: Colors.white),
-                      onPressed: () => _navigateToPlayer(context, item.episodeId),
+                      onPressed: () => _navigateToPlayer(context, item.episodeId, item.title),
                     ),
-                    if (nextEpisode != null) IconButton(
+                    if (nextEpisode != null && nextEpisodeTitle != null) IconButton(
                       icon: HugeIcon(icon: HugeIcons.strokeRoundedArrowRight01, color: Colors.white),
-                      onPressed: () => _navigateToPlayer(context, nextEpisode!),
+                      onPressed: () => _navigateToPlayer(context, nextEpisode!, nextEpisodeTitle!),
                     ),
                   ],
                 ),
