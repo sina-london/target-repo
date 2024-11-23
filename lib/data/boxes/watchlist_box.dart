@@ -29,13 +29,9 @@ class WatchlistBox {
 
     if (index != -1) {
       // Update existing item
-      if (!item.isCompleted!) {
-        list[index] = item;
-      } else {
-        list.removeAt(index);
-      }
-    } else if (!item.isCompleted!) {
-      // Add new item
+      list[index] = item; // Replace with the updated item
+    } else {
+      // Add as a new item
       list.insert(0, item);
     }
 
@@ -57,25 +53,25 @@ class WatchlistBox {
       // Copy the current list of watched episodes
       List<String> watchedEpisodes = List.from(item.watchedEpisodes ?? []);
 
-      // Add the episode to watched list if it is marked as watched
+      // Add the episode to the watched list if it is marked as watched
       if (markAsWatched && !watchedEpisodes.contains(episodeId)) {
         watchedEpisodes.add(episodeId);
       }
 
-      // Update the item with new progress details
       var updatedItem = ContinueWatchingItem(
         id: item.id,
         title: item.title,
         name: item.name,
         poster: item.poster,
-        episode: episode,
-        episodeId: episodeId,
-        timestamp: timestamp,
-        duration: duration,
-        type: item.type,
-        watchedEpisodes: watchedEpisodes,
-        // Only mark as completed if explicitly indicated
-        isCompleted: markAsWatched ? item.isCompleted : false,
+        episode: episode, // Update to the current episode
+        episodeId: episodeId, // Current episode ID
+        timestamp: timestamp, // Current timestamp
+        duration: duration, // Current duration
+        type: item.type, // Retain original type
+        watchedEpisodes: watchedEpisodes, // Preserved watched episodes
+        isCompleted: markAsWatched
+            ? item.isCompleted
+            : false, // Maintain completion logic
       );
 
       // Update the continue watching list

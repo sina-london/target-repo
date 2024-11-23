@@ -81,6 +81,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
 
   void _loadContinueWatching() {
     continueWatchingItem = _watchlistBox.getContinueWatchingById(widget.id);
+    print(continueWatchingItem?.episode);
     setState(() {});
   }
 

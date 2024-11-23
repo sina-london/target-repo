@@ -32,24 +32,20 @@ class StreamScreen extends StatefulWidget {
 }
 
 class _StreamScreenState extends State<StreamScreen> {
-  // Constants
   static const defaultServer = "hd-1";
   static const defaultDubSub = "sub";
-  static const progressThreshold = 0.05; // 5% threshold for recently watched
+  // static const progressThreshold = 0.05; // 5% threshold for recently watched
 
-  // Services and state
   final AnimeService _animeService = AnimeService();
   final _serversCache = <String, EpisodeServersModel>{};
   final _linksCache = <String, EpisodeStreamingLinksModel>{};
   late final WatchlistBox _watchlistBox;
 
-  // Player state
   BetterPlayerController? _playerController;
   String _selectedServer = defaultServer;
   String _selectedDubSub = defaultDubSub;
   String _currentPosition = '0:00:00.000000';
 
-  // UI state
   bool _isLoading = true;
   bool _isPlayerInitializing = false;
   EpisodeServersModel? _episodeServers;
@@ -65,10 +61,50 @@ class _StreamScreenState extends State<StreamScreen> {
     _watchlistBox = WatchlistBox();
     await _watchlistBox.init();
 
-    // Restore previous position
     final continueWatching = _watchlistBox.getContinueWatchingById(widget.id);
     if (continueWatching?.episodeId == widget.episodeId) {
-      _currentPosition = continueWatching!.timestamp;
+      if (!mounted) return;
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
+          title: Text(
+            'Continue Watching',
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+          ),
+          content: Text(
+            'Continue where you left off?',
+            style: Theme.of(context).textTheme.bodyLarge,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text(
+                'Cancel',
+                style: TextStyle(color: Colors.grey),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _currentPosition = continueWatching!.timestamp;
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                foregroundColor: Theme.of(context).colorScheme.onSurface,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: const Text('Continue'),
+            ),
+          ],
+        ),
+      );
     }
 
     await _loadInitialData();
@@ -89,7 +125,6 @@ class _StreamScreenState extends State<StreamScreen> {
     if (!mounted) return;
 
     try {
-      // Check cache first
       if (_serversCache.containsKey(episodeId)) {
         setState(() => _episodeServers = _serversCache[episodeId]);
         return;
@@ -107,7 +142,6 @@ class _StreamScreenState extends State<StreamScreen> {
       }
     } catch (e) {
       debugPrint("Error fetching episode servers: $e");
-      // Consider showing a user-friendly error message
     }
   }
 
@@ -115,7 +149,6 @@ class _StreamScreenState extends State<StreamScreen> {
     final cacheKey = '$episodeId-$_selectedServer-$_selectedDubSub';
 
     try {
-      // Check cache first
       if (_linksCache.containsKey(cacheKey)) {
         _streamingLinks = _linksCache[cacheKey];
         await _initializePlayer();
@@ -135,7 +168,6 @@ class _StreamScreenState extends State<StreamScreen> {
       }
     } catch (e) {
       debugPrint("Error fetching streaming links: $e");
-      // Consider showing a user-friendly error message
     }
   }
 
@@ -188,7 +220,13 @@ class _StreamScreenState extends State<StreamScreen> {
         ),
       );
 
-      // Update continue watching
+      final existingItem = _watchlistBox.getContinueWatchingById(widget.id);
+      final watchedEpisodes =
+          List<String>.from(existingItem?.watchedEpisodes ?? []);
+      if (!watchedEpisodes.contains(widget.episodeId)) {
+        watchedEpisodes.add(widget.episodeId);
+      }
+
       await _watchlistBox.updateContinueWatching(
         ContinueWatchingItem(
           title: widget.title,
@@ -200,12 +238,12 @@ class _StreamScreenState extends State<StreamScreen> {
           timestamp: _currentPosition,
           duration: _currentPosition,
           type: widget.type,
+          watchedEpisodes: watchedEpisodes,
         ),
       );
 
       controller.addEventsListener(_onPlayerEvent);
 
-      // Restore previous position if exists
       if (_currentPosition != '0:00:00.000000') {
         final parts = _currentPosition.split(':');
         if (parts.length >= 3) {
@@ -221,40 +259,49 @@ class _StreamScreenState extends State<StreamScreen> {
 
       setState(() => _playerController = controller);
     } finally {
+      _playerController?.pause();
       if (mounted) setState(() => _isPlayerInitializing = false);
     }
   }
 
   Future<void> _onPlayerEvent(BetterPlayerEvent event) async {
-    if (event.betterPlayerEventType == BetterPlayerEventType.progress) {
-      final position = _playerController?.videoPlayerController?.value.position;
-      final duration = _playerController?.videoPlayerController?.value.duration;
-
-      if (position == null || duration == null) return;
-
-      setState(() => _currentPosition = position.toString());
-
-      // Update progress
-      await _watchlistBox.updateEpisodeProgress(
-        widget.id,
-        episode: widget.episode,
-        episodeId: widget.episodeId,
-        timestamp: _currentPosition,
-        duration: duration.toString(),
-        markAsWatched: true,
-      );
-
-      // Add to recently watched after threshold
-      if (position.inSeconds > duration.inSeconds * progressThreshold) {
-        await _watchlistBox.addToRecentlyWatched(
-          RecentlyWatchedItem(
-            id: widget.id,
-            name: widget.name,
-            poster: widget.poster,
-            type: widget.type,
-          ),
+    switch (event.betterPlayerEventType) {
+      case BetterPlayerEventType.progress:
+        // Handle progress updates
+        final position =
+            _playerController?.videoPlayerController?.value.position;
+        final duration =
+            _playerController?.videoPlayerController?.value.duration;
+        debugPrint("Progress: $position / $duration");
+        await _watchlistBox.updateEpisodeProgress(
+          widget.id,
+          episode: widget.episode,
+          episodeId: widget.episodeId,
+          timestamp: position.toString(),
+          duration: duration.toString(),
         );
-      }
+        break;
+
+      // case BetterPlayerEventType.finished:
+      //   // Handle video finished playing
+      //   debugPrint("Video playback finished");
+      //   break;
+
+      // case BetterPlayerEventType.exception:
+      //   // Handle playback exceptions
+      //   debugPrint("Playback exception: ${event.parameters?['exception']}");
+      //   break;
+
+      // case BetterPlayerEventType.bufferingStart:
+      //   debugPrint("Buffering started");
+      //   break;
+
+      // case BetterPlayerEventType.bufferingEnd:
+      //   debugPrint("Buffering ended");
+      //   break;
+
+      default:
+        debugPrint("Event: ${event.betterPlayerEventType}");
     }
   }
 
