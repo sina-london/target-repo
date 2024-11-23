@@ -33,6 +33,7 @@ flutter:
   uses-material-design: true
   assets:
     - lib/assets/images/onboarding/
+    - lib/assets/images/onboarding/logo.svg
     - lib/assets/images/profile/
     # - assets/images/home/
     # - assets/icons/app_icon.png
