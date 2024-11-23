@@ -386,7 +386,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
             title: continueWatchingItem!.title,
             id: widget.id,
             image: widget.image,
-            type: widget.type!,
+            type: widget.type,
           );
         },
       ),
