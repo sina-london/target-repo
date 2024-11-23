@@ -61,9 +61,9 @@ class ViewAllScreen extends StatelessWidget {
 
   Future<void> _onDeleteConfirmed(String id) async {
     if (title.toLowerCase().split(' ')[0] == 'recently') {
-      await watchlistBox.removeFromRecentlyWatched(id);
+      await watchlistBox.removeRecentlyWatched([id]);
     } else if (title.toLowerCase().split(' ')[0] == 'favorites') {
-      await watchlistBox.removeFromFavorites(id);
+      await watchlistBox.removeFavorites([id]);
     }
   }
 
