@@ -1,5 +1,4 @@
 import 'package:nekoflow/data/models/anime_model.dart';
-import 'package:nekoflow/data/models/watchlist/watchlist_model.dart';
 
 class SearchModel {
   final int currentPage;
@@ -41,16 +40,12 @@ class SearchModel {
 }
 
 
-class AnimeResult implements BaseAnimeCard{
-  @override
+class AnimeResult {
   final String id;
-  @override
   final String name;
   final String? japaneseTitle;
-  @override
   final String poster;
   final String? duration;
-  @override
   final String type;
   final String? rating;
   final bool? nsfw;
@@ -81,13 +76,4 @@ class AnimeResult implements BaseAnimeCard{
       episodes: AnimeEpisodes.fromJson(json['episodes']),
     );
   }
-
-  @override
-  double? get score => null;
-
-  @override
-  int? get episodeCount => episodes.sub;
-
-  @override
-  String? get status => null;
 }

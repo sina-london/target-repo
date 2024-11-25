@@ -17,7 +17,7 @@ class SettingsModel extends HiveObject {
 
   SettingsModel({
     this.defaultQuality = '720p',
-    this.theme = 'dark',
+    this.theme = 'light',
     this.defaultOrientation = 'Portrait',
     this.layoutMode = 'Grid',
     this.isLabelEnabled = true,
