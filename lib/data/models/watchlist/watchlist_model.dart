@@ -94,12 +94,12 @@ class ContinueWatchingItem extends HiveObject {
     required this.poster,
     required this.episode,
     required this.episodeId,
-    required this.timestamp,
     required this.title,
     this.isCompleted = false,
+    this.timestamp = '0:00:00.000000',
     this.duration = '0:00:00.000000',
     this.type,
-    this.watchedEpisodes
+    this.watchedEpisodes,
   });
 }
 
