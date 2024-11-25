@@ -292,19 +292,22 @@ class _EpisodeGridTile extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(8.0),
+          border: !episode.isFiller
+            ? null
+            : Border.all(color: themeData.colorScheme.primary, width: 2),
           gradient: LinearGradient(
             colors: isWatched
                 ? [
-                    Colors.green.withOpacity(0.5),
-                    Colors.greenAccent.withOpacity(0.7),
+                    themeData.colorScheme.surface,
+                    themeData.colorScheme.primary.withOpacity(0.2),
                   ]
                 : [
                     !episode.isFiller
-                        ? themeData.colorScheme.primary.withOpacity(0.5)
-                        : Colors.transparent,
+                        ? themeData.colorScheme.primary.withOpacity(0.4)
+                        : themeData.colorScheme.surface,
                     !episode.isFiller
-                        ? themeData.colorScheme.secondary.withOpacity(0.8)
-                        : Colors.transparent,
+                        ? themeData.colorScheme.secondary.withOpacity(0.7)
+                        : themeData.colorScheme.surface,
                   ],
             begin: Alignment.bottomLeft,
             end: Alignment.topRight,
@@ -321,10 +324,10 @@ class _EpisodeGridTile extends StatelessWidget {
                     ),
                 textAlign: TextAlign.center,
               ),
-              if (episode.isFiller)
+              if (episode.isFiller || isWatched)
                 Text(
-                  " ${isWatched ? 'Watched' : 'FILLER'}",
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  " ${isWatched ? 'WATCHED' : 'FILLER'}",
+                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
                         color: Theme.of(context).colorScheme.error,
                       ),
                   textAlign: TextAlign.center,
