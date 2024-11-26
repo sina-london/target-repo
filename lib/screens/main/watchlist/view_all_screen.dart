@@ -38,15 +38,12 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
         } else {
           _selectedIds.add(item.id);
         }
-        
+
         // Exit multiselect mode if no items are selected
         if (_selectedIds.isEmpty) {
           _isMultiselectMode = false;
         }
       });
-    } else {
-      // TODO: Implement navigation to anime details
-      // Navigator.push(context, MaterialPageRoute(...))
     }
   }
 
@@ -97,7 +94,7 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
 
   void _showDeleteConfirmationDialog() {
     final itemCount = _selectedIds.length;
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -182,7 +179,7 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
               child: Text(
                 "No items found in ${widget.title}",
                 style: theme.textTheme.bodyLarge?.copyWith(
-                  color: theme.colorScheme.onBackground.withOpacity(0.7),
+                  color: theme.colorScheme.onSurface.withOpacity(0.7),
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -226,7 +223,8 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
                           if (_isMultiselectMode && isSelected)
                             Positioned.fill(
                               child: Container(
-                                color: theme.colorScheme.primary.withOpacity(0.3),
+                                color:
+                                    theme.colorScheme.primary.withOpacity(0.3),
                                 child: const Center(
                                   child: Icon(
                                     Icons.check_circle,
