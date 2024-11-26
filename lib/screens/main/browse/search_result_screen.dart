@@ -11,6 +11,16 @@ class SearchResultScreen extends StatefulWidget {
 }
 
 class _SearchResultScreenState extends State<SearchResultScreen> {
+  // Add a state variable to track the current layout
+  bool _isGridLayout = true;
+
+  // Toggle layout method
+  void _toggleLayout() {
+    setState(() {
+      _isGridLayout = !_isGridLayout;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     ThemeData themeData = Theme.of(context);
@@ -32,7 +42,14 @@ class _SearchResultScreenState extends State<SearchResultScreen> {
             overflow: TextOverflow.ellipsis,
           ),
         ),
-        // centerTitle: true,
+        actions: [
+          // Layout toggle button
+          IconButton(
+            icon: Icon(_isGridLayout ? Icons.view_list : Icons.grid_view),
+            onPressed: _toggleLayout,
+            tooltip: _isGridLayout ? 'Switch to List View' : 'Switch to Grid View',
+          ),
+        ],
         titleSpacing: 0,
         forceMaterialTransparency: true,
       ),
@@ -52,26 +69,48 @@ class _SearchResultScreenState extends State<SearchResultScreen> {
               ),
             ),
 
-            // Anime Grid
+            // Conditional rendering based on layout
             Expanded(
-              child: GridView.builder(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  childAspectRatio: 0.7,
-                  crossAxisSpacing: 16,
-                  mainAxisSpacing: 16,
-                ),
-                itemCount: widget.searchModel.animes.length,
-                itemBuilder: (context, index) {
-                  final anime = widget.searchModel.animes[index];
-                  return AnimeCard(anime: anime, tag: 'search');
-                },
-              ),
+              child: _isGridLayout 
+                ? _buildGridView(themeData)
+                : _buildListView(themeData),
             ),
           ],
         ),
       ),
     );
   }
-}
 
+  // Grid View Builder
+  Widget _buildGridView(ThemeData themeData) {
+    return GridView.builder(
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        childAspectRatio: 0.7,
+        crossAxisSpacing: 16,
+        mainAxisSpacing: 16,
+      ),
+      itemCount: widget.searchModel.animes.length,
+      itemBuilder: (context, index) {
+        final anime = widget.searchModel.animes[index];
+        return AnimeCard(anime: anime, tag: 'search_grid_$index');
+      },
+    );
+  }
+
+  // List View Builder
+  Widget _buildListView(ThemeData themeData) {
+    return ListView.separated(
+      itemCount: widget.searchModel.animes.length,
+      separatorBuilder: (context, index) => const SizedBox(height: 10,),
+      itemBuilder: (context, index) {
+        final anime = widget.searchModel.animes[index];
+        return AnimeCard(
+          anime: anime, 
+          tag: 'search_list_$index',
+          isListLayout: true,
+        );
+      },
+    );
+  }
+}
