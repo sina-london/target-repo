@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:nekoflow/screens/main/browse/browse_screen.dart';
 import 'package:nekoflow/screens/main/home/home_screen.dart';
-import 'package:nekoflow/screens/main/search/search_screen.dart';
 import 'package:nekoflow/screens/main/settings/settings_screen.dart';
 import 'package:nekoflow/screens/main/watchlist/watchlist_screen.dart';
 import 'package:crystal_navigation_bar/crystal_navigation_bar.dart';
@@ -22,7 +22,7 @@ class _AppRouterState extends State<AppRouter> {
   late final List<Widget> _screens = [
     const SettingsScreen(),
     HomeScreen(name: widget.name),
-    const Placeholder(), // Placeholder for dynamic SearchScreen
+    const BrowseScreen(),
     const WatchlistScreen(),
   ];
 
@@ -40,13 +40,7 @@ class _AppRouterState extends State<AppRouter> {
       extendBody: true,
       body: IndexedStack(
         index: _selectedIndex,
-        children: _screens
-            .asMap()
-            .entries
-            .map((entry) => entry.key == 2 && _selectedIndex == 2
-                ? const SearchScreen() // Dynamically replace the SearchScreen
-                : entry.value)
-            .toList(),
+        children: _screens,
       ),
       bottomNavigationBar: CrystalNavigationBar(
         backgroundColor: colorScheme.primary.withOpacity(0.1),
@@ -69,12 +63,12 @@ class _AppRouterState extends State<AppRouter> {
             unselectedIcon: HugeIcons.strokeRoundedHome02,
           ),
           CrystalNavigationBarItem(
-            icon: HugeIcons.strokeRoundedSearch01,
-            unselectedIcon: HugeIcons.strokeRoundedSearch02,
+            icon: HugeIcons.strokeRoundedGlobalSearch,
+            unselectedIcon: HugeIcons.strokeRoundedGlobal,
           ),
           CrystalNavigationBarItem(
-            icon: HugeIcons.strokeRoundedBookmarkAdd01,
-            unselectedIcon: HugeIcons.strokeRoundedBookmark02,
+            icon: HugeIcons.strokeRoundedCollectionsBookmark,
+            unselectedIcon: HugeIcons.strokeRoundedAllBookmark,
           ),
         ],
       ),
