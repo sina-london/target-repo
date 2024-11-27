@@ -263,6 +263,8 @@ class _HomeScreenState extends State<HomeScreen> {
         //       icon: HugeIcons.strokeRoundedUser,
         //       color: theme.colorScheme.onSurface),
         // ),
+        backgroundColor: Colors.transparent,
+        forceMaterialTransparency: true,
         actions: [
           IconButton(
             onPressed: () => Navigator.push(context,
