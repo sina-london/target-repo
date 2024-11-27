@@ -14,56 +14,28 @@ class BrowseScreen extends StatefulWidget {
 
 class _BrowseScreenState extends State<BrowseScreen> {
   static const List<String> _genres = [
-    "Action",
-    "Adventure",
-    "Cars",
-    "Comedy",
-    "Dementia",
-    "Demons",
-    "Drama",
-    "Ecchi",
-    "Fantasy",
-    "Game",
-    "Harem",
-    "Historical",
-    "Horror",
-    "Isekai",
-    "Josei",
-    "Kids",
-    "Magic",
-    "Martial Arts",
-    "Mecha",
-    "Military",
-    "Music",
-    "Mystery",
-    "Parody",
-    "Police",
-    "Psychological",
-    "Romance",
-    "Samurai",
-    "School",
-    "Sci-Fi",
-    "Seinen",
-    "Shoujo",
-    "Shoujo Ai",
-    "Shounen",
-    "Shounen Ai",
-    "Slice of Life",
-    "Space",
-    "Sports",
-    "Super Power",
-    "Supernatural",
-    "Thriller",
-    "Vampire"
+    "Action", "Adventure", "Cars", "Comedy", "Dementia", "Demons", 
+    "Drama", "Ecchi", "Fantasy", "Game", "Harem", "Historical", 
+    "Horror", "Isekai", "Josei", "Kids", "Magic", "Martial Arts", 
+    "Mecha", "Military", "Music", "Mystery", "Parody", "Police", 
+    "Psychological", "Romance", "Samurai", "School", "Sci-Fi", 
+    "Seinen", "Shoujo", "Shoujo Ai", "Shounen", "Shounen Ai", 
+    "Slice of Life", "Space", "Sports", "Super Power", 
+    "Supernatural", "Thriller", "Vampire"
   ];
 
   late AnimeService _animeService;
   final TextEditingController _searchController = TextEditingController();
-  SearchModel? _searchResult;
   bool _isLoading = false;
   String? _error;
 
-  Future<void> _performSearch() async {
+  @override
+  void initState() {
+    super.initState();
+    _animeService = AnimeService();
+  }
+
+  Future<void> _performSearch({int page = 1}) async {
     if (_searchController.text.isEmpty) {
       setState(() {
         _error = 'Please enter a search query.';
@@ -79,26 +51,25 @@ class _BrowseScreenState extends State<BrowseScreen> {
     try {
       final result = await _animeService.fetchByQuery(
         query: _searchController.text,
-        page: 1,
+        page: page,
       );
+
       if (!mounted) return;
-      setState(() {
-        _searchResult = result;
-      });
 
       Navigator.push(
         context,
         CupertinoPageRoute(
           builder: (context) => SearchResultScreen(
-            searchModel: _searchResult!,
+            searchModel: result,
+            animeService: _animeService,
+            searchType: 'query',
           ),
         ),
       );
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _error =
-            'An error occurred. Please check your connection or try again.';
+        _error = 'An error occurred. Please check your connection or try again.';
       });
     } finally {
       setState(() {
@@ -107,39 +78,47 @@ class _BrowseScreenState extends State<BrowseScreen> {
     }
   }
 
-  Future<void> _fetchGenreAnimes(String genreName) async {
+  Future<void> _fetchGenreAnimes({
+    required String genreName, 
+    int page = 1
+  }) async {
     setState(() {
       _isLoading = true;
       _error = null;
     });
 
     try {
-      final genreDetail = await _animeService.fetchGenreAnime(genreName);
+      // Transform genre name to URL-friendly format
+      final formattedGenreName = genreName
+        .toLowerCase()
+        .split(' ')
+        .join('-');
+
+      final genreDetail = await _animeService.fetchGenreAnime(
+        formattedGenreName,
+        page: page
+      );
+
       if (!mounted) return;
 
       if (genreDetail.success) {
         // Map GenreDetailModel's AnimeResult to SearchModel's AnimeResult
-        final mappedAnimes = genreDetail.data.animes
-            .map((genreAnime) => AnimeResult(
-                  id: genreAnime.id,
-                  name: genreAnime.name,
-                  poster: genreAnime.poster,
-                  duration: genreAnime.duration,
-                  type: genreAnime.type,
-                  rating: genreAnime.rating,
-                  episodes: genreAnime.episodes,
-                ))
-            .toList();
-
-        // Create a SearchModel from the genre results
         final searchResult = SearchModel(
           currentPage: genreDetail.data.currentPage,
           hasNextPage: genreDetail.data.hasNextPage,
           totalPages: genreDetail.data.totalPages,
-          searchQuery: genreName, // Use genre name as search query
-          searchFilters: {}, // You can add genre as a filter if needed
-          animes: mappedAnimes,
-          mostPopularAnimes: [], // You can populate this if needed
+          searchQuery: formattedGenreName, // Use formatted genre name
+          searchFilters: {}, 
+          animes: genreDetail.data.animes.map((genreAnime) => AnimeResult(
+            id: genreAnime.id,
+            name: genreAnime.name,
+            poster: genreAnime.poster,
+            duration: genreAnime.duration,
+            type: genreAnime.type,
+            rating: genreAnime.rating,
+            episodes: genreAnime.episodes,
+          )).toList(),
+          mostPopularAnimes: [], 
         );
 
         Navigator.push(
@@ -147,6 +126,8 @@ class _BrowseScreenState extends State<BrowseScreen> {
           CupertinoPageRoute(
             builder: (context) => SearchResultScreen(
               searchModel: searchResult,
+              animeService: _animeService,
+              searchType: 'genre',
             ),
           ),
         );
@@ -165,12 +146,6 @@ class _BrowseScreenState extends State<BrowseScreen> {
         _isLoading = false;
       });
     }
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _animeService = AnimeService();
   }
 
   @override
@@ -196,7 +171,7 @@ class _BrowseScreenState extends State<BrowseScreen> {
             padding: const EdgeInsets.all(15.0),
             child: Searchbar(
               controller: _searchController,
-              onSearch: _performSearch,
+              onSearch: () => _performSearch(),
               isLoading: _isLoading,
             ),
           ),
@@ -234,10 +209,9 @@ class _BrowseScreenState extends State<BrowseScreen> {
                   label: Text(genre),
                   selected: false,
                   onSelected: (bool selected) {
-                    debugPrint('Selected genre: $genre');
                     _fetchGenreAnimes(
-                      genre.toLowerCase().split(' ').join('-'),
-                    ); // Fetch animes for the selected genre
+                      genreName: genre,
+                    );
                   },
                   selectedColor:
                       themeData.colorScheme.secondary.withOpacity(0.5),

@@ -34,13 +34,13 @@ class SpotlightCard extends StatelessWidget {
             right: 1, bottom: 24, left: 1), // Adjust spacing between cards
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: theme.colorScheme.onSurface.withOpacity(0.8),
-              blurRadius: 2,
-              offset: Offset(0, 2), // Soft shadow for depth
-            ),
-          ],
+          // boxShadow: [
+          //   BoxShadow(
+          //     color: theme.colorScheme.onSurface.withOpacity(0.8),
+          //     blurRadius: 2,
+          //     offset: Offset(0, 2), // Soft shadow for depth
+          //   ),
+          // ],
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(16),
