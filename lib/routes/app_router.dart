@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nekoflow/screens/main/browse/browse_screen.dart';
 import 'package:nekoflow/screens/main/home/home_screen.dart';
-import 'package:nekoflow/screens/main/settings/settings_screen.dart';
 import 'package:nekoflow/screens/main/watchlist/watchlist_screen.dart';
 import 'package:crystal_navigation_bar/crystal_navigation_bar.dart';
 import 'package:hugeicons/hugeicons.dart';
@@ -16,11 +15,10 @@ class AppRouter extends StatefulWidget {
 }
 
 class _AppRouterState extends State<AppRouter> {
-  int _selectedIndex = 1;
+  int _selectedIndex = 0;
 
   // Preserved state screens
   late final List<Widget> _screens = [
-    const SettingsScreen(),
     HomeScreen(name: widget.name),
     const BrowseScreen(),
     const WatchlistScreen(),
@@ -43,21 +41,21 @@ class _AppRouterState extends State<AppRouter> {
         children: _screens,
       ),
       bottomNavigationBar: CrystalNavigationBar(
-        backgroundColor: colorScheme.primary.withOpacity(0.1),
+        backgroundColor: colorScheme.surface.withOpacity(0.5),
         currentIndex: _selectedIndex,
         onTap: (index) => setState(() => _selectedIndex = index),
-        selectedItemColor: colorScheme.onSurface,
-        unselectedItemColor: colorScheme.onSurface.withOpacity(0.5),
+        selectedItemColor: colorScheme == ThemeData.light().colorScheme
+            ? colorScheme.surface
+            : colorScheme.onSurface,
+        unselectedItemColor: colorScheme == ThemeData.light().colorScheme
+            ? colorScheme.surface.withOpacity(0.5)
+            : colorScheme.onSurface.withOpacity(0.5),
         enableFloatingNavBar: true,
-        marginR: const EdgeInsets.symmetric(horizontal: 90, vertical: 20),
+        marginR: const EdgeInsets.symmetric(horizontal: 120, vertical: 20),
         splashBorderRadius: 50,
         borderRadius: 500,
         enablePaddingAnimation: true,
         items: [
-          CrystalNavigationBarItem(
-            icon: HugeIcons.strokeRoundedSettings01,
-            unselectedIcon: HugeIcons.strokeRoundedSettings02,
-          ),
           CrystalNavigationBarItem(
             icon: HugeIcons.strokeRoundedHome01,
             unselectedIcon: HugeIcons.strokeRoundedHome02,

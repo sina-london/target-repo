@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:nekoflow/data/models/search_model.dart';
 import 'package:nekoflow/data/services/anime_service.dart';
@@ -87,7 +88,7 @@ class _BrowseScreenState extends State<BrowseScreen> {
 
       Navigator.push(
         context,
-        MaterialPageRoute(
+        CupertinoPageRoute(
           builder: (context) => SearchResultScreen(
             searchModel: _searchResult!,
           ),
@@ -143,7 +144,7 @@ class _BrowseScreenState extends State<BrowseScreen> {
 
         Navigator.push(
           context,
-          MaterialPageRoute(
+          CupertinoPageRoute(
             builder: (context) => SearchResultScreen(
               searchModel: searchResult,
             ),

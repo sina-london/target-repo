@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:nekoflow/data/models/episodes_model.dart';
 import 'package:nekoflow/screens/main/stream/stream_screen.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:dismissible_page/dismissible_page.dart';
 
 class EpisodesList extends StatefulWidget {
   final String id;
@@ -34,19 +36,29 @@ class _EpisodesListState extends State<EpisodesList> {
   int _selectedRangeIndex = 0;
 
   void _navigateToStreamScreen(BuildContext context, Episode episode) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => StreamScreen(
-          id: widget.id,
-          name: widget.name,
-          episodeId: episode.episodeId,
-          poster: widget.poster,
-          episode: episode.number,
-          title: episode.title,
-        ),
+    context.pushTransparentRoute(
+      StreamScreen(
+        id: widget.id,
+        name: widget.name,
+        episodeId: episode.episodeId,
+        poster: widget.poster,
+        episode: episode.number,
+        title: episode.title,
       ),
     );
+    // Navigator.push(
+    //   context,
+    //   MaterialPageRoute(
+    //     builder: (context) => StreamScreen(
+    //       id: widget.id,
+    //       name: widget.name,
+    //       episodeId: episode.episodeId,
+    //       poster: widget.poster,
+    //       episode: episode.number,
+    //       title: episode.title,
+    //     ),
+    //   ),
+    // );
   }
 
   List<Map<String, List<Episode>>> _getGroupedEpisodes(List<Episode> episodes) {
@@ -293,8 +305,8 @@ class _EpisodeGridTile extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(8.0),
           border: !episode.isFiller
-            ? null
-            : Border.all(color: themeData.colorScheme.primary, width: 2),
+              ? null
+              : Border.all(color: themeData.colorScheme.secondary, width: 2),
           gradient: LinearGradient(
             colors: isWatched
                 ? [
@@ -328,7 +340,7 @@ class _EpisodeGridTile extends StatelessWidget {
                 Text(
                   " ${isWatched ? 'WATCHED' : 'FILLER'}",
                   style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.error,
+                        color: Theme.of(context).colorScheme.tertiary,
                       ),
                   textAlign: TextAlign.center,
                 ),
@@ -378,14 +390,6 @@ class _EpisodeTile extends StatelessWidget {
           begin: Alignment.bottomLeft,
           end: Alignment.topRight,
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Theme.of(context).shadowColor,
-            spreadRadius: 1,
-            blurRadius: 2,
-            offset: const Offset(0, 3),
-          ),
-        ],
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16),
@@ -401,7 +405,10 @@ class _EpisodeTile extends StatelessWidget {
           style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
         ),
         trailing: IconButton(
-          icon: const Icon(Icons.play_circle_fill),
+          icon: HugeIcon(
+            icon: HugeIcons.strokeRoundedPlay,
+            color: Theme.of(context).colorScheme.onSurface,
+          ),
           onPressed: onTap,
         ),
       ),

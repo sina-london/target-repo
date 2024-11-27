@@ -1,3 +1,4 @@
+import 'package:dismissible_page/dismissible_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:better_player/better_player.dart';
@@ -135,6 +136,7 @@ class _StreamScreenState extends State<StreamScreen> {
     try {
       _playerController?.dispose();
       _playerController = null;
+      final ThemeData themeData = Theme.of(context);
       final parts = _currentPosition.split(':');
       final controller = BetterPlayerController(
         BetterPlayerConfiguration(
@@ -152,11 +154,11 @@ class _StreamScreenState extends State<StreamScreen> {
             DeviceOrientation.portraitUp,
             DeviceOrientation.portraitDown,
           ],
-          controlsConfiguration: const BetterPlayerControlsConfiguration(
+          controlsConfiguration: BetterPlayerControlsConfiguration(
             controlBarColor: Colors.black54,
             enableProgressText: true,
             enableSubtitles: true,
-            loadingColor: Colors.white,
+            loadingColor: themeData.colorScheme.primary,
           ),
         ),
       );
@@ -338,88 +340,181 @@ class _StreamScreenState extends State<StreamScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
+Widget build(BuildContext context) {
+  // final ThemeData themeData = Theme.of(context);
+
+  return DismissiblePage(
+    onDismissed: () => Navigator.of(context).pop(),
+    direction: DismissiblePageDismissDirection.none,
+    child: Scaffold(
       appBar: AppBar(
         forceMaterialTransparency: true,
         title: Text(widget.title),
         elevation: 0,
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            _buildBannerSection(),
+            const SizedBox(height: 20),
             _buildPlayer(),
             const SizedBox(height: 20),
-            _buildDubSubButtons(),
+            _buildChoiceSection(),
             const SizedBox(height: 20),
-            const Text(
-              "Servers",
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-            const SizedBox(height: 10),
             _buildServersSection(),
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   // UI Components
   Widget _buildPlayer() {
+    ThemeData themeData = Theme.of(context);
     return Container(
-      color: Colors.black,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(15),
+        gradient: LinearGradient(
+          colors: [
+            themeData.colorScheme.primary.withOpacity(0.05),
+            themeData.colorScheme.secondary.withOpacity(0.8),
+            themeData.colorScheme.tertiary.withOpacity(0.05)
+          ],
+          begin: Alignment.bottomLeft,
+          end: Alignment.topRight,
+        ),
+      ),
       height: 230,
       width: double.infinity,
       child: _isPlayerInitializing || _playerController == null
-          ? const Center(child: CircularProgressIndicator())
+          ? Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const CircularProgressIndicator(),
+                const SizedBox(height: 10),
+                Text(
+                  "Loading video...",
+                  style: TextStyle(color: Colors.white70),
+                ),
+              ],
+            )
           : BetterPlayer(controller: _playerController!),
     );
   }
 
-  Widget _buildDubSubButtons() {
-    return Row(
-      children: [
-        _buildChoiceButton(
-            "Sub", _selectedDubSub == "sub", () => _onDubSubChanged("sub")),
-        const SizedBox(width: 15),
-        _buildChoiceButton(
-            "Dub", _selectedDubSub == "dub", () => _onDubSubChanged("dub")),
-      ],
-    );
-  }
+  Widget _buildBannerSection() {
+  return Stack(
+    children: [
+      Container(
+        width: double.infinity,
+        height: 200,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(15),
+          image: DecorationImage(
+            image: NetworkImage(widget.poster),
+            fit: BoxFit.cover,
+          ),
+        ),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(15),
+            gradient: LinearGradient(
+              colors: [Colors.black.withOpacity(0.6), Colors.transparent],
+              begin: Alignment.bottomCenter,
+              end: Alignment.topCenter,
+            ),
+          ),
+        ),
+      ),
+      Positioned(
+        bottom: 15,
+        left: 15,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              widget.title,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 20,
+                overflow: TextOverflow.ellipsis
+              ),
+            ),
+            const SizedBox(height: 5),
+            Text(
+              'Episode ${widget.episode}',
+              style: const TextStyle(
+                color: Colors.white70,
+                fontSize: 16,
+              ),
+            ),
+          ],
+        ),
+      ),
+    ],
+  );
+}
+
+Widget _buildChoiceSection() {
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      const Text(
+        "Select Language",
+        style: TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      const SizedBox(height: 10),
+      Row(
+        children: [
+          _buildChoiceButton(
+              "Sub", _selectedDubSub == "sub", () => _onDubSubChanged("sub")),
+          const SizedBox(width: 15),
+          _buildChoiceButton(
+              "Dub", _selectedDubSub == "dub", () => _onDubSubChanged("dub")),
+        ],
+      ),
+    ],
+  );
+}
+
 
   Widget _buildServersSection() {
-    if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    final servers =
-        _selectedDubSub == "sub" ? _episodeServers?.sub : _episodeServers?.dub;
-
-    if (servers == null || servers.isEmpty) {
-      return const Center(child: Text('No servers available'));
-    }
-
-    return SizedBox(
-      height: 50,
-      child: ListView.builder(
-        itemCount: servers.length,
-        scrollDirection: Axis.horizontal,
-        itemBuilder: (context, index) {
-          final serverName = servers[index].serverName;
-          return _buildServerButton(
-            serverName,
-            serverName == _selectedServer,
-            () => _onServerChanged(serverName),
-          );
-        },
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          "Servers",
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 10),
+        if (_isLoading)
+          const Center(child: CircularProgressIndicator())
+        else
+          SizedBox(
+            height: 50,
+            child: ListView.builder(
+              itemCount: _episodeServers?.sub.length ?? 0,
+              scrollDirection: Axis.horizontal,
+              itemBuilder: (context, index) {
+                final serverName = _episodeServers?.sub[index].serverName ?? "";
+                return _buildServerButton(
+                  serverName,
+                  serverName == _selectedServer,
+                  () => _onServerChanged(serverName),
+                );
+              },
+            ),
+          ),
+      ],
     );
   }
 
@@ -431,9 +526,10 @@ class _StreamScreenState extends State<StreamScreen> {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 15),
           decoration: BoxDecoration(
+            border: Border.all(color: theme.colorScheme.primary, width: 3),
             color: isSelected
                 ? theme.colorScheme.primary
-                : theme.colorScheme.secondary.withOpacity(0.7),
+                : theme.colorScheme.surface,
             borderRadius: BorderRadius.circular(10),
             boxShadow: [
               BoxShadow(
@@ -446,7 +542,6 @@ class _StreamScreenState extends State<StreamScreen> {
             child: Text(
               label,
               style: const TextStyle(
-                color: Colors.white,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -464,9 +559,10 @@ class _StreamScreenState extends State<StreamScreen> {
         margin: const EdgeInsets.only(right: 10),
         padding: const EdgeInsets.symmetric(horizontal: 20),
         decoration: BoxDecoration(
+          border: Border.all(color: theme.colorScheme.primary, width: 3),
           color: isSelected
               ? theme.colorScheme.primary
-              : theme.colorScheme.secondary,
+              : theme.colorScheme.surface,
           borderRadius: BorderRadius.circular(10),
           boxShadow: [
             BoxShadow(

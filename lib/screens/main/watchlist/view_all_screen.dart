@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:nekoflow/data/boxes/watchlist_box.dart';
 import 'package:nekoflow/data/models/watchlist/watchlist_model.dart';
 import 'package:nekoflow/widgets/anime_card.dart';
@@ -188,12 +189,13 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
               padding: const EdgeInsets.all(16.0),
               child: GridView.builder(
                 physics: const BouncingScrollPhysics(),
-                gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                  maxCrossAxisExtent: 200,
-                  mainAxisExtent: 260,
-                  mainAxisSpacing: 20,
-                  crossAxisSpacing: 15,
-                ),
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3,mainAxisExtent: 180, mainAxisSpacing: 15, crossAxisSpacing: 10),
+                // gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                //   maxCrossAxisExtent: 200,
+                //   mainAxisExtent: 260,
+                //   mainAxisSpacing: 20,
+                //   crossAxisSpacing: 15,
+                // ),
                 itemCount: widget.items.length,
                 itemBuilder: (context, index) {
                   final item = widget.items[index];
@@ -205,7 +207,7 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 200),
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(20),
                         border: _isMultiselectMode && isSelected
                             ? Border.all(
                                 color: theme.colorScheme.primary,
@@ -225,11 +227,11 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
                               child: Container(
                                 color:
                                     theme.colorScheme.primary.withOpacity(0.3),
-                                child: const Center(
-                                  child: Icon(
-                                    Icons.check_circle,
+                                child: Center(
+                                  child: HugeIcon(
+                                    icon: HugeIcons.strokeRoundedTick02,
                                     size: 40,
-                                    color: Colors.white,
+                                    color: Theme.of(context).colorScheme.onSurface,
                                   ),
                                 ),
                               ),
