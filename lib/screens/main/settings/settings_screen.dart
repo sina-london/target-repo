@@ -17,7 +17,13 @@ class SettingsScreen extends StatelessWidget {
   }) {
     final theme = Theme.of(context);
     return GestureDetector(
-      onTap: () => Navigator.push(context, CupertinoPageRoute(builder: (context) => destination)),
+      onTap: () => Navigator.push(
+        context,
+        CupertinoPageRoute(
+          builder: (context) =>
+              SafeArea(maintainBottomViewPadding: true, child: destination),
+        ),
+      ),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
         child: Card(
@@ -75,59 +81,62 @@ class SettingsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      extendBody: true,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        toolbarHeight: 200,
-        leading: IconButton(
-          onPressed: () => Navigator.pop(context),
-          icon: HugeIcon(
-            icon: HugeIcons.strokeRoundedCancel01,
-            size: 30,
-            color: Theme.of(context).colorScheme.onSurface,
-          ),
-        ),
-        title: Text(
-          "Settings",
-          style: Theme.of(context).textTheme.headlineLarge,
-        ),
-      ),
-      body: ListView(
-        children: [
-          // _buildCustomTile(
-          //   context: context,
-          //   leadingIcon: HugeIcons.strokeRoundedProfile,
-          //   title: "Profile (SOON)",
-          //   subtitle: "Information about you",
-          //   destination: const ProfileScreen(),
-          // ),
-          _buildCustomTile(
-            context: context,
-            leadingIcon: Icons.color_lens,
-            title: "Theme",
-            subtitle: "Change the app theme",
-            destination: const ThemeScreen(
-              title: 'Theme',
+    return SafeArea(
+      maintainBottomViewPadding: true,
+      child: Scaffold(
+        extendBody: true,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          toolbarHeight: 200,
+          leading: IconButton(
+            onPressed: () => Navigator.pop(context),
+            icon: HugeIcon(
+              icon: HugeIcons.strokeRoundedCancel01,
+              size: 30,
+              color: Theme.of(context).colorScheme.onSurface,
             ),
           ),
-          _buildCustomTile(
-            context: context,
-            leadingIcon: HugeIcons.strokeRoundedInformationCircle,
-            title: "About",
-            subtitle: "Information about the developer",
-            destination: const AboutScreen(
-              title: 'About',
-            ),
+          title: Text(
+            "Settings",
+            style: Theme.of(context).textTheme.headlineLarge,
           ),
-          // _buildCustomTile(
-          //   context: context,
-          //   leadingIcon: HugeIcons.strokeRoundedCircleArrowDataTransferHorizontal,
-          //   title: "Storage (SOON)",
-          //   subtitle: "Export and import your data",
-          //   destination: const StorageScreen(),
-          // ),
-        ],
+        ),
+        body: ListView(
+          children: [
+            // _buildCustomTile(
+            //   context: context,
+            //   leadingIcon: HugeIcons.strokeRoundedProfile,
+            //   title: "Profile (SOON)",
+            //   subtitle: "Information about you",
+            //   destination: const ProfileScreen(),
+            // ),
+            _buildCustomTile(
+              context: context,
+              leadingIcon: Icons.color_lens,
+              title: "Theme",
+              subtitle: "Change the app theme",
+              destination: const ThemeScreen(
+                title: 'Theme',
+              ),
+            ),
+            _buildCustomTile(
+              context: context,
+              leadingIcon: HugeIcons.strokeRoundedInformationCircle,
+              title: "About",
+              subtitle: "Information about the developer",
+              destination: const AboutScreen(
+                title: 'About',
+              ),
+            ),
+            // _buildCustomTile(
+            //   context: context,
+            //   leadingIcon: HugeIcons.strokeRoundedCircleArrowDataTransferHorizontal,
+            //   title: "Storage (SOON)",
+            //   subtitle: "Export and import your data",
+            //   destination: const StorageScreen(),
+            // ),
+          ],
+        ),
       ),
     );
   }
