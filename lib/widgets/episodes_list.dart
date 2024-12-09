@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:nekoflow/data/models/episodes_model.dart';
+import 'package:nekoflow/data/models/watchlist/watchlist_model.dart';
 import 'package:nekoflow/screens/main/stream/stream_screen.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:dismissible_page/dismissible_page.dart';
 
 class EpisodesList extends StatefulWidget {
-  final String id;
-  final String name;
-  final String poster;
-  final String type;
+  final AnimeItem anime;
   final ValueNotifier<List<Episode>> episodes;
   final ValueNotifier<bool> isLoading;
   final int rangeSize;
@@ -17,10 +15,7 @@ class EpisodesList extends StatefulWidget {
 
   const EpisodesList({
     super.key,
-    required this.id,
-    required this.poster,
-    required this.name,
-    required this.type,
+    required this.anime,
     required this.episodes,
     required this.isLoading,
     this.rangeSize = 50,
@@ -38,12 +33,9 @@ class _EpisodesListState extends State<EpisodesList> {
   void _navigateToStreamScreen(BuildContext context, Episode episode) {
     context.pushTransparentRoute(
       StreamScreen(
-        id: widget.id,
-        name: widget.name,
-        episodeId: episode.episodeId,
-        poster: widget.poster,
-        episode: episode.number,
-        title: episode.title,
+        episodes: widget.episodes.value,
+        anime: AnimeItem(name: widget.anime.name, poster: widget.anime.poster, id: widget.anime.id),
+        episode: episode,
       ),
     );
     // Navigator.push(
@@ -340,7 +332,7 @@ class _EpisodeGridTile extends StatelessWidget {
                 Text(
                   " ${isWatched ? 'WATCHED' : 'FILLER'}",
                   style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.tertiary,
+                        color: Theme.of(context).colorScheme.primary,
                       ),
                   textAlign: TextAlign.center,
                 ),
@@ -381,7 +373,7 @@ class _EpisodeTile extends StatelessWidget {
                 ]
               : [
                   !episode.isFiller
-                      ? themeData.colorScheme.primary.withOpacity(0.4)
+                      ? themeData.colorScheme.primary.withOpacity(0.6)
                       : themeData.colorScheme.surface,
                   !episode.isFiller
                       ? themeData.colorScheme.secondary.withOpacity(0.7)

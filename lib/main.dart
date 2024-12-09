@@ -44,7 +44,6 @@ class _MainAppState extends State<MainApp> {
 
   Future<void> _loadTheme() async {
     final userTheme = _settingsBox.getTheme();
-    debugPrint("MAIN: $userTheme");
     setState(() {
       _theme = ThemeManager.getThemeType(userTheme!) ?? ThemeType.dark;
     });
