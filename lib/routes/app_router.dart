@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:nekoflow/screens/main/browse/browse_screen.dart';
-import 'package:nekoflow/screens/main/downloads/downloads_screen.dart';
 import 'package:nekoflow/screens/main/home/home_screen.dart';
 import 'package:nekoflow/screens/main/watchlist/watchlist_screen.dart';
 import 'package:crystal_navigation_bar/crystal_navigation_bar.dart';
@@ -23,7 +22,6 @@ class _AppRouterState extends State<AppRouter> {
     HomeScreen(name: widget.name),
     const BrowseScreen(),
     const WatchlistScreen(),
-    const DownloadsScreen()
   ];
 
   @override
@@ -55,7 +53,8 @@ class _AppRouterState extends State<AppRouter> {
               ? colorScheme.surface.withOpacity(0.5)
               : colorScheme.onSurface.withOpacity(0.5),
           enableFloatingNavBar: true,
-          marginR: const EdgeInsets.symmetric(horizontal: 90, vertical: 20),
+          // marginR: const EdgeInsets.symmetric(horizontal: 90, vertical: 20),
+          marginR: const EdgeInsets.symmetric(horizontal: 120, vertical: 20),
           splashBorderRadius: 50,
           borderRadius: 500,
           enablePaddingAnimation: true,
@@ -71,10 +70,6 @@ class _AppRouterState extends State<AppRouter> {
             CrystalNavigationBarItem(
               icon: HugeIcons.strokeRoundedCollectionsBookmark,
               unselectedIcon: HugeIcons.strokeRoundedAllBookmark,
-            ),
-            CrystalNavigationBarItem(
-              icon: HugeIcons.strokeRoundedDownload01,
-              unselectedIcon: HugeIcons.strokeRoundedFolder01,
             ),
           ],
         ),

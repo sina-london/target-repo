@@ -67,7 +67,7 @@ class _MainAppState extends State<MainApp> {
     return ValueListenableBuilder(
       valueListenable: _settingsBox.listenable(),
       builder: (context, Box<SettingsModel> box, child) {
-        _theme = ThemeManager.getThemeType(_settingsBox.getTheme() ?? 'dark') ??
+        _theme = ThemeManager.getThemeType(_settingsBox.getTheme() ?? 'crimsonAnime') ??
             _theme;
         return MaterialApp(
           debugShowCheckedModeBanner: false,
