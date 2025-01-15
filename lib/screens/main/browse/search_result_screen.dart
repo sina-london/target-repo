@@ -25,14 +25,30 @@ class _SearchResultScreenState extends State<SearchResultScreen> {
   List<AnimeResult> _animeResults = [];
   int _currentPage = 1;
   int _totalPages = 1;
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
-    // Initialize with the initial search results
     _animeResults = widget.searchModel.animes;
     _currentPage = widget.searchModel.currentPage;
     _totalPages = widget.searchModel.totalPages;
+    
+    _scrollController.addListener(_scrollListener);
+  }
+
+  void _scrollListener() {
+    if (_scrollController.position.pixels == _scrollController.position.maxScrollExtent) {
+      if (_currentPage < _totalPages) {
+        _loadPage(_currentPage + 1);
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadPage(int page) async {
@@ -43,17 +59,14 @@ class _SearchResultScreenState extends State<SearchResultScreen> {
     });
 
     try {
-      // Load results for the specified page
       SearchModel updatedSearchModel;
       if (widget.searchType == 'query') {
         updatedSearchModel = await widget.animeService
             .fetchByQuery(query: widget.searchModel.searchQuery, page: page);
       } else {
-        // For genre search, transform the genre name back to original format
         final genreDetail = await widget.animeService
             .fetchGenreAnime(widget.searchModel.searchQuery, page: page);
 
-        // Convert genre detail to search model
         updatedSearchModel = SearchModel(
           currentPage: genreDetail.data.currentPage,
           hasNextPage: genreDetail.data.hasNextPage,
@@ -76,8 +89,11 @@ class _SearchResultScreenState extends State<SearchResultScreen> {
       }
 
       setState(() {
-        // Replace results with new page results
-        _animeResults = updatedSearchModel.animes;
+        if (page == 1) {
+          _animeResults = updatedSearchModel.animes;
+        } else {
+          _animeResults.addAll(updatedSearchModel.animes);
+        }
         _currentPage = updatedSearchModel.currentPage;
         _totalPages = updatedSearchModel.totalPages;
         _isLoading = false;
@@ -86,278 +102,167 @@ class _SearchResultScreenState extends State<SearchResultScreen> {
       setState(() {
         _isLoading = false;
       });
-      // Show an error snackbar
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to load page: $e')),
+        SnackBar(
+          content: Text('Failed to load page: $e'),
+          behavior: SnackBarBehavior.floating,
+        ),
       );
     }
   }
 
-  // Toggle layout method
   void _toggleLayout() {
     setState(() {
       _isGridLayout = !_isGridLayout;
     });
   }
 
-  // Widget _buildFloatingPagination() {
-  //   return Padding(
-  //     padding: EdgeInsets.symmetric(horizontal: 100, vertical: 15),
-  //     child: Container(
-  //       decoration: BoxDecoration(
-  //           color: Theme.of(context).colorScheme.surface,
-  //           borderRadius: BorderRadius.circular(100),
-  //           boxShadow: [
-  //             BoxShadow(
-  //                 color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
-  //                 blurRadius: 10,
-  //                 spreadRadius: 0,
-  //                 offset: Offset(0, -2))
-  //           ]),
-  //       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-  //       child: Row(
-  //         mainAxisSize: MainAxisSize.max,
-  //         mainAxisAlignment: MainAxisAlignment.center,
-  //         children: [
-  //           // Previous Page Button
-  //           IconButton(
-  //             icon: Icon(Icons.arrow_back_ios, size: 20),
-  //             color: _currentPage > 1
-  //                 ? Theme.of(context).colorScheme.primary
-  //                 : Colors.grey,
-  //             onPressed:
-  //                 _currentPage > 1 ? () => _loadPage(_currentPage - 1) : null,
-  //           ),
-
-  //           // Page Indicator with Animation
-  //           AnimatedSwitcher(
-  //             duration: Duration(milliseconds: 300),
-  //             child: Text(
-  //               '$_currentPage / $_totalPages',
-  //               key: ValueKey(_currentPage),
-  //               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-  //                   fontWeight: FontWeight.bold,
-  //                   color: Theme.of(context).colorScheme.primary),
-  //             ),
-  //           ),
-
-  //           // Next Page Button
-  //           IconButton(
-  //             icon: Icon(Icons.arrow_forward_ios, size: 20),
-  //             color: _currentPage < _totalPages
-  //                 ? Theme.of(context).colorScheme.primary
-  //                 : Colors.grey,
-  //             onPressed: _currentPage < _totalPages
-  //                 ? () => _loadPage(_currentPage + 1)
-  //                 : null,
-  //           ),
-  //         ],
-  //       ),
-  //     ),
-  //   );
-  // }
-
-  Widget _buildAdvancedPagination() {
+  Widget _buildPaginationIndicator() {
     return Container(
-      height: 100,
-      margin: EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.all(16),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Previous Button
-          ElevatedButton.icon(
-            icon: Icon(Icons.chevron_left),
-            label: Text('Previous'),
-            onPressed:
-                _currentPage > 1 ? () => _loadPage(_currentPage - 1) : null,
+          IconButton(
+            icon: Icon(Icons.first_page),
+            onPressed: _currentPage > 1 ? () => _loadPage(1) : null,
           ),
-
-          // Page Jump Dropdown
-          Expanded(
-            child: Center(
-              child: DropdownButton<int>(
-                value: _currentPage,
-                items: List.generate(
-                    _totalPages,
-                    (index) => DropdownMenuItem(
-                          value: index + 1,
-                          child: Text('Page ${index + 1}'),
-                        )),
-                onChanged: (page) {
-                  if (page != null) _loadPage(page);
-                },
-              ),
+          IconButton(
+            icon: Icon(Icons.chevron_left),
+            onPressed: _currentPage > 1 ? () => _loadPage(_currentPage - 1) : null,
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (_isLoading)
+                  Container(
+                    margin: const EdgeInsets.only(right: 8),
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
+                  ),
+                Text(
+                  '$_currentPage / $_totalPages',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+              ],
             ),
           ),
-
-          // Next Button
-          ElevatedButton.icon(
-            icon: Text('Next'),
-            label: Icon(Icons.chevron_right),
-            onPressed: _currentPage < _totalPages
-                ? () => _loadPage(_currentPage + 1)
-                : null,
+          IconButton(
+            icon: Icon(Icons.chevron_right),
+            onPressed: _currentPage < _totalPages ? () => _loadPage(_currentPage + 1) : null,
+          ),
+          IconButton(
+            icon: Icon(Icons.last_page),
+            onPressed: _currentPage < _totalPages ? () => _loadPage(_totalPages) : null,
           ),
         ],
       ),
     );
   }
 
-  // Widget _buildInputPagination() {
-  //   final TextEditingController pageController =
-  //       TextEditingController(text: _currentPage.toString());
-
-  //   return Container(
-  //     padding: EdgeInsets.symmetric(horizontal: 16),
-  //     child: Row(
-  //       children: [
-  //         IconButton(
-  //           icon: Icon(Icons.first_page),
-  //           onPressed: _currentPage > 1 ? () => _loadPage(1) : null,
-  //         ),
-  //         IconButton(
-  //           icon: Icon(Icons.chevron_left),
-  //           onPressed:
-  //               _currentPage > 1 ? () => _loadPage(_currentPage - 1) : null,
-  //         ),
-  //         Expanded(
-  //           child: TextField(
-  //             controller: pageController,
-  //             keyboardType: TextInputType.number,
-  //             textAlign: TextAlign.center,
-  //             decoration: InputDecoration(
-  //               labelText: 'Go to Page',
-  //               border: OutlineInputBorder(),
-  //             ),
-  //             onSubmitted: (value) {
-  //               int? page = int.tryParse(value);
-  //               if (page != null && page > 0 && page <= _totalPages) {
-  //                 _loadPage(page);
-  //               } else {
-  //                 // Show error
-  //                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-  //                   content: Text('Invalid page number'),
-  //                   backgroundColor: Colors.red,
-  //                 ));
-  //               }
-  //             },
-  //           ),
-  //         ),
-  //         IconButton(
-  //           icon: Icon(Icons.chevron_right),
-  //           onPressed: _currentPage < _totalPages
-  //               ? () => _loadPage(_currentPage + 1)
-  //               : null,
-  //         ),
-  //         IconButton(
-  //           icon: Icon(Icons.last_page),
-  //           onPressed: _currentPage < _totalPages
-  //               ? () => _loadPage(_totalPages)
-  //               : null,
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
-
   @override
   Widget build(BuildContext context) {
     ThemeData themeData = Theme.of(context);
-    return SafeArea(
-      maintainBottomViewPadding: true,
-      child: Scaffold(
-        extendBody: true,
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          leading: IconButton(
-            onPressed: () => Navigator.pop(context),
-            icon: const Icon(
-              Icons.navigate_before,
-              size: 30,
-            ),
+    return Scaffold(
+      appBar: AppBar(
+        elevation: 0,
+        backgroundColor: themeData.colorScheme.surface,
+        leading: IconButton(
+          onPressed: () => Navigator.pop(context),
+          icon: Icon(
+            Icons.arrow_back,
+            color: themeData.colorScheme.onSurface,
           ),
-          title: Text(
-            "Search Results for \"${widget.searchModel.searchQuery}\"",
-            style: themeData.textTheme.bodyLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-          actions: [
-            // Layout toggle button
-            IconButton(
-              icon: Icon(_isGridLayout ? Icons.view_list : Icons.grid_view),
-              onPressed: _toggleLayout,
-              tooltip:
-                  _isGridLayout ? 'Switch to List View' : 'Switch to Grid View',
-            ),
-          ],
-          titleSpacing: 0,
-          forceMaterialTransparency: true,
         ),
-        body: Column(
+        title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Total results and pagination info
-            Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-              child: Text(
-                'Total Results: ${_animeResults.length} | Page $_currentPage of $_totalPages',
-                style: themeData.textTheme.bodyMedium?.copyWith(
-                  color: Colors.grey[700],
-                ),
+            Text(
+              "Search Results",
+              style: themeData.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
               ),
             ),
-      
-            // Conditional rendering based on layout
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: _isLoading
-                    ? const Center(child: CircularProgressIndicator())
-                    : _isGridLayout
-                        ? _buildGridView(themeData)
-                        : _buildListView(themeData),
+            Text(
+              '"${widget.searchModel.searchQuery}"',
+              style: themeData.textTheme.bodySmall?.copyWith(
+                color: themeData.colorScheme.onSurface.withOpacity(0.6),
               ),
             ),
-      
-            // Add some bottom padding
-            const SizedBox(height: 16),
           ],
         ),
-        bottomNavigationBar: // Pagination Widget
-            _totalPages < 0 || _totalPages > 1
-                ? _buildAdvancedPagination()
-                : null,
+        actions: [
+          IconButton(
+            icon: Icon(
+              _isGridLayout ? Icons.view_list : Icons.grid_view,
+              color: themeData.colorScheme.onSurface,
+            ),
+            onPressed: _toggleLayout,
+            tooltip: _isGridLayout ? 'Switch to List View' : 'Switch to Grid View',
+          ),
+        ],
+      ),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Text(
+              '${_animeResults.length} results found',
+              style: themeData.textTheme.bodyMedium?.copyWith(
+                color: themeData.colorScheme.onSurface.withOpacity(0.8),
+              ),
+            ),
+          ),
+          Expanded(
+            child: RefreshIndicator(
+              onRefresh: () => _loadPage(1),
+              child: _isGridLayout
+                  ? _buildGridView(themeData)
+                  : _buildListView(themeData),
+            ),
+          ),
+          _buildPaginationIndicator(),
+        ],
       ),
     );
   }
 
-  // Grid View Builder
   Widget _buildGridView(ThemeData themeData) {
     return GridView.builder(
+      controller: _scrollController,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
         childAspectRatio: 0.7,
-        crossAxisSpacing: 16,
-        mainAxisSpacing: 16,
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 12,
       ),
       itemCount: _animeResults.length,
       itemBuilder: (context, index) {
         final anime = _animeResults[index];
-        return AnimeCard(anime: anime, tag: 'search_grid_$index');
+        return AnimeCard(
+          anime: anime,
+          tag: 'search_grid_$index',
+        );
       },
     );
   }
 
-  // List View Builder
   Widget _buildListView(ThemeData themeData) {
     return ListView.separated(
+      controller: _scrollController,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       itemCount: _animeResults.length,
-      separatorBuilder: (context, index) => const SizedBox(
-        height: 10,
-      ),
+      separatorBuilder: (context, index) => const Divider(height: 1),
       itemBuilder: (context, index) {
         final anime = _animeResults[index];
         return AnimeCard(
