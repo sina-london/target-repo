@@ -81,4 +81,13 @@ class AnimeResult implements BaseAnimeCard{
       episodes: AnimeEpisodes.fromJson(json['episodes']),
     );
   }
+
+  @override
+  double? get score => null;
+
+  @override
+  int? get episodeCount => episodes.sub;
+
+  @override
+  String? get status => null;
 }
