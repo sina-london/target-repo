@@ -102,19 +102,16 @@ class UISettingsScreen extends ConsumerWidget {
           SliverList(
             delegate: SliverChildListDelegate([
               SettingsSection(
-                compact: true,
                 context: context,
                 title: 'Layout',
                 items: [
                   SettingsItem(
-                    compact: true,
                     onTap: () => _showDefaultTabDialog(context, ref),
                     icon: Iconsax.home,
                     title: 'Default Tab',
                     description: 'Set the tab shown on app launch',
                   ),
                   SettingsItem(
-                    compact: true,
                     onTap: () {},
                     icon: Iconsax.grid_3,
                     title: 'Layout Style',
@@ -124,12 +121,10 @@ class UISettingsScreen extends ConsumerWidget {
                 ],
               ),
               SettingsSection(
-                compact: true,
                 context: context,
                 title: 'Content Display',
                 items: [
                   SettingsItem(
-                    compact: true,
                     icon: Iconsax.card,
                     title: 'Card Style',
                     description: 'Customize card appearance',
@@ -138,12 +133,10 @@ class UISettingsScreen extends ConsumerWidget {
                 ],
               ),
               SettingsSection(
-                compact: true,
                 context: context,
                 title: 'Immersive Mode',
                 items: [
                   SettingsSwitch(
-                    compact: true,
                     icon: Icons.fullscreen,
                     title: 'Enable Immersive Mode',
                     description:
@@ -197,7 +190,7 @@ class UISettingsScreen extends ConsumerWidget {
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide(
-                      color: colorScheme.outline.withValues(alpha: 0.2),
+                      color: colorScheme.outline.withOpacity(0.2),
                     ),
                   ),
                   filled: true,
@@ -279,7 +272,7 @@ class UISettingsScreen extends ConsumerWidget {
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide(
-                          color: colorScheme.outline.withValues(alpha: 0.2),
+                          color: colorScheme.outline.withOpacity(0.2),
                         ),
                       ),
                       filled: true,
@@ -358,7 +351,7 @@ class UISettingsScreen extends ConsumerWidget {
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
-              color: colorScheme.onSurface.withValues(alpha: 0.8),
+              color: colorScheme.onSurface.withOpacity(0.8),
             ),
           ),
           const SizedBox(height: 8),
