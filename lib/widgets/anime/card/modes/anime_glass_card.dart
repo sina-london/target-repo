@@ -12,7 +12,10 @@ class GlassCard extends StatelessWidget {
   final bool isHovered;
 
   const GlassCard(
-      {super.key, required this.anime, required this.tag, required this.isHovered});
+      {super.key,
+      required this.anime,
+      required this.tag,
+      required this.isHovered});
 
   @override
   Widget build(BuildContext context) {
@@ -20,7 +23,7 @@ class GlassCard extends StatelessWidget {
     return ClipRRect(
       borderRadius:
           (theme.cardTheme.shape as RoundedRectangleBorder?)?.borderRadius ??
-              BorderRadius.circular(8),
+              BorderRadius.circular(22),
       child: Stack(
         children: [
           // Base image
@@ -29,8 +32,8 @@ class GlassCard extends StatelessWidget {
           // Blur overlay with better glass effect
           BackdropFilter(
             filter: ImageFilter.blur(
-              sigmaX: isHovered ? 3.0 : 1.5,
-              sigmaY: isHovered ? 3.0 : 1.5,
+              sigmaX: isHovered ? 1.5 : 1,
+              sigmaY: isHovered ? 1.5 : 1,
             ),
             child: Container(
               decoration: BoxDecoration(
@@ -104,7 +107,6 @@ class GlassCard extends StatelessWidget {
                         shadows: [
                           Shadow(
                             color: Colors.black.withOpacity(0.3),
-                            blurRadius: 4,
                           ),
                         ],
                       ),
@@ -153,45 +155,42 @@ class _GlassTag extends StatelessWidget {
     final theme = Theme.of(context);
     return ClipRRect(
       borderRadius: BorderRadius.circular(large ? 10 : 8),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 4.0, sigmaY: 4.0),
-        child: Container(
-          padding: EdgeInsets.symmetric(
-            horizontal: large ? 10 : 8,
-            vertical: large ? 6 : 4,
+      child: Container(
+        padding: EdgeInsets.symmetric(
+          horizontal: large ? 10 : 8,
+          vertical: large ? 6 : 4,
+        ),
+        decoration: BoxDecoration(
+          color: primaryColor.withOpacity(0.5),
+          border: Border.all(
+            color: primaryColor.withOpacity(0.5),
+            width: 1,
           ),
-          decoration: BoxDecoration(
-            color: primaryColor.withOpacity(0.3),
-            border: Border.all(
-              color: primaryColor.withOpacity(0.5),
-              width: 1,
-            ),
-            borderRadius: BorderRadius.circular(large ? 10 : 8),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (icon != null) ...[
-                Icon(
-                  icon,
-                  size: large ? 14 : 12,
-                  color: textColor,
-                ),
-                SizedBox(width: large ? 6 : 4),
-              ],
-              Text(
-                text,
-                style: (large
-                        ? theme.textTheme.labelMedium
-                        : theme.textTheme.labelSmall)
-                    ?.copyWith(
-                  color: textColor,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 0.2,
-                ),
+          borderRadius: BorderRadius.circular(large ? 10 : 8),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (icon != null) ...[
+              Icon(
+                icon,
+                size: large ? 14 : 12,
+                color: textColor,
               ),
+              SizedBox(width: large ? 6 : 4),
             ],
-          ),
+            Text(
+              text,
+              style: (large
+                      ? theme.textTheme.labelMedium
+                      : theme.textTheme.labelSmall)
+                  ?.copyWith(
+                color: textColor,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 0.2,
+              ),
+            ),
+          ],
         ),
       ),
     );
