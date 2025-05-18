@@ -352,7 +352,7 @@ class UISettingsModel extends HiveObject {
     this.defaultTab = 'Home',
     this.showThumbnails = true,
     this.cardStyle = 'Card',
-    this.layoutStyle = 'Grid',
+    this.layoutStyle = 'horizontal',
     this.immersiveMode = false,
   });
 
