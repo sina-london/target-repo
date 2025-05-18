@@ -9,7 +9,6 @@ import 'package:shonenx/app_initializer.dart';
 import 'package:shonenx/providers/hive_service_provider.dart';
 import 'package:shonenx/theme/app_theme.dart';
 import 'package:shonenx/router/router.dart';
-import 'package:shonenx/widgets/ui/shonenx_search_bar.dart';
 import 'package:window_manager/window_manager.dart';
 
 class ToggleFullscreenIntent extends Intent {

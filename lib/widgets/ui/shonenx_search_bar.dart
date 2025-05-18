@@ -210,6 +210,7 @@ class SearchBarExample extends StatefulWidget {
 
 class _SearchBarExampleState extends State<SearchBarExample> {
   final TextEditingController _searchController = TextEditingController();
+  // ignore: unused_field
   String _searchQuery = '';
   List<String> _filteredItems = [];
   final List<String> _exampleItems = [

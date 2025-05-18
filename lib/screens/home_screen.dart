@@ -675,7 +675,7 @@ class _VerticalAnimeSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final actualCrossAxisCount = _getCrossAxisCount(context);
+    // final actualCrossAxisCount = _getCrossAxisCount(context);
     final actualAspectRatio = _getCardAspectRatio(uiSettings.cardStyle);
 
     return SliverToBoxAdapter(

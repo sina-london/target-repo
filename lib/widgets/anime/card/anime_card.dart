@@ -148,7 +148,7 @@ class _ErrorPlaceholder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    // final theme = Theme.of(context);
     return Skeletonizer(child: Bone.square());
   }
 }

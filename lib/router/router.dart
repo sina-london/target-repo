@@ -313,7 +313,7 @@ class _AppRouterScreenState extends State<AppRouterScreen>
                   controller: _tabController,
                   physics: const BouncingScrollPhysics(),
                   children: navItems.asMap().entries.map((entry) {
-                    final index = entry.key;
+                    // final index = entry.key;
                     final item = entry.value;
                     if (item.path == '/browse') {
                       // Use Consumer to react to route changes

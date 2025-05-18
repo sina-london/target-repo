@@ -10,7 +10,7 @@ import 'dart:developer' as developer;
 
 class BottomControls extends StatelessWidget {
   static const _padding = EdgeInsets.symmetric(horizontal: 12, vertical: 6);
-  static final _borderRadius = BorderRadius.circular(10);
+  // static final _borderRadius = BorderRadius.circular(10);
 
   final AnimeProvider animeProvider;
   final WatchState watchState;
