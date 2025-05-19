@@ -52,7 +52,7 @@ class ProviderSettingsModel extends HiveObject {
   final String? customApiUrl;
 
   ProviderSettingsModel({
-    this.selectedProviderName = 'animekai',
+    this.selectedProviderName = 'hianime',
     this.customApiUrl,
   });
 
