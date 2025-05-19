@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:developer';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:html/dom.dart';
 import 'package:http/http.dart' as http;
 import 'package:shonenx/core/models/anime/episode_model.dart';
@@ -15,7 +16,7 @@ class KaidoProvider extends AnimeProvider {
       : super(
             apiUrl: customApiUrl != null
                 ? '$customApiUrl/anime/zoro'
-                : 'https://consumet-api-production-cfef.up.railway.app/anime/zoro',
+                : "${dotenv.env['API_URL']}/anime/zoro",
             baseUrl: 'https://kaido.to',
             providerName: 'kaido');
 
