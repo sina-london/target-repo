@@ -9,17 +9,15 @@ import 'package:shonenx/core/models/anilist/anilist_user.dart';
 import 'package:shonenx/core/models/anime/page_model.dart';
 import 'package:shonenx/data/hive/boxes/anime_watch_progress_box.dart';
 import 'package:shonenx/data/hive/boxes/settings_box.dart';
-import 'package:shonenx/data/hive/models/settings_offline_model.dart';
 import 'package:shonenx/helpers/navigation.dart';
 import 'package:shonenx/providers/anilist/anilist_user_provider.dart';
 import 'package:shonenx/providers/hive_service_provider.dart';
 import 'package:shonenx/providers/homepage_provider.dart';
 import 'package:shonenx/utils/greeting_methods.dart';
-import 'package:shonenx/widgets/anime/card/anime_card.dart';
+import 'package:shonenx/widgets/anime/anime_section.dart';
 import 'package:shonenx/widgets/anime/spotlight_card/anime_spotlight_card.dart';
 import 'package:shonenx/widgets/anime/continue_watching/continue_watching_view.dart';
 import 'package:shonenx/widgets/ui/slide_indicator.dart';
-import 'package:uuid/uuid.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -62,47 +60,31 @@ class HomeScreen extends ConsumerWidget {
     final theme = Theme.of(context);
     return FloatingActionButton.extended(
       backgroundColor: theme.colorScheme.primaryContainer,
-      onPressed: null, // Handled by SearchBar's onSubmitted
+      onPressed: null, // Handled by TextField's onSubmitted
       label: Container(
-          width: 300,
-          child: Row(
-            children: [
-              Icon(Iconsax.search_normal,
-                  color: theme.colorScheme.onPrimaryContainer),
-              const SizedBox(width: 10),
-              Expanded(
-                child: TextField(
-                  keyboardType: TextInputType.text,
-                  onSubmitted: (value) => context.go('/browse?keyword=$value'),
-                  textInputAction: TextInputAction.search,
-                  decoration: InputDecoration(
-                    hintStyle: TextStyle(
-                      color: theme.colorScheme.onPrimaryContainer,
-                    ),
-                    border: InputBorder.none,
-                    hintText: 'Search anime...',
+        width: 300,
+        child: Row(
+          children: [
+            Icon(Iconsax.search_normal,
+                color: theme.colorScheme.onPrimaryContainer),
+            const SizedBox(width: 10),
+            Expanded(
+              child: TextField(
+                keyboardType: TextInputType.text,
+                onSubmitted: (value) => context.go('/browse?keyword=$value'),
+                textInputAction: TextInputAction.search,
+                decoration: InputDecoration(
+                  hintStyle: TextStyle(
+                    color: theme.colorScheme.onPrimaryContainer,
                   ),
+                  border: InputBorder.none,
+                  hintText: 'Search anime...',
                 ),
-              )
-            ],
-          )
-
-          // child: SearchBar(
-          //   padding: const WidgetStatePropertyAll(EdgeInsets.only(left: 15)),
-
-          //   leading: Icon(Iconsax.search_normal,
-          //       color: theme.colorScheme.onPrimaryContainer),
-          //   autoFocus: true,
-          //   hintText: 'Search anime...',
-          //   hintStyle: WidgetStatePropertyAll(
-          //     TextStyle(color: theme.colorScheme.onPrimaryContainer),
-          //   ),
-          //   textStyle: WidgetStatePropertyAll(
-          //     TextStyle(color: theme.colorScheme.onPrimaryContainer),
-          //   ),
-          //   onSubmitted: (value) => context.go('/browse?keyword=$value'),
-          // ),
-          ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -138,58 +120,38 @@ class _HomeContent extends StatelessWidget {
             ),
           ),
           if (uiSettings.layoutStyle == 'horizontal') ...[
-            _HorizontalAnimeSection(
+            HorizontalAnimeSection(
               title: 'Popular',
               animes: homePage?.popularAnime,
               uiSettings: uiSettings,
             ),
-            _HorizontalAnimeSection(
+            HorizontalAnimeSection(
               title: 'Trending',
               animes: homePage?.trendingAnime,
               uiSettings: uiSettings,
             ),
-            // _HorizontalAnimeSection(
-            //   title: 'Top Rated',
-            //   animes: homePage?.recentlyUpdated,
-            //   uiSettings: uiSettings,
-            // ),
-            _HorizontalAnimeSection(
+            HorizontalAnimeSection(
               title: 'Most Favorite',
               animes: homePage?.mostFavoriteAnime,
               uiSettings: uiSettings,
             ),
-            // _HorizontalAnimeSection(
-            //   title: 'Most Watched',
-            //   animes: homePage?.mostWatchedAnime,
-            //   uiSettings: uiSettings,
-            // ),
           ],
           if (uiSettings.layoutStyle == 'vertical') ...[
-            _VerticalAnimeSection(
+            VerticalAnimeSection(
               title: 'Popular',
               animes: homePage?.popularAnime,
               uiSettings: uiSettings,
             ),
-            _VerticalAnimeSection(
+            VerticalAnimeSection(
               title: 'Trending',
               animes: homePage?.trendingAnime,
               uiSettings: uiSettings,
             ),
-            // _VerticalAnimeSection(
-            //   title: 'Top Rated',
-            //   animes: homePage?.recentlyUpdated,
-            //   uiSettings: uiSettings,
-            // ),
-            _VerticalAnimeSection(
+            VerticalAnimeSection(
               title: 'Most Favorite',
               animes: homePage?.mostFavoriteAnime,
               uiSettings: uiSettings,
             ),
-            // _VerticalAnimeSection(
-            //   title: 'Most Watched',
-            //   animes: homePage?.mostWatchedAnime,
-            //   uiSettings: uiSettings,
-            // ),
           ],
           const SliverToBoxAdapter(child: SizedBox(height: 100)),
         ],
@@ -340,7 +302,10 @@ class ActionPanel extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         if (!isDesktop) ...[
-          const _ActionButton(icon: Iconsax.search_normal, route: null),
+          _ActionButton(
+            icon: Iconsax.search_normal,
+            onTap: () => showSearchModal(context),
+          ),
           const SizedBox(width: 10),
         ],
         const _ActionButton(icon: Iconsax.setting_2, route: '/settings'),
@@ -352,8 +317,13 @@ class ActionPanel extends StatelessWidget {
 class _ActionButton extends StatelessWidget {
   final IconData icon;
   final String? route;
+  final VoidCallback? onTap;
 
-  const _ActionButton({required this.icon, this.route});
+  const _ActionButton({
+    required this.icon,
+    this.route,
+    this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -362,7 +332,7 @@ class _ActionButton extends StatelessWidget {
       color: theme.colorScheme.secondaryContainer,
       borderRadius: BorderRadius.circular(16),
       child: InkWell(
-        onTap: route != null ? () => context.push(route!) : null,
+        onTap: onTap ?? (route != null ? () => context.push(route!) : null),
         borderRadius: BorderRadius.circular(16),
         child: Padding(
           padding: const EdgeInsets.all(12),
@@ -371,6 +341,69 @@ class _ActionButton extends StatelessWidget {
       ),
     );
   }
+}
+
+// Show a modal SearchBar for smaller screens
+void showSearchModal(BuildContext context) {
+  final theme = Theme.of(context);
+  showDialog(
+    context: context,
+    builder: (context) => Dialog(
+      backgroundColor: Colors.transparent,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        constraints: const BoxConstraints(maxWidth: 400),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SearchBar(
+              padding: WidgetStatePropertyAll(
+                  EdgeInsets.symmetric(horizontal: 15, vertical: 5)),
+              leading: Icon(Iconsax.search_normal,
+                  color: theme.colorScheme.onSurface),
+              trailing: [
+                IconButton(
+                  icon: Icon(Icons.close, color: theme.colorScheme.onSurface),
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+              ],
+              shape: WidgetStatePropertyAll(
+                RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(50),
+                  side: BorderSide(
+                    color: theme.colorScheme.primaryContainer,
+                    width: 2,
+                  ),
+                ),
+              ),
+              hintText: 'Search anime...',
+              hintStyle: WidgetStatePropertyAll(
+                TextStyle(color: theme.colorScheme.onSurface.withOpacity(0.7)),
+              ),
+              textStyle: WidgetStatePropertyAll(
+                TextStyle(color: theme.colorScheme.onSurface),
+              ),
+              backgroundColor: WidgetStatePropertyAll(
+                theme.colorScheme.surfaceContainer,
+              ),
+              elevation: const WidgetStatePropertyAll(0),
+              autoFocus: true,
+              keyboardType: TextInputType.text,
+              textInputAction: TextInputAction.search,
+              onSubmitted: (value) {
+                Navigator.of(context).pop(); // Close the dialog
+                context.go('/browse?keyword=$value');
+              },
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    ),
+  );
 }
 
 class DiscoverCard extends StatelessWidget {
@@ -526,219 +559,6 @@ class _SpotlightHeader extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _HorizontalAnimeSection extends StatelessWidget {
-  final String title;
-  final List<Media>? animes;
-  final UISettingsModel uiSettings;
-
-  const _HorizontalAnimeSection({
-    required this.title,
-    required this.animes,
-    required this.uiSettings,
-  });
-
-  double _getCardWidth(BuildContext context, String mode) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    return switch (mode) {
-      'Card' => screenWidth < 600 ? 140.0 : 160.0,
-      'Compact' => screenWidth < 600 ? 100.0 : 120.0,
-      'Poster' => screenWidth < 600 ? 160.0 : 180.0,
-      'Glass' => screenWidth < 600 ? 150.0 : 170.0,
-      'Neon' => screenWidth < 600 ? 140.0 : 160.0,
-      'Minimal' => screenWidth < 600 ? 130.0 : 150.0,
-      'Cinematic' => screenWidth < 600 ? 200.0 : 350,
-      _ => screenWidth < 600 ? 140.0 : 160.0,
-    };
-  }
-
-  double _getCardHeight(BuildContext context, String mode) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    return switch (mode) {
-      'Card' => screenWidth < 600 ? 200.0 : 240.0,
-      'Compact' => screenWidth < 600 ? 150.0 : 180.0,
-      'Poster' => screenWidth < 600 ? 260.0 : 300.0,
-      'Glass' => screenWidth < 600 ? 220.0 : 260.0,
-      'Neon' => screenWidth < 600 ? 200.0 : 240.0,
-      'Minimal' => screenWidth < 600 ? 180.0 : 220.0,
-      'Cinematic' => screenWidth < 600 ? 100.0 : 120.0,
-      _ => screenWidth < 600 ? 200.0 : 240.0,
-    };
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final cardWidth = _getCardWidth(context, uiSettings.cardStyle);
-    final cardHeight = _getCardHeight(context, uiSettings.cardStyle);
-
-    return SliverToBoxAdapter(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(15, 32, 15, 16),
-            child: Text(
-              title,
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.w600,
-                color: colorScheme.onSurface,
-              ),
-            ),
-          ),
-          SizedBox(
-            height: cardHeight,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 15),
-              physics: const ClampingScrollPhysics(),
-              itemCount: animes?.length ?? 10,
-              itemBuilder: (context, index) {
-                final anime = animes?[index];
-                final tag = const Uuid().v4();
-                return Padding(
-                  padding: const EdgeInsets.only(right: 16),
-                  child: SizedBox(
-                    width: cardWidth,
-                    child: AnimatedAnimeCard(
-                      anime: anime,
-                      tag: tag,
-                      mode: uiSettings.cardStyle,
-                      onTap: () => anime != null
-                          ? navigateToDetail(context, anime, tag)
-                          : null,
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _VerticalAnimeSection extends StatelessWidget {
-  final String title;
-  final List<Media>? animes;
-  final UISettingsModel uiSettings;
-  final int crossAxisCount;
-  final double aspectRatio;
-
-  const _VerticalAnimeSection({
-    required this.title,
-    required this.animes,
-    required this.uiSettings,
-    this.crossAxisCount = 2,
-    this.aspectRatio = 0.7,
-  });
-
-  double _getCardWidth(BuildContext context, String mode) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    return switch (mode) {
-      'Card' => screenWidth < 600 ? 140.0 : 160.0,
-      'Compact' => screenWidth < 600 ? 100.0 : 120.0,
-      'Poster' => screenWidth < 600 ? 160.0 : 180.0,
-      'Glass' => screenWidth < 600 ? 150.0 : 170.0,
-      'Neon' => screenWidth < 600 ? 140.0 : 160.0,
-      'Minimal' => screenWidth < 600 ? 130.0 : 150.0,
-      'Cinematic' => screenWidth < 600 ? 200.0 : 350,
-      _ => screenWidth < 600 ? 140.0 : 160.0,
-    };
-  }
-
-  double _getCardHeight(BuildContext context, String mode) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    return switch (mode) {
-      'Card' => screenWidth < 600 ? 200.0 : 240.0,
-      'Compact' => screenWidth < 600 ? 150.0 : 180.0,
-      'Poster' => screenWidth < 600 ? 260.0 : 300.0,
-      'Glass' => screenWidth < 600 ? 220.0 : 260.0,
-      'Neon' => screenWidth < 600 ? 200.0 : 240.0,
-      'Minimal' => screenWidth < 600 ? 180.0 : 220.0,
-      'Cinematic' => screenWidth < 600 ? 100.0 : 120.0,
-      _ => screenWidth < 600 ? 200.0 : 240.0,
-    };
-  }
-
-  int _getCrossAxisCount(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-
-    // Responsive grid layout based on screen width
-    if (screenWidth < 400) return 2;
-    if (screenWidth < 700) return 3;
-    if (screenWidth < 1000) return 4;
-    return 8;
-  }
-
-  double _getCardAspectRatio(String mode) {
-    return switch (mode) {
-      'Card' => 0.7,
-      'Compact' => 0.65,
-      'Poster' => 0.6,
-      'Glass' => 0.75,
-      'Neon' => 0.7,
-      'Minimal' => 0.72,
-      'Cinematic' => 1.8, // Wider cards for cinematic style
-      _ => 0.7,
-    };
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    // final actualCrossAxisCount = _getCrossAxisCount(context);
-    final actualAspectRatio = _getCardAspectRatio(uiSettings.cardStyle);
-
-    return SliverToBoxAdapter(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(15, 32, 15, 16),
-            child: Text(
-              title,
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.w600,
-                color: colorScheme.onSurface,
-              ),
-            ),
-          ),
-          GridView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 15),
-            physics: const NeverScrollableScrollPhysics(),
-            shrinkWrap: true,
-            gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-              maxCrossAxisExtent: _getCardWidth(context, uiSettings.cardStyle),
-              childAspectRatio: actualAspectRatio,
-              crossAxisSpacing: 5,
-              mainAxisSpacing: 5,
-            ),
-            itemCount: animes?.length ?? 10,
-            itemBuilder: (context, index) {
-              final anime = animes?[index];
-              final tag = const Uuid().v4();
-              return AnimatedAnimeCard(
-                anime: anime,
-                tag: tag,
-                mode: uiSettings.cardStyle,
-                onTap: () => anime != null
-                    ? navigateToDetail(context, anime, tag)
-                    : null,
-              );
-            },
-          ),
-          const SizedBox(height: 16), // Bottom padding
-        ],
       ),
     );
   }
