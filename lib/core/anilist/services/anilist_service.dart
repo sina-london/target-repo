@@ -5,224 +5,274 @@ import 'package:shonenx/core/anilist/queries.dart';
 import 'package:shonenx/core/models/anilist/anilist_media_list.dart';
 import 'package:shonenx/core/models/anilist/anilist_favorites.dart';
 
+/// Custom exception for Anilist service errors
+class AnilistServiceException implements Exception {
+  final String message;
+  final dynamic error;
+
+  AnilistServiceException(this.message, [this.error]);
+
+  @override
+  String toString() =>
+      'AnilistServiceException: $message${error != null ? ' ($error)' : ''}';
+}
+
+/// Service class for interacting with the AniList GraphQL API
 class AnilistService {
-  /// **Generic method to execute GraphQL queries**
-  Future<dynamic> _executeGraphQLOperation({
+  static const _validStatuses = {
+    'CURRENT',
+    'COMPLETED',
+    'PAUSED',
+    'DROPPED',
+    'PLANNING',
+    'REPEATING',
+  };
+
+  /// Executes a GraphQL operation (query or mutation)
+  Future<T?> _executeGraphQLOperation<T>({
     required String? accessToken,
     required String query,
-    dynamic variables,
+    Map<String, dynamic>? variables,
     bool isMutation = false,
+    String operationName = '',
   }) async {
-    final client = AnilistClient.getClient(accessToken: accessToken);
-
-    final result = isMutation
-        ? await client.mutate(
-            MutationOptions(
+    try {
+      final client = AnilistClient.getClient(accessToken: accessToken);
+      final options = isMutation
+          ? MutationOptions(
               document: gql(query),
               variables: variables ?? {},
               fetchPolicy: FetchPolicy.networkOnly,
-            ),
-          )
-        : await client.query(
-            QueryOptions(
+            )
+          : QueryOptions(
               document: gql(query),
               variables: variables ?? {},
               fetchPolicy: FetchPolicy.cacheAndNetwork,
-            ),
-          );
+            );
 
-    if (result.hasException) {
-      log(query);
-      log('GraphQL Operation Failed: ${result.exception}');
+      final result = isMutation
+          ? await client.mutate(options as MutationOptions)
+          : await client.query(options as QueryOptions);
+
+      if (result.hasException) {
+        log('GraphQL Error', name: operationName, error: result.exception);
+        throw AnilistServiceException(
+            'GraphQL operation failed', result.exception);
+      }
+
+      return result.data as T?;
+    } catch (e, stackTrace) {
+      log('Operation Failed',
+          name: operationName, error: e, stackTrace: stackTrace);
+      throw AnilistServiceException('Failed to execute $operationName', e);
     }
-
-    return result.data;
   }
 
-  /// **Search for anime by title**
+  /// Converts dynamic media list to typed Media list
+  List<Media> _parseMediaList(List<dynamic>? media) =>
+      media?.map((json) => Media.fromJson(json)).toList() ?? [];
+
+  /// Search for anime by title
   Future<List<Media>> searchAnime(String title) async {
-    final data = await _executeGraphQLOperation(
+    final data = await _executeGraphQLOperation<Map<String, dynamic>>(
       accessToken: null,
       query: AnilistQueries.searchAnimeQuery,
       variables: {'search': title},
+      operationName: 'SearchAnime',
     );
-
-    final mediaList = (data?['Page']?['media'] as List<dynamic>)
-        .map((mediaJson) => Media.fromJson(mediaJson))
-        .toList();
-    return mediaList;
+    return _parseMediaList(data?['Page']?['media']);
   }
 
-  /// **Fetch user profile data**
+  /// Fetch user profile data
   Future<Map<String, dynamic>> getUserProfile(String accessToken) async {
-    final data = await _executeGraphQLOperation(
+    final data = await _executeGraphQLOperation<Map<String, dynamic>>(
       accessToken: accessToken,
       query: AnilistQueries.userProfileQuery,
+      operationName: 'GetUserProfile',
     );
-
-    if (data?['Viewer'] == null) {
-      log('User profile not found');
-      return {};
-    }
-    return data?['Viewer'];
+    return data?['Viewer'] ?? {};
   }
 
-  /// **Fetch user anime list by status**
+  /// Fetch user anime list by status
   Future<MediaListCollection> getUserAnimeList({
     required String accessToken,
     required String userId,
-    required String type, // e.g., 'ANIME' or 'MANGA'
-    required String status, // e.g., 'CURRENT', 'COMPLETED', etc.
+    required String type,
+    required String status,
   }) async {
-    if (accessToken.isEmpty) return MediaListCollection(lists: []);
-    log('Fetching anime list: User ID: $userId, Type: $type, Status: $status');
-
-    final data = await _executeGraphQLOperation(
-      accessToken: accessToken,
-      query: AnilistQueries.userAnimeListQuery,
-      variables: {'userId': userId, 'status': status, 'type': type},
-    );
-
-    if (data == null) {
-      log('Failed to fetch anime list for status: $status');
+    if (accessToken.isEmpty) {
       return MediaListCollection(lists: []);
     }
 
-    return MediaListCollection.fromJson(data);
+    final data = await _executeGraphQLOperation<Map<String, dynamic>>(
+      accessToken: accessToken,
+      query: AnilistQueries.userAnimeListQuery,
+      variables: {'userId': userId, 'status': status, 'type': type},
+      operationName: 'GetUserAnimeList',
+    );
+
+    return data != null
+        ? MediaListCollection.fromJson(data)
+        : MediaListCollection(lists: []);
   }
 
-  /// **Fetch trending anime**
+  /// Fetch trending anime
   Future<List<Media>> getTrendingAnime() async {
-    final data = await _executeGraphQLOperation(
+    final data = await _executeGraphQLOperation<Map<String, dynamic>>(
       accessToken: null,
       query: AnilistQueries.trendingAnimeQuery,
+      operationName: 'GetTrendingAnime',
     );
-
-    final mediaList = (data?['Page']?['media'] as List<dynamic>? ?? [])
-        .map((mediaJson) => Media.fromJson(mediaJson))
-        .toList();
-    return mediaList;
+    return _parseMediaList(data?['Page']?['media']);
   }
 
-  /// **Fetch popular anime**
+  /// Fetch popular anime
   Future<List<Media>> getPopularAnime() async {
-    final data = await _executeGraphQLOperation(
+    final data = await _executeGraphQLOperation<Map<String, dynamic>>(
       accessToken: null,
       query: AnilistQueries.popularAnimeQuery,
+      operationName: 'GetPopularAnime',
     );
-
-    final mediaList = (data?['Page']?['media'] as List<dynamic>)
-        .map((mediaJson) => Media.fromJson(mediaJson))
-        .toList();
-    return mediaList;
+    return _parseMediaList(data?['Page']?['media']);
   }
 
-  /// **Fetch recently updated anime**
+  /// Fetch recently updated anime
   Future<List<Media>> getRecentlyUpdatedAnime() async {
-    final data = await _executeGraphQLOperation(
+    final data = await _executeGraphQLOperation<Map<String, dynamic>>(
       accessToken: null,
       query: AnilistQueries.recentlyUpdatedAnimeQuery,
+      operationName: 'GetRecentlyUpdatedAnime',
     );
-
-    final mediaList = (data?['Page']?['media'] as List<dynamic>)
-        .map((mediaJson) => Media.fromJson(mediaJson))
-        .toList();
-    return mediaList;
+    return _parseMediaList(data?['Page']?['media']);
   }
 
-  /// **Fetch upcoming anime**
+  /// Fetch top-rated anime
+  Future<List<Media>> getTopRatedAnime() async {
+    final data = await _executeGraphQLOperation<Map<String, dynamic>>(
+      accessToken: null,
+      query: AnilistQueries.topRatedAnimeQuery,
+      operationName: 'GetTopRatedAnime',
+    );
+    return _parseMediaList(data?['Page']?['media']);
+  }
+
+  /// Fetch most favorited anime
+  Future<List<Media>> getMostFavoriteAnime() async {
+    final data = await _executeGraphQLOperation<Map<String, dynamic>>(
+      accessToken: null,
+      query: AnilistQueries.mostFavoritedAnimeQuery,
+      operationName: 'GetMostFavoriteAnime',
+    );
+    return _parseMediaList(data?['Page']?['media']);
+  }
+
+  /// Fetch most watched anime
+  Future<List<Media>> getMostWatchedAnime() async {
+    final data = await _executeGraphQLOperation<Map<String, dynamic>>(
+      accessToken: null,
+      query: AnilistQueries.mostWatchedAnimeQuery,
+      operationName: 'GetMostWatchedAnime',
+    );
+    return _parseMediaList(data?['Page']?['media']);
+  }
+
+  /// Fetch upcoming anime
   Future<List<Map<String, dynamic>>> getUpcomingAnime() async {
-    final data = await _executeGraphQLOperation(
+    final data = await _executeGraphQLOperation<Map<String, dynamic>>(
       accessToken: null,
       query: AnilistQueries.upcomingAnimeQuery,
+      operationName: 'GetUpcomingAnime',
     );
-
-    final mediaList = data?['Page']?['media'] as List<dynamic>? ?? [];
-    return mediaList.cast<Map<String, dynamic>>();
+    return (data?['Page']?['media'] as List<dynamic>?)
+            ?.cast<Map<String, dynamic>>() ??
+        [];
   }
 
-  /// **Fetch detailed anime information**
+  /// Fetch detailed anime information
   Future<Media> getAnimeDetails(int animeId) async {
-    final data = await _executeGraphQLOperation(
+    final data = await _executeGraphQLOperation<Map<String, dynamic>>(
       accessToken: null,
       query: AnilistQueries.animeDetailsQuery,
       variables: {'id': animeId},
+      operationName: 'GetAnimeDetails',
     );
-
-    if (data?['Media'] == null) {
-      log('Anime details not found');
-      return Media(); // Return an empty Media object instead of throwing an exception
-    }
-
-    return Media.fromJson(data?['Media']);
+    return data?['Media'] != null ? Media.fromJson(data!['Media']) : Media();
   }
 
-  /// **Fetch user's favorite anime**
-  Future<AnilistFavorites?> getFavorites(
-      {required int? userId, required String? accessToken}) async {
+  /// Fetch user's favorite anime
+  Future<AnilistFavorites?> getFavorites({
+    required int? userId,
+    required String? accessToken,
+  }) async {
     if (userId == null || accessToken == null || accessToken.isEmpty) {
-      log('❌ User ID or access token is null');
+      log('Invalid input: userId or accessToken is null/empty',
+          name: 'GetFavorites');
       return null;
     }
-    log('Fetching favorite anime list for user ID: $userId');
-    final data = await _executeGraphQLOperation(
+
+    final data = await _executeGraphQLOperation<Map<String, dynamic>>(
       accessToken: accessToken,
       query: AnilistQueries.userFavoritesQuery,
       variables: {'userId': userId},
+      operationName: 'GetFavorites',
     );
-    if (data == null) {
-      log('Failed to fetch favorite anime list');
-      return null; // Return null instead of throwing an exception
-    }
-    return AnilistFavorites(
-      anime: (data['User']?['favourites']?['anime']?['nodes'] as List<dynamic>)
-          .map((json) => Media.fromJson(json))
-          .toList(),
-    );
+
+    return data != null
+        ? AnilistFavorites(
+            anime: _parseMediaList(
+                data['User']?['favourites']?['anime']?['nodes']),
+          )
+        : null;
   }
 
-  /// **Toggle anime as favorite**
-  Future<List<Media>> toggleFavorite(
-      {required int animeId, required accessToken}) async {
+  /// Toggle anime as favorite
+  Future<List<Media>> toggleFavorite({
+    required int animeId,
+    required String? accessToken,
+  }) async {
     if (accessToken == null || accessToken.isEmpty) {
-      log('❌ User ID or access token is null');
+      log('Invalid accessToken', name: 'ToggleFavorite');
+      return [];
     }
-    log('💖 Toggling Favorite for $animeId');
-    final data = await _executeGraphQLOperation(
-        accessToken: accessToken,
-        query: AnilistQueries.toggleFavoriteQuery,
-        variables: {'animeId': animeId},
-        isMutation: true);
-    if (data == null) {
-      log('Failed to toggle favorite');
-      return []; // Return an empty list instead of throwing an exception
-    }
-    return (data['ToggleFavourite']?['anime']?['nodes'] as List<dynamic>)
-        .map((mediaJson) => Media.fromJson(mediaJson))
-        .toList();
+
+    final data = await _executeGraphQLOperation<Map<String, dynamic>>(
+      accessToken: accessToken,
+      query: AnilistQueries.toggleFavoriteQuery,
+      variables: {'animeId': animeId},
+      isMutation: true,
+      operationName: 'ToggleFavorite',
+    );
+
+    return _parseMediaList(data?['ToggleFavourite']?['anime']?['nodes']);
   }
 
-  Future<void> saveMediaProgress(
-      {required int mediaId,
-      required String accessToken,
-      required int episodeNumber}) async {
-    final data = await _executeGraphQLOperation(
-        accessToken: accessToken,
-        query: AnilistQueries.saveMediaProgressQuery,
-        variables: {'mediaId': mediaId, 'progress': episodeNumber},
-        isMutation: true);
-    log(data);
+  /// Save media progress
+  Future<void> saveMediaProgress({
+    required int mediaId,
+    required String accessToken,
+    required int episodeNumber,
+  }) async {
+    await _executeGraphQLOperation<Map<String, dynamic>>(
+      accessToken: accessToken,
+      query: AnilistQueries.saveMediaProgressQuery,
+      variables: {'mediaId': mediaId, 'progress': episodeNumber},
+      isMutation: true,
+      operationName: 'SaveMediaProgress',
+    );
   }
 
-  /// **Check if an anime is favorited**
-  Future<bool> isAnimeFavorite(
-      {required int animeId, required String accessToken}) async {
-    final data = await _executeGraphQLOperation(
+  /// Check if an anime is favorited
+  Future<bool> isAnimeFavorite({
+    required int animeId,
+    required String accessToken,
+  }) async {
+    final data = await _executeGraphQLOperation<Map<String, dynamic>>(
       accessToken: accessToken,
       query: AnilistQueries.isAnimeFavoriteQuery,
       variables: {'animeId': animeId},
+      operationName: 'IsAnimeFavorite',
     );
-    return (data?['Media']?['isFavourite'] as bool);
+    return data?['Media']?['isFavourite'] as bool? ?? false;
   }
 
   /// Update the status of an anime in the user's list
@@ -231,99 +281,87 @@ class AnilistService {
     required String accessToken,
     required String newStatus,
   }) async {
-    try {
-      final validatedStatus = validateMediaListStatus(newStatus);
-      final data = await _executeGraphQLOperation(
-        accessToken: accessToken,
-        query: '''
-          mutation UpdateAnimeStatus(\$mediaId: Int!, \$status: MediaListStatus!) {
-            SaveMediaListEntry(mediaId: \$mediaId, status: \$status, progress: 0) {
-              id
-              mediaId
-              status
-              progress
-              score
-            }
-          }
-        ''',
-        variables: {
-          'mediaId': mediaId,
-          'status': validatedStatus,
-        },
-        isMutation: true,
-      );
+    final validatedStatus = validateMediaListStatus(newStatus);
+    if (validatedStatus == 'INVALID') {
+      throw AnilistServiceException('Invalid MediaListStatus: $newStatus');
+    }
 
-      if (data != null && data['SaveMediaListEntry'] != null) {
-        log('✅ Anime status updated successfully: $data');
-      } else {
-        log('❌ Failed to update anime status: No data returned');
-      }
-    } catch (e) {
-      log('❌ Error updating anime status: $e');
+    final data = await _executeGraphQLOperation<Map<String, dynamic>>(
+      accessToken: accessToken,
+      query: '''
+        mutation UpdateAnimeStatus(\$mediaId: Int!, \$status: MediaListStatus!) {
+          SaveMediaListEntry(mediaId: \$mediaId, status: \$status, progress: 0) {
+            id
+            mediaId
+            status
+            progress
+            score
+          }
+        }
+      ''',
+      variables: {'mediaId': mediaId, 'status': validatedStatus},
+      isMutation: true,
+      operationName: 'UpdateAnimeStatus',
+    );
+
+    if (data?['SaveMediaListEntry'] == null) {
+      throw AnilistServiceException('Failed to update anime status');
     }
   }
 
-  /// **Remove an anime from the user's list**
+  /// Remove an anime from the user's list
   Future<void> deleteAnimeEntry({
-    required int entryId, // The ID of the MediaList entry
+    required int entryId,
     required String accessToken,
   }) async {
-    final data = await _executeGraphQLOperation(
+    final data = await _executeGraphQLOperation<Map<String, dynamic>>(
       accessToken: accessToken,
       query: '''
-      mutation DeleteMediaListEntry(\$id: Int!) {
-        DeleteMediaListEntry(id: \$id) {
-          deleted
+        mutation DeleteMediaListEntry(\$id: Int!) {
+          DeleteMediaListEntry(id: \$id) {
+            deleted
+          }
         }
-      }
-    ''',
+      ''',
       variables: {'id': entryId},
       isMutation: true,
+      operationName: 'DeleteAnimeEntry',
     );
 
     if (data?['DeleteMediaListEntry']?['deleted'] != true) {
-      log('Failed to delete anime entry');
-    } else {
-      log('✅ Anime entry deleted successfully');
+      throw AnilistServiceException('Failed to delete anime entry');
     }
   }
 
-  /// **Fetch the current status of an anime for a user**
+  /// Fetch the current status of an anime for a user
   Future<Map<String, dynamic>?> getAnimeStatus({
     required String accessToken,
     required int userId,
     required int animeId,
   }) async {
-    final data = await _executeGraphQLOperation(
+    final data = await _executeGraphQLOperation<Map<String, dynamic>>(
       accessToken: accessToken,
       query: '''
-      query GetAnimeStatus(\$userId: Int!, \$animeId: Int!) {
-        MediaList(userId: \$userId, mediaId: \$animeId) {
-          id
-          status
+        query GetAnimeStatus(\$userId: Int!, \$animeId: Int!) {
+          MediaList(userId: \$userId, mediaId: \$animeId) {
+            id
+            status
+          }
         }
-      }
-    ''',
+      ''',
       variables: {'userId': userId, 'animeId': animeId},
+      operationName: 'GetAnimeStatus',
     );
-
     return data?['MediaList'] as Map<String, dynamic>?;
   }
 
   /// Validate and convert status to a valid MediaListStatus value
   String validateMediaListStatus(String status) {
-    final validStatuses = [
-      'CURRENT',
-      'COMPLETED',
-      'PAUSED',
-      'DROPPED',
-      'PLANNING',
-      'REPEATING',
-    ];
     final upperStatus = status.toUpperCase();
-    if (!validStatuses.contains(upperStatus)) {
-      log('Invalid MediaListStatus: $status. Valid values are: $validStatuses');
-      return 'INVALID'; // Return a default invalid status instead of throwing an exception
+    if (!_validStatuses.contains(upperStatus)) {
+      log('Invalid MediaListStatus: $status. Valid values: $_validStatuses',
+          name: 'ValidateMediaListStatus');
+      return 'INVALID';
     }
     return upperStatus;
   }

@@ -139,6 +139,27 @@ class AnilistQueries {
     }
   ''';
 
+  static const String mostWatchedAnimeQuery = '''
+  query {
+    Page(page: 1, perPage: 15) {
+      media(sort: WATCHERS_DESC, type: ANIME) {
+        $mediaFields
+      }
+    }
+  }
+''';
+
+// Query: Fetch anime with most favorites
+  static const String mostFavoritedAnimeQuery = '''
+  query {
+    Page(page: 1, perPage: 15) {
+      media(sort: FAVOURITES_DESC, type: ANIME) {
+        $mediaFields
+      }
+    }
+  }
+''';
+
   // Query: Fetch popular anime
   static const String popularAnimeQuery = '''
     query {

@@ -8,30 +8,45 @@ final anilistServiceProvider =
     Provider<AnilistService>((ref) => AnilistService());
 
 final homePageProvider = FutureProvider.autoDispose<HomePage>((ref) async {
-  // Log the start of data fetching
   dev.log('Fetching home page data...', name: 'homePageProvider');
-
-  // Get the AnilistService instance from the provider
   final anilistService = ref.watch(anilistServiceProvider);
 
-  try {
-    // Fetch data concurrently to improve performance
-    final fetchFutures = await Future.wait([
-      anilistService.getTrendingAnime(),
-      anilistService.getPopularAnime(),
-      anilistService.getRecentlyUpdatedAnime(),
-    ]);
+  Future<T> fetchWithRetry<T>(Future<T> Function() fetchFn,
+      {int retries = 1}) async {
+    int attempt = 0;
+    while (true) {
+      try {
+        return await fetchFn();
+      } catch (e) {
+        if (attempt >= retries) rethrow;
+        attempt++;
+        dev.log('Retrying fetch: $e', name: 'homePageProvider');
+      }
+    }
+  }
 
-    final trending = fetchFutures[0];
-    final popular = fetchFutures[1];
-    final recentlyUpdated = fetchFutures[2];
+  try {
+    final trending =
+        await fetchWithRetry(() => anilistService.getTrendingAnime());
+    final popular =
+        await fetchWithRetry(() => anilistService.getPopularAnime());
+    // final recentlyUpdated = await fetchWithRetry(() => anilistService.getRecentlyUpdatedAnime());
+    // final topRated =
+    //     await fetchWithRetry(() => anilistService.getTopRatedAnime());
+    final mostFavorite =
+        await fetchWithRetry(() => anilistService.getMostFavoriteAnime());
+    // final mostWatched =
+    //     await fetchWithRetry(() => anilistService.getMostWatchedAnime());
 
     final homePageData = HomePage(
       trendingAnime: trending,
       popularAnime: popular,
-      recentlyUpdated: recentlyUpdated,
-      spotlight: [], // You can populate this if needed
-      featured: [], // You can populate this if needed
+      recentlyUpdated: [],
+      topRatedAnime: [],
+      mostFavoriteAnime: mostFavorite,
+      mostWatchedAnime: [],
+      spotlight: [],
+      featured: [],
     );
 
     dev.log('Home page data fetched successfully', name: 'homePageProvider');

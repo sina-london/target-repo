@@ -13,6 +13,9 @@ class HomePage {
   final List<Media> trendingAnime;
   final List<Media> popularAnime;
   final List<Media> recentlyUpdated;
+  final List<Media> topRatedAnime;
+  final List<Media> mostFavoriteAnime;
+  final List<Media> mostWatchedAnime;
   final List<BaseAnimeModel> spotlight;
   final List<BaseAnimeModel> trending;
   final List<Featured> featured;
@@ -21,6 +24,9 @@ class HomePage {
     this.trendingAnime = const [],
     this.popularAnime = const [],
     this.recentlyUpdated = const [],
+    this.topRatedAnime = const [],
+    this.mostFavoriteAnime = const [],
+    this.mostWatchedAnime = const [],
     this.spotlight = const [],
     this.trending = const [],
     this.featured = const [],
