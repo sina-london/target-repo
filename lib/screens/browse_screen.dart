@@ -6,7 +6,6 @@ import 'package:shonenx/core/anilist/services/anilist_service.dart';
 import 'package:shonenx/core/models/anilist/anilist_media_list.dart';
 import 'package:shonenx/data/constants/constants.dart';
 import 'package:shonenx/helpers/navigation.dart';
-import 'package:shonenx/helpers/provider.dart';
 import 'package:shonenx/widgets/anime/card/anime_card.dart';
 import 'package:shonenx/widgets/ui/search_bar.dart';
 import 'package:uuid/uuid.dart';
@@ -74,14 +73,7 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen> {
       _isLoading = true;
     });
 
-    final animeProvider = getAnimeProvider(ref);
     final anilistService = AnilistService();
-    if (animeProvider == null) {
-      setState(() {
-        _isLoading = false;
-      });
-      return;
-    }
 
     try {
       _searchResults = await anilistService.searchAnime(_searchController.text);
@@ -139,8 +131,8 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen> {
                     color: colorScheme.onSurface,
                     onPressed: _showSortDialog,
                     style: IconButton.styleFrom(
-                      backgroundColor: colorScheme.surfaceContainerHighest
-                          .withOpacity(0.2),
+                      backgroundColor:
+                          colorScheme.surfaceContainerHighest.withOpacity(0.2),
                       padding: const EdgeInsets.all(10),
                     ),
                   ),
@@ -150,8 +142,8 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen> {
                     color: colorScheme.onSurface,
                     onPressed: _showFilterDialog,
                     style: IconButton.styleFrom(
-                      backgroundColor: colorScheme.surfaceContainerHighest
-                          .withOpacity(0.2),
+                      backgroundColor:
+                          colorScheme.surfaceContainerHighest.withOpacity(0.2),
                       padding: const EdgeInsets.all(10),
                     ),
                   ),

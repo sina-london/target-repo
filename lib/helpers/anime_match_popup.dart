@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:developer';
 
+import 'package:shonenx/core/registery/anime_source_registery_provider.dart';
+import 'package:shonenx/data/hive/providers/provider_provider.dart';
 import 'package:shonenx/helpers/matcher.dart';
 import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -12,7 +14,6 @@ import 'package:shonenx/core/models/anilist/anilist_media_list.dart';
 import 'package:shonenx/core/models/anime/anime_model.dep.dart';
 import 'package:shonenx/core/sources/anime/anime_provider.dart';
 import 'package:shonenx/data/hive/providers/anime_watch_progress_provider.dart';
-import 'package:shonenx/helpers/provider.dart';
 
 Future<void> providerAnimeMatchSearch({
   Function? beforeSearchCallback,
@@ -25,12 +26,14 @@ Future<void> providerAnimeMatchSearch({
   if (beforeSearchCallback != null) beforeSearchCallback();
 
   try {
-    final animeProvider = getAnimeProvider(ref);
+    final animeProvider = ref
+        .read(animeSourceRegistryProvider.notifier)
+        .getProvider(ref.read(providerSettingsProvider).selectedProviderName)!;
     final title = animeMedia.title?.english ??
         animeMedia.title?.romaji ??
         animeMedia.title?.native;
 
-    if (title == null || animeProvider == null) {
+    if (title == null) {
       throw Exception('Invalid title or anime provider');
     }
 

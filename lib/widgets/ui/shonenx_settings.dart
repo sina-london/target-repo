@@ -25,12 +25,14 @@ class SettingsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     return Padding(
-      padding: EdgeInsets.only(bottom: compact ? 12 : 24),
+      padding: EdgeInsets.only(bottom: compact ? 16 : 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Section Header
           Padding(
             padding: EdgeInsets.only(
               left: 8,
@@ -49,7 +51,7 @@ class SettingsSection extends StatelessWidget {
                       style: TextStyle(
                         fontSize: compact ? 14 : 16,
                         fontWeight: FontWeight.w600,
-                        color: theme.colorScheme.primary,
+                        color: colorScheme.primary,
                         letterSpacing: 0.5,
                       ),
                     ),
@@ -60,44 +62,49 @@ class SettingsSection extends StatelessWidget {
                     Icon(
                       Iconsax.arrow_right_3,
                       size: 16,
-                      color: theme.colorScheme.primary.withOpacity(0.5),
+                      color: colorScheme.primary.withOpacity(0.5),
                     )
                   ]
                 ],
               ),
             ),
           ),
-          Card(
-            elevation: 1,
-            shadowColor: theme.colorScheme.shadow.withOpacity(0.1),
-            shape: RoundedRectangleBorder(
-              borderRadius: (theme.cardTheme.shape as RoundedRectangleBorder?)
-                      ?.borderRadius ??
-                  BorderRadius.circular(12),
-            ),
-            child: ClipRRect(
-              borderRadius: (theme.cardTheme.shape as RoundedRectangleBorder?)
-                      ?.borderRadius ??
-                  BorderRadius.circular(12),
-              child: Column(
-                children: items.asMap().entries.map((entry) {
-                  final index = entry.key;
-                  final item = entry.value;
-                  return Column(
-                    children: [
-                      if (index > 0 && showDividers)
-                        Divider(
-                          height: 1,
-                          indent: 60,
-                          endIndent: 16,
-                          color: theme.colorScheme.onSurface
-                              .withOpacity(0.1),
-                        ),
-                      item,
-                    ],
-                  );
-                }).toList(),
+
+          // Section Content Card
+          Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: colorScheme.outlineVariant,
+                width: 1,
               ),
+              color: colorScheme.surface,
+              boxShadow: [
+                BoxShadow(
+                  color: colorScheme.shadow.withOpacity(0.05),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: Column(
+              children: items.asMap().entries.map((entry) {
+                final index = entry.key;
+                final item = entry.value;
+                return Column(
+                  children: [
+                    if (index > 0 && showDividers)
+                      Divider(
+                        height: 1,
+                        indent: 60,
+                        endIndent: 16,
+                        color: colorScheme.outlineVariant.withOpacity(0.5),
+                      ),
+                    item,
+                  ],
+                );
+              }).toList(),
             ),
           ),
         ],
@@ -163,9 +170,66 @@ class _SettingsItemState extends State<SettingsItem>
     super.dispose();
   }
 
+  Widget _buildIconContainer(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    final effectiveIconColor = widget.iconColor ??
+        (widget.disabled
+            ? colorScheme.onSurface.withOpacity(0.3)
+            : colorScheme.primary);
+
+    return Container(
+      padding: EdgeInsets.all(widget.compact ? 8 : 10),
+      decoration: BoxDecoration(
+        color: widget.disabled
+            ? colorScheme.surfaceVariant.withOpacity(0.3)
+            : effectiveIconColor.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Icon(
+        widget.icon,
+        size: widget.compact ? 18 : 22,
+        color: effectiveIconColor,
+      ),
+    );
+  }
+
+  Widget _buildContent(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          widget.title,
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontSize: widget.compact ? 14 : 16,
+            fontWeight: FontWeight.w600,
+            color: widget.disabled
+                ? colorScheme.onSurface.withOpacity(0.4)
+                : colorScheme.onSurface,
+          ),
+        ),
+        if (widget.description.isNotEmpty) ...[
+          SizedBox(height: widget.compact ? 2 : 4),
+          Text(
+            widget.description,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: widget.disabled
+                  ? colorScheme.onSurfaceVariant.withOpacity(0.4)
+                  : colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     return Semantics(
       label: widget.semanticLabel ?? '${widget.title}: ${widget.description}',
@@ -182,41 +246,27 @@ class _SettingsItemState extends State<SettingsItem>
             scale: _scaleAnimation,
             child: InkWell(
               onTap: widget.disabled ? null : widget.onTap,
-              borderRadius: getCardBorderRadius(context),
+              borderRadius: BorderRadius.circular(16),
+              splashColor: colorScheme.primary.withOpacity(0.1),
+              highlightColor: colorScheme.primary.withOpacity(0.05),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
                 padding: EdgeInsets.symmetric(
                     horizontal: 16, vertical: widget.compact ? 12 : 16),
                 decoration: BoxDecoration(
                   color: _isHovered && !widget.disabled
-                      ? theme.colorScheme.surfaceContainerHighest
-                          .withOpacity(0.3)
+                      ? colorScheme.surfaceVariant.withOpacity(0.3)
                       : Colors.transparent,
-                  borderRadius:
-                      (theme.cardTheme.shape as RoundedRectangleBorder?)
-                              ?.borderRadius ??
-                          BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(16),
                 ),
                 child: Row(
                   children: [
                     if (widget.showIcon) ...[
-                      _buildIconContainer(
-                        context,
-                        widget.icon,
-                        widget.disabled,
-                        widget.compact,
-                        widget.iconColor,
-                      ),
+                      _buildIconContainer(context),
                       SizedBox(width: widget.compact ? 12 : 16),
                     ],
                     Expanded(
-                      child: _buildItemContent(
-                        context,
-                        widget.title,
-                        widget.description,
-                        widget.disabled,
-                        widget.compact,
-                      ),
+                      child: _buildContent(context),
                     ),
                     widget.trailing != null
                         ? widget.trailing!
@@ -224,10 +274,8 @@ class _SettingsItemState extends State<SettingsItem>
                             Iconsax.arrow_right_3,
                             size: widget.compact ? 18 : 20,
                             color: widget.disabled
-                                ? theme.colorScheme.onSurface
-                                    .withOpacity(0.2)
-                                : theme.colorScheme.onSurface
-                                    .withOpacity(0.5),
+                                ? colorScheme.onSurface.withOpacity(0.2)
+                                : colorScheme.onSurfaceVariant,
                           )
                   ],
                 ),
@@ -375,8 +423,7 @@ class _SettingsItemDropdownState<T> extends State<SettingsItemDropdown<T>>
                               fontSize: 14,
                               fontWeight: FontWeight.w500,
                               color: widget.disabled
-                                  ? theme.colorScheme.onSurface
-                                      .withOpacity(0.4)
+                                  ? theme.colorScheme.onSurface.withOpacity(0.4)
                                   : theme.colorScheme.onSurface,
                             ),
                           ),
@@ -385,10 +432,8 @@ class _SettingsItemDropdownState<T> extends State<SettingsItemDropdown<T>>
                             Iconsax.arrow_down_1,
                             size: 16,
                             color: widget.disabled
-                                ? theme.colorScheme.onSurface
-                                    .withOpacity(0.2)
-                                : theme.colorScheme.onSurface
-                                    .withOpacity(0.5),
+                                ? theme.colorScheme.onSurface.withOpacity(0.2)
+                                : theme.colorScheme.onSurface.withOpacity(0.5),
                           ),
                         ],
                       ),
@@ -442,8 +487,7 @@ class _SettingsItemDropdownState<T> extends State<SettingsItemDropdown<T>>
                 ),
               ),
               Divider(
-                  height: 1,
-                  color: theme.colorScheme.outline.withOpacity(0.2)),
+                  height: 1, color: theme.colorScheme.outline.withOpacity(0.2)),
               ConstrainedBox(
                 constraints: BoxConstraints(
                   maxHeight: MediaQuery.of(context).size.height * 0.6,
@@ -665,8 +709,7 @@ class _SettingsSliderState extends State<SettingsSlider> {
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
                 color: widget.disabled
-                    ? theme.colorScheme.surfaceContainerHighest
-                        .withOpacity(0.1)
+                    ? theme.colorScheme.surfaceContainerHighest.withOpacity(0.1)
                     : theme.colorScheme.primary.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(100),
               ),
@@ -778,9 +821,8 @@ Widget _buildIconContainer(BuildContext context, IconData icon, bool disabled,
     child: Icon(
       icon,
       size: compact ? 18 : 22,
-      color: disabled
-          ? theme.colorScheme.onSurface.withOpacity(0.4)
-          : baseColor,
+      color:
+          disabled ? theme.colorScheme.onSurface.withOpacity(0.4) : baseColor,
     ),
   );
 }
