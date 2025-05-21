@@ -1,11 +1,9 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:shonenx/core/models/anilist/anilist_media_list.dart';
-import 'package:shonenx/providers/hive_service_provider.dart';
 import 'package:shonenx/screens/browse_screen.dart';
 import 'package:shonenx/screens/continue_watching_screen.dart';
 import 'package:shonenx/screens/details_screen.dart';
@@ -90,14 +88,7 @@ final GoRouter router = GoRouter(
     ),
     GoRoute(
       path: '/continue-all',
-      builder: (context, state) => Consumer(
-        builder: (context, ref, _) {
-          final hiveService = ref.watch(hiveServiceProvider).value;
-          return ContinueWatchingScreen(
-            animeWatchProgressBox: hiveService!.progress,
-          );
-        },
-      ),
+      builder: (context, state) => ContinueWatchingScreen(),
     ),
     GoRoute(
       path: '/details',

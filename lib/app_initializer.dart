@@ -8,7 +8,11 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shonenx/data/hive/models/anime_watch_progress_model.dart';
-import 'package:shonenx/data/hive/models/settings_offline_model.dart';
+import 'package:shonenx/data/hive/models/settings/player_model.dart';
+import 'package:shonenx/data/hive/models/settings/provider_model.dart';
+import 'package:shonenx/data/hive/models/settings/theme_model.dart';
+import 'package:shonenx/data/hive/models/settings/ui_model.dart';
+// import 'package:shonenx/data/hive/models/settings_offline_model.dart';
 import 'package:window_manager/window_manager.dart';
 
 class AppInitializer {
@@ -44,18 +48,21 @@ class AppInitializer {
     await Hive.initFlutter(customPath);
     log("✅ Hive initialized at: $customPath", name: "appInitializer");
 
-    Hive.registerAdapter(SettingsModelAdapter());
-    Hive.registerAdapter(ProviderSettingsModelAdapter());
-    Hive.registerAdapter(ThemeSettingsModelAdapter());
-    Hive.registerAdapter(UISettingsModelAdapter());
-    Hive.registerAdapter(PlayerSettingsModelAdapter());
+    Hive.registerAdapter(ThemeSettingsAdapter());
+    Hive.registerAdapter(UiSettingsAdapter());
+    Hive.registerAdapter(ProviderSettingsAdapter());
+    Hive.registerAdapter(PlayerSettingsAdapter());
+
     Hive.registerAdapter(AnimeWatchProgressEntryAdapter());
     Hive.registerAdapter(EpisodeProgressAdapter());
 
-    // Future.wait([
-    //   SettingsBox().init(),
-    //   AnimeWatchProgressBox().init(),
-    // ]);
+    Future.wait([
+      Hive.openBox<ThemeSettings>('theme_settings'),
+      Hive.openBox<UiSettings>('ui_settings'),
+      Hive.openBox<ProviderSettings>('provider_settings'),
+      Hive.openBox<PlayerSettings>('player_settings'),
+      Hive.openBox<AnimeWatchProgressEntry>('anime_watch_progress'),
+    ]);
 
     log("✅ Hive adapters registered.", name: "appInitializer");
   }

@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:media_kit_video/media_kit_video.dart' as media_kit_video;
-import 'package:shonenx/data/hive/models/settings_offline_model.dart';
+import 'package:shonenx/data/hive/models/settings/player_model.dart';
+import 'package:shonenx/data/hive/providers/player_provider.dart';
 import 'package:shonenx/helpers/player/gesture_handler.dart';
 import 'package:shonenx/helpers/player/overlay_manager.dart';
 import 'package:shonenx/helpers/provider.dart';
 import 'package:shonenx/helpers/ui.dart';
 import 'package:shonenx/providers/watch_providers.dart';
-import 'package:shonenx/screens/settings/player/player_screen.dart';
 import 'package:shonenx/widgets/player/bottom_controls.dart';
 import 'package:shonenx/widgets/player/center_controls.dart';
 import 'package:shonenx/widgets/player/seek_bar.dart';
@@ -151,7 +151,7 @@ class _CustomControlsState extends ConsumerState<CustomControls> {
   Widget build(BuildContext context) {
     final playerState = ref.watch(playerStateProvider);
     final playerNotifier = ref.read(playerStateProvider.notifier);
-    final playerSettings = ref.watch(playerSettingsProvider).playerSettings;
+    final playerSettings = ref.watch(playerSettingsProvider);
     final watchState = ref.watch(watchProvider);
     final theme = Theme.of(context);
     final isDesktop = !Platform.isAndroid && !Platform.isIOS;
@@ -212,7 +212,7 @@ class _CustomControlsState extends ConsumerState<CustomControls> {
   }
 
   Widget _buildSubtitleOverlay(
-      PlayerState playerState, PlayerSettingsModel playerSettings) {
+      PlayerState playerState, PlayerSettings playerSettings) {
     return Positioned(
       bottom: _controlsVisible ? 100 : 0,
       left: 0,

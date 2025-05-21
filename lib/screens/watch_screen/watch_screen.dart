@@ -65,7 +65,6 @@ class _WatchScreenState extends ConsumerState<WatchScreen>
   }
 
   Future<void> _initializeAsync() async {
-    await _progressService.initialize();
     _progressService.startProgressTimer(() {
       if (mounted) _saveProgress();
     });
@@ -126,7 +125,7 @@ class _WatchScreenState extends ConsumerState<WatchScreen>
     if (ref.context.mounted) {
       ref.read(watchProvider.notifier).dispose();
     }
-    _progressService.dispose();
+    // _progressService.dispose();
     _animationController.dispose();
     if (mounted) {
       _resetOrientationAndUI();

@@ -4,56 +4,8 @@ import 'package:iconsax/iconsax.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shonenx/core/models/anilist/anilist_media_list.dart'
     as anime_media;
-import 'package:shonenx/data/hive/boxes/settings_box.dart';
-import 'package:shonenx/data/hive/models/settings_offline_model.dart';
+import 'package:shonenx/data/hive/providers/ui_provider.dart';
 import 'package:shonenx/widgets/ui/shonenx_settings.dart';
-
-// Riverpod provider for UI settings
-final uiSettingsProvider =
-    StateNotifierProvider<UISettingsNotifier, UISettingsState>((ref) {
-  return UISettingsNotifier();
-});
-
-class UISettingsState {
-  final UISettingsModel uiSettings;
-  final bool isLoading;
-
-  UISettingsState({required this.uiSettings, this.isLoading = false});
-
-  UISettingsState copyWith({UISettingsModel? uiSettings, bool? isLoading}) {
-    return UISettingsState(
-      uiSettings: uiSettings ?? this.uiSettings,
-      isLoading: isLoading ?? this.isLoading,
-    );
-  }
-}
-
-class UISettingsNotifier extends StateNotifier<UISettingsState> {
-  SettingsBox? _settingsBox;
-
-  UISettingsNotifier() : super(UISettingsState(uiSettings: UISettingsModel()));
-
-  Future<void> initializeSettings() async {
-    state = state.copyWith(isLoading: true);
-    _settingsBox = SettingsBox();
-    await _settingsBox?.init();
-    _loadSettings();
-    state = state.copyWith(isLoading: false);
-  }
-
-  void _loadSettings() {
-    final settings = _settingsBox?.getSettings();
-    if (settings != null) {
-      state =
-          state.copyWith(uiSettings: settings.uiSettings ?? UISettingsModel());
-    }
-  }
-
-  void updateUISettings(UISettingsModel settings) {
-    state = state.copyWith(uiSettings: settings);
-    _settingsBox?.updateUISettings(settings);
-  }
-}
 
 class UISettingsScreen extends ConsumerWidget {
   const UISettingsScreen({super.key});
@@ -81,11 +33,11 @@ class UISettingsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final settingsState = ref.watch(uiSettingsProvider);
+    // final settingsState = ref.watch(uiSettingsProvider);
 
-    if (settingsState.isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
+    // if (settingsState.isLoading) {
+    //   return const Center(child: CircularProgressIndicator());
+    // }
 
     return _buildContent(context, ref);
   }
@@ -137,13 +89,10 @@ class UISettingsScreen extends ConsumerWidget {
                     title: 'Enable Immersive Mode',
                     description:
                         'Toggle immersive mode for a distraction-free experience',
-                    value:
-                        ref.watch(uiSettingsProvider).uiSettings.immersiveMode,
+                    value: ref.watch(uiSettingsProvider).immersiveMode,
                     onChanged: (value) {
-                      final currentSettings =
-                          ref.read(uiSettingsProvider).uiSettings;
-                      ref.read(uiSettingsProvider.notifier).updateUISettings(
-                            currentSettings.copyWith(
+                      ref.read(uiSettingsProvider.notifier).updateSettings(
+                            (prev) => prev.copyWith(
                               immersiveMode: value,
                             ),
                           );
@@ -161,13 +110,11 @@ class UISettingsScreen extends ConsumerWidget {
 
   void _showDefaultTabDialog(BuildContext context, WidgetRef ref) {
     final colorScheme = Theme.of(context).colorScheme;
-    final settings = ref.read(uiSettingsProvider);
+    final uiSettings = ref.read(uiSettingsProvider);
     final List<String> tabs = ["Home", "Watchlist", "Browse"];
 
     ValueNotifier<String> selectedTab = ValueNotifier(
-        tabs.contains(settings.uiSettings.defaultTab)
-            ? settings.uiSettings.defaultTab
-            : 'Home');
+        tabs.contains(uiSettings.defaultTab) ? uiSettings.defaultTab : 'Home');
 
     showDialog(
       context: context,
@@ -216,9 +163,8 @@ class UISettingsScreen extends ConsumerWidget {
             ),
             TextButton(
               onPressed: () {
-                ref.read(uiSettingsProvider.notifier).updateUISettings(
-                      settings.uiSettings
-                          .copyWith(defaultTab: selectedTab.value),
+                ref.read(uiSettingsProvider.notifier).updateSettings(
+                      (prev) => prev.copyWith(defaultTab: selectedTab.value),
                     );
                 Navigator.pop(context);
               },
@@ -232,12 +178,12 @@ class UISettingsScreen extends ConsumerWidget {
 
   void _showLayoutStyleDialog(BuildContext context, WidgetRef ref) {
     final colorScheme = Theme.of(context).colorScheme;
-    final settings = ref.read(uiSettingsProvider);
+    final uiSettings = ref.read(uiSettingsProvider);
     final List<String> layoutStyles = ['horizontal', 'vertical'];
 
     ValueNotifier<String> selectedStyle = ValueNotifier(
-      layoutStyles.contains(settings.uiSettings.layoutStyle)
-          ? settings.uiSettings.layoutStyle
+      layoutStyles.contains(uiSettings.layoutStyle)
+          ? uiSettings.layoutStyle
           : 'horizontal',
     );
 
@@ -288,9 +234,8 @@ class UISettingsScreen extends ConsumerWidget {
             ),
             TextButton(
               onPressed: () {
-                ref.read(uiSettingsProvider.notifier).updateUISettings(
-                      settings.uiSettings
-                          .copyWith(layoutStyle: selectedStyle.value),
+                ref.read(uiSettingsProvider.notifier).updateSettings(
+                      (prev) => prev.copyWith(layoutStyle: selectedStyle.value),
                     );
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
@@ -317,7 +262,7 @@ class UISettingsScreen extends ConsumerWidget {
 
   void _showCardStyleDialog(BuildContext context, WidgetRef ref) {
     final colorScheme = Theme.of(context).colorScheme;
-    final settings = ref.read(uiSettingsProvider);
+    final uiSettings = ref.read(uiSettingsProvider);
     final List<String> cardStyles = [
       'Card',
       'Compact',
@@ -328,9 +273,7 @@ class UISettingsScreen extends ConsumerWidget {
       'Cinematic',
     ];
     ValueNotifier<String> selectedStyle = ValueNotifier(
-      cardStyles.contains(settings.uiSettings.cardStyle)
-          ? settings.uiSettings.cardStyle
-          : 'Card',
+      cardStyles.contains(uiSettings.cardStyle) ? uiSettings.cardStyle : 'Card',
     );
 
     showDialog(
@@ -380,9 +323,8 @@ class UISettingsScreen extends ConsumerWidget {
             ),
             TextButton(
               onPressed: () {
-                ref.read(uiSettingsProvider.notifier).updateUISettings(
-                      settings.uiSettings
-                          .copyWith(cardStyle: selectedStyle.value),
+                ref.read(uiSettingsProvider.notifier).updateSettings(
+                      (prev) => prev.copyWith(cardStyle: selectedStyle.value),
                     );
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(

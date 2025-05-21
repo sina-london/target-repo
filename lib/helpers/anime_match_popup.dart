@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:developer';
 
+import 'package:shonenx/helpers/matcher.dart';
 import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -10,8 +11,7 @@ import 'package:iconsax/iconsax.dart';
 import 'package:shonenx/core/models/anilist/anilist_media_list.dart';
 import 'package:shonenx/core/models/anime/anime_model.dep.dart';
 import 'package:shonenx/core/sources/anime/anime_provider.dart';
-import 'package:shonenx/data/hive/boxes/anime_watch_progress_box.dart';
-import 'package:shonenx/helpers/matcher.dart';
+import 'package:shonenx/data/hive/providers/anime_watch_progress_provider.dart';
 import 'package:shonenx/helpers/provider.dart';
 
 Future<void> providerAnimeMatchSearch({
@@ -21,7 +21,6 @@ Future<void> providerAnimeMatchSearch({
   required WidgetRef ref,
   required Media animeMedia,
   int plusEpisode = 0,
-  required AnimeWatchProgressBox animeWatchProgressBox,
 }) async {
   if (beforeSearchCallback != null) beforeSearchCallback();
 
@@ -67,7 +66,8 @@ Future<void> providerAnimeMatchSearch({
       final bestMatch = matchedResults.first.$1;
       log("Best match found: ${bestMatch.id}");
       final encodedAnimeName = Uri.encodeComponent(bestMatch.name ?? '');
-      final episode = animeWatchProgressBox
+      final episode = ref
+          .read(animeWatchProgressProvider.notifier)
           .getMostRecentEpisodeProgressByAnimeId(animeMedia.id!);
       context.push(
           '/watch/${bestMatch.id}?animeName=$encodedAnimeName&episode=${(episode?.episodeNumber ?? 1) + plusEpisode}',
@@ -87,7 +87,6 @@ Future<void> providerAnimeMatchSearch({
             : matchedResults.map((r) => r.$1).toList(),
         animeProvider: animeProvider,
         animeMedia: animeMedia,
-        animeWatchProgressBox: animeWatchProgressBox,
         initialQuery: title,
       ),
     );
@@ -119,12 +118,11 @@ void _showErrorSnackBar(BuildContext context, String title, String message) {
 }
 
 // Modern Anime Search Dialog
-class _AnimeSearchDialog extends StatefulWidget {
+class _AnimeSearchDialog extends ConsumerStatefulWidget {
   final List<BaseAnimeModel> initialResults;
   final AnimeProvider animeProvider;
   final Media animeMedia;
   final int plusEpisode;
-  final AnimeWatchProgressBox animeWatchProgressBox;
   final String initialQuery;
 
   const _AnimeSearchDialog({
@@ -132,15 +130,14 @@ class _AnimeSearchDialog extends StatefulWidget {
     required this.animeProvider,
     required this.plusEpisode,
     required this.animeMedia,
-    required this.animeWatchProgressBox,
     required this.initialQuery,
   });
 
   @override
-  State<_AnimeSearchDialog> createState() => _AnimeSearchDialogState();
+  ConsumerState<_AnimeSearchDialog> createState() => _AnimeSearchDialogState();
 }
 
-class _AnimeSearchDialogState extends State<_AnimeSearchDialog> {
+class _AnimeSearchDialogState extends ConsumerState<_AnimeSearchDialog> {
   late TextEditingController _searchController;
   List<BaseAnimeModel> _results = [];
   bool _isLoading = false;
@@ -261,8 +258,8 @@ class _AnimeSearchDialogState extends State<_AnimeSearchDialog> {
                               anime: result,
                               onTap: () {
                                 Navigator.of(context).pop();
-                                final continueWatchingEntry = widget
-                                    .animeWatchProgressBox
+                                final continueWatchingEntry = ref
+                                    .read(animeWatchProgressProvider.notifier)
                                     .getMostRecentEpisodeProgressByAnimeId(
                                         widget.animeMedia.id!);
                                 final encodedAnimeName =

@@ -2,58 +2,9 @@ import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:iconsax/iconsax.dart';
-import 'package:shonenx/data/hive/boxes/settings_box.dart';
-import 'package:shonenx/data/hive/models/settings_offline_model.dart';
+import 'package:shonenx/data/hive/models/settings/theme_model.dart';
+import 'package:shonenx/data/hive/providers/theme_provider.dart';
 import 'package:shonenx/widgets/ui/shonenx_settings.dart';
-
-// Riverpod provider for theme settings
-final themeSettingsProvider =
-    StateNotifierProvider<ThemeSettingsNotifier, ThemeSettingsState>((ref) {
-  return ThemeSettingsNotifier()..initializeSettings();
-});
-
-class ThemeSettingsState {
-  final ThemeSettingsModel themeSettings;
-  final bool isLoading;
-
-  ThemeSettingsState({required this.themeSettings, this.isLoading = false});
-
-  ThemeSettingsState copyWith(
-      {ThemeSettingsModel? themeSettings, bool? isLoading}) {
-    return ThemeSettingsState(
-      themeSettings: themeSettings ?? this.themeSettings,
-      isLoading: isLoading ?? this.isLoading,
-    );
-  }
-}
-
-class ThemeSettingsNotifier extends StateNotifier<ThemeSettingsState> {
-  SettingsBox? _settingsBox;
-
-  ThemeSettingsNotifier()
-      : super(ThemeSettingsState(themeSettings: ThemeSettingsModel()));
-
-  Future<void> initializeSettings() async {
-    if (state.isLoading) return; // Prevent re-init
-    state = state.copyWith(isLoading: true);
-    _settingsBox = SettingsBox();
-    await _settingsBox?.init(); // Async Hive init
-    _loadSettings();
-    state = state.copyWith(isLoading: false);
-  }
-
-  void _loadSettings() {
-    final settings = _settingsBox?.getSettings();
-    if (settings != null) {
-      state = state.copyWith(themeSettings: settings.themeSettings);
-    }
-  }
-
-  void updateThemeSettings(ThemeSettingsModel settings) {
-    state = state.copyWith(themeSettings: settings);
-    _settingsBox?.updateThemeSettings(settings);
-  }
-}
 
 // Section configuration model
 class SectionConfig {
@@ -100,12 +51,11 @@ class ThemeSettingsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return Consumer(
       builder: (context, ref, child) {
-        final settingsState = ref.watch(themeSettingsProvider);
-        if (settingsState.isLoading) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        final sections =
-            _buildSectionConfigs(context, settingsState.themeSettings, ref);
+        final settings = ref.watch(themeSettingsProvider);
+        // if (settingsState.isLoading) {
+        //   return const Center(child: CircularProgressIndicator());
+        // }
+        final sections = _buildSectionConfigs(context, settings, ref);
         return ListView.builder(
           padding: const EdgeInsets.all(16),
           itemCount: sections.length + 1,
@@ -125,7 +75,7 @@ class ThemeSettingsScreen extends ConsumerWidget {
   }
 
   List<SectionConfig> _buildSectionConfigs(
-      BuildContext context, ThemeSettingsModel settings, WidgetRef ref) {
+      BuildContext context, ThemeSettings settings, WidgetRef ref) {
     final notifier = ref.read(themeSettingsProvider.notifier);
     final colorScheme = Theme.of(context).colorScheme;
 
@@ -139,8 +89,8 @@ class ThemeSettingsScreen extends ConsumerWidget {
             icon: Iconsax.moon,
             trailing: Switch(
               value: settings.themeMode != 'light',
-              onChanged: (value) => notifier.updateThemeSettings(
-                  settings.copyWith(themeMode: value ? 'dark' : 'light')),
+              onChanged: (value) => notifier.updateField(
+                  (prev) => prev.copyWith(themeMode: value ? 'dark' : 'light')),
               activeColor: colorScheme.primary,
               activeTrackColor: colorScheme.primary.withOpacity(0.5),
             ),
@@ -154,7 +104,7 @@ class ThemeSettingsScreen extends ConsumerWidget {
               trailing: Switch(
                 value: settings.amoled,
                 onChanged: (value) => notifier
-                    .updateThemeSettings(settings.copyWith(amoled: value)),
+                    .updateField((prev) => prev.copyWith(amoled: value)),
                 activeColor: colorScheme.primary,
                 activeTrackColor: colorScheme.primary.withOpacity(0.5),
               ),
@@ -172,7 +122,7 @@ class ThemeSettingsScreen extends ConsumerWidget {
             trailing: Switch(
               value: settings.useMaterial3,
               onChanged: (value) => notifier
-                  .updateThemeSettings(settings.copyWith(useMaterial3: value)),
+                  .updateField((prev) => prev.copyWith(useMaterial3: value)),
               activeColor: colorScheme.primary,
               activeTrackColor: colorScheme.primary.withOpacity(0.5),
             ),
@@ -185,7 +135,7 @@ class ThemeSettingsScreen extends ConsumerWidget {
             trailing: Switch(
               value: settings.useSubThemes,
               onChanged: (value) => notifier
-                  .updateThemeSettings(settings.copyWith(useSubThemes: value)),
+                  .updateField((prev) => prev.copyWith(useSubThemes: value)),
               activeColor: colorScheme.primary,
               activeTrackColor: colorScheme.primary.withOpacity(0.5),
             ),
@@ -202,8 +152,8 @@ class ThemeSettingsScreen extends ConsumerWidget {
             icon: Iconsax.arrange_square,
             trailing: Switch(
               value: settings.swapLightColors,
-              onChanged: (value) => notifier.updateThemeSettings(
-                  settings.copyWith(swapLightColors: value)),
+              onChanged: (value) => notifier
+                  .updateField((prev) => prev.copyWith(swapLightColors: value)),
               activeColor: colorScheme.primary,
               activeTrackColor: colorScheme.primary.withOpacity(0.5),
             ),
@@ -216,8 +166,8 @@ class ThemeSettingsScreen extends ConsumerWidget {
               icon: Iconsax.arrange_square,
               trailing: Switch(
                 value: settings.swapDarkColors,
-                onChanged: (value) => notifier.updateThemeSettings(
-                    settings.copyWith(swapDarkColors: value)),
+                onChanged: (value) => notifier.updateField(
+                    (prev) => prev.copyWith(swapDarkColors: value)),
                 activeColor: colorScheme.primary,
                 activeTrackColor: colorScheme.primary.withOpacity(0.5),
               ),
@@ -230,7 +180,7 @@ class ThemeSettingsScreen extends ConsumerWidget {
           //   trailing: Switch(
           //     value: settings.useKeyColors,
           //     onChanged: (value) => notifier
-          //         .updateThemeSettings(settings.copyWith(useKeyColors: value)),
+          //         .updateField((prev) => prev.copyWith(useKeyColors: value)),
           //     activeColor: colorScheme.primary,
           //     activeTrackColor: colorScheme.primary.withOpacity(0.5),
           //   ),
@@ -243,7 +193,7 @@ class ThemeSettingsScreen extends ConsumerWidget {
           //   trailing: Switch(
           //     value: settings.useTertiary,
           //     onChanged: (value) => notifier
-          //         .updateThemeSettings(settings.copyWith(useTertiary: value)),
+          //         .updateField((prev) => prev.copyWith(useTertiary: value)),
           //     activeColor: colorScheme.primary,
           //     activeTrackColor: colorScheme.primary.withOpacity(0.5),
           //   ),
@@ -259,8 +209,8 @@ class ThemeSettingsScreen extends ConsumerWidget {
             sliderMax: 40,
             sliderDivisions: 40,
             sliderSuffix: '',
-            onSliderChanged: (value) => notifier.updateThemeSettings(
-                settings.copyWith(blendLevel: value.toInt())),
+            onSliderChanged: (value) => notifier.updateField(
+                (prev) => prev.copyWith(blendLevel: value.toInt())),
             onTap: () {},
           ),
         ],
@@ -280,7 +230,7 @@ class ThemeSettingsScreen extends ConsumerWidget {
             sliderDivisions: 20,
             sliderSuffix: '%',
             onSliderChanged: (value) => notifier
-                .updateThemeSettings(settings.copyWith(appBarOpacity: value)),
+                .updateField((prev) => prev.copyWith(appBarOpacity: value)),
             onTap: () {},
           ),
           SettingItemConfig(
@@ -289,8 +239,8 @@ class ThemeSettingsScreen extends ConsumerWidget {
             icon: Iconsax.colorfilter,
             trailing: Switch(
               value: settings.useAppbarColors,
-              onChanged: (value) => notifier.updateThemeSettings(
-                  settings.copyWith(useAppbarColors: value)),
+              onChanged: (value) => notifier
+                  .updateField((prev) => prev.copyWith(useAppbarColors: value)),
               activeColor: colorScheme.primary,
               activeTrackColor: colorScheme.primary.withOpacity(0.5),
             ),
@@ -308,7 +258,7 @@ class ThemeSettingsScreen extends ConsumerWidget {
             sliderDivisions: 20,
             sliderSuffix: '%',
             onSliderChanged: (value) => notifier
-                .updateThemeSettings(settings.copyWith(tabBarOpacity: value)),
+                .updateField((prev) => prev.copyWith(tabBarOpacity: value)),
             onTap: () {},
           ),
           SettingItemConfig(
@@ -322,8 +272,8 @@ class ThemeSettingsScreen extends ConsumerWidget {
             sliderMax: 1,
             sliderDivisions: 20,
             sliderSuffix: '%',
-            onSliderChanged: (value) => notifier.updateThemeSettings(
-                settings.copyWith(bottomBarOpacity: value)),
+            onSliderChanged: (value) => notifier
+                .updateField((prev) => prev.copyWith(bottomBarOpacity: value)),
             onTap: () {},
           ),
           SettingItemConfig(
@@ -332,8 +282,8 @@ class ThemeSettingsScreen extends ConsumerWidget {
             icon: Iconsax.status,
             trailing: Switch(
               value: settings.transparentStatusBar,
-              onChanged: (value) => notifier.updateThemeSettings(
-                  settings.copyWith(transparentStatusBar: value)),
+              onChanged: (value) => notifier.updateField(
+                  (prev) => prev.copyWith(transparentStatusBar: value)),
               activeColor: colorScheme.primary,
               activeTrackColor: colorScheme.primary.withOpacity(0.5),
             ),
@@ -350,7 +300,7 @@ class ThemeSettingsScreen extends ConsumerWidget {
             sliderDivisions: 24,
             sliderSuffix: 'dp',
             onSliderChanged: (value) => notifier
-                .updateThemeSettings(settings.copyWith(defaultRadius: value)),
+                .updateField((prev) => prev.copyWith(defaultRadius: value)),
             onTap: () {},
           ),
           SettingItemConfig(
@@ -359,8 +309,8 @@ class ThemeSettingsScreen extends ConsumerWidget {
             icon: Iconsax.message_question,
             trailing: Switch(
               value: settings.tooltipsMatchBackground,
-              onChanged: (value) => notifier.updateThemeSettings(
-                  settings.copyWith(tooltipsMatchBackground: value)),
+              onChanged: (value) => notifier.updateField(
+                  (prev) => prev.copyWith(tooltipsMatchBackground: value)),
               activeColor: colorScheme.primary,
               activeTrackColor: colorScheme.primary.withOpacity(0.5),
             ),
@@ -378,7 +328,7 @@ class ThemeSettingsScreen extends ConsumerWidget {
             trailing: Switch(
               value: settings.useTextTheme,
               onChanged: (value) => notifier
-                  .updateThemeSettings(settings.copyWith(useTextTheme: value)),
+                  .updateField((prev) => prev.copyWith(useTextTheme: value)),
               activeColor: colorScheme.primary,
               activeTrackColor: colorScheme.primary.withOpacity(0.5),
             ),
@@ -404,7 +354,7 @@ class ThemeSettingsScreen extends ConsumerWidget {
     ];
   }
 
-  void _showColorSchemeModal(BuildContext context, ThemeSettingsModel settings,
+  void _showColorSchemeModal(BuildContext context, ThemeSettings settings,
       ThemeSettingsNotifier notifier) {
     showModalBottomSheet(
       context: context,
@@ -510,7 +460,7 @@ class SettingsSection extends StatelessWidget {
 }
 
 class ColorSchemeModal extends StatelessWidget {
-  final ThemeSettingsModel settings;
+  final ThemeSettings settings;
   final ThemeSettingsNotifier notifier;
 
   const ColorSchemeModal(
@@ -548,8 +498,9 @@ class ColorSchemeModal extends StatelessWidget {
                     scheme: scheme,
                     isSelected: settings.colorScheme == scheme.name,
                     onSelected: (selectedScheme) {
-                      notifier.updateThemeSettings(
-                        settings.copyWith(colorScheme: selectedScheme.name),
+                      notifier.updateField(
+                        (prev) =>
+                            prev.copyWith(colorScheme: selectedScheme.name),
                       );
                       Navigator.pop(context);
                     },

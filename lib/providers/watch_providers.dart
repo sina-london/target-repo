@@ -9,7 +9,6 @@ import 'package:shonenx/core/models/anime/episode_model.dart';
 import 'package:shonenx/core/models/anime/source_model.dart';
 import 'package:shonenx/core/registery/anime_source_registery_provider.dart';
 import 'package:shonenx/core/sources/anime/anime_provider.dart';
-import 'package:shonenx/data/hive/boxes/settings_box.dart';
 import 'package:shonenx/utils/extractors.dart' as extractor;
 
 // Optimized WatchState
@@ -176,34 +175,34 @@ class WatchStateNotifier extends StateNotifier<WatchState> {
 
         // Cancel any existing position subscription
         await _positionSubscription?.cancel();
-        final settingsBox = SettingsBox();
-        await settingsBox.init();
-        final playerSettings = settingsBox.getPlayerSettings();
+        // final settingsBox = SettingsBox);
+        // await settingsBox.init();
+        // final playerSettings = settingsBox.getPlayerSettings();
 
-        // Set up position listener for intro/outro skipping
-        if (state.intro != null || state.outro != null) {
-          _positionSubscription = player?.stream.position.listen((position) {
-            final positionSeconds = position.inSeconds;
+        // // Set up position listener for intro/outro skipping
+        // if (state.intro != null || state.outro != null) {
+        //   _positionSubscription = player?.stream.position.listen((position) {
+        //     final positionSeconds = position.inSeconds;
 
-            // Skip intro
-            if (playerSettings.skipIntro &&
-                state.intro != null &&
-                positionSeconds >= state.intro!['start']! &&
-                positionSeconds < state.intro!['end']!) {
-              player?.seek(Duration(seconds: state.intro!['end']!));
-              log('Skipped intro from ${state.intro!['start']} to ${state.intro!['end']}');
-            }
+        //     // Skip intro
+        //     if (playerSettings.skipIntro &&
+        //         state.intro != null &&
+        //         positionSeconds >= state.intro!['start']! &&
+        //         positionSeconds < state.intro!['end']!) {
+        //       player?.seek(Duration(seconds: state.intro!['end']!));
+        //       log('Skipped intro from ${state.intro!['start']} to ${state.intro!['end']}');
+        //     }
 
-            // Skip outro
-            if (playerSettings.skipIntro &&
-                state.outro != null &&
-                positionSeconds >= state.outro!['start']! &&
-                positionSeconds < state.outro!['end']!) {
-              player?.seek(Duration(seconds: state.outro!['end']!));
-              log('Skipped outro from ${state.outro!['start']} to ${state.outro!['end']}');
-            }
-          });
-        }
+        //     // Skip outro
+        //     if (playerSettings.skipIntro &&
+        //         state.outro != null &&
+        //         positionSeconds >= state.outro!['start']! &&
+        //         positionSeconds < state.outro!['end']!) {
+        //       player?.seek(Duration(seconds: state.outro!['end']!));
+        //       log('Skipped outro from ${state.outro!['start']} to ${state.outro!['end']}');
+        //     }
+        //   });
+        // }
       }
     } catch (e, stackTrace) {
       _handleError('Failed to update video source: $e', stackTrace);

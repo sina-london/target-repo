@@ -16,18 +16,18 @@ AnimeProvider? getAnimeProvider(WidgetRef ref) {
 
     // Fallback to manual resolution if the provider fails
     // Read the selected provider state
-    final selectedState = ref.read(selectedProviderKeyProvider);
+    // final selectedState = ref.read(selectedProviderKeyProvider);
 
     // Ensure the state is not null and not in a loading state
-    if (selectedState.isLoading) return null;
+    // if (selectedState.isLoading) return null;
 
     // Extract the selected provider key
-    final selectedKey = selectedState.selectedProviderKey;
+    // final selectedKey = selectedState.selectedProviderKey;
 
     // Retrieve the registry instance
     final registryState = ref.read(animeSourceRegistryProvider);
 
     // Get the provider corresponding to the selected key
-    return registryState.registry.getProvider(selectedKey);
+    // return registryState.registry.getProvider(selectedKey);
   }
 }

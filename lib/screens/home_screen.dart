@@ -7,11 +7,9 @@ import 'package:iconsax/iconsax.dart';
 import 'package:shonenx/core/models/anilist/anilist_media_list.dart';
 import 'package:shonenx/core/models/anilist/anilist_user.dart';
 import 'package:shonenx/core/models/anime/page_model.dart';
-import 'package:shonenx/data/hive/boxes/anime_watch_progress_box.dart';
-import 'package:shonenx/data/hive/boxes/settings_box.dart';
+import 'package:shonenx/data/hive/providers/ui_provider.dart';
 import 'package:shonenx/helpers/navigation.dart';
 import 'package:shonenx/providers/anilist/anilist_user_provider.dart';
-import 'package:shonenx/providers/hive_service_provider.dart';
 import 'package:shonenx/providers/homepage_provider.dart';
 import 'package:shonenx/utils/greeting_methods.dart';
 import 'package:shonenx/widgets/anime/anime_section.dart';
@@ -25,33 +23,21 @@ class HomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isDesktop = MediaQuery.of(context).size.width > 900;
-    final hiveServiceAsync = ref.watch(hiveServiceProvider);
 
     return Scaffold(
       extendBodyBehindAppBar: true,
       floatingActionButton: isDesktop ? _buildFAB(context) : null,
       body: SafeArea(
-        child: hiveServiceAsync.when(
-          data: (hiveService) => ref.watch(homePageProvider).when(
-                data: (homePage) => _HomeContent(
-                  animeWatchProgressBox: hiveService.progress,
-                  settingsBox: hiveService.settings,
+        child: ref.watch(homePageProvider).when(
+              data: (homePage) => _HomeContent(
                   homePage: homePage,
                   isDesktop: isDesktop,
-                  onRefresh: () => ref.refresh(homePageProvider),
-                ),
-                error: (_, __) => _HomeContent(
-                  animeWatchProgressBox: hiveService.progress,
-                  settingsBox: hiveService.settings,
-                  homePage: null,
-                  isDesktop: isDesktop,
-                  onRefresh: () => ref.refresh(homePageProvider),
-                ),
-                loading: () => const Center(child: CircularProgressIndicator()),
+                  onRefresh: () => ref.refresh(homePageProvider)),
+              error: (error, stackTrace) => const SizedBox(),
+              loading: () => const Center(
+                child: CircularProgressIndicator(),
               ),
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (err, _) => Center(child: Text('Error: $err')),
-        ),
+            ),
       ),
     );
   }
@@ -61,7 +47,7 @@ class HomeScreen extends ConsumerWidget {
     return FloatingActionButton.extended(
       backgroundColor: theme.colorScheme.primaryContainer,
       onPressed: null, // Handled by TextField's onSubmitted
-      label: Container(
+      label: SizedBox(
         width: 300,
         child: Row(
           children: [
@@ -89,24 +75,20 @@ class HomeScreen extends ConsumerWidget {
   }
 }
 
-class _HomeContent extends StatelessWidget {
+class _HomeContent extends ConsumerWidget {
   final HomePage? homePage;
-  final AnimeWatchProgressBox animeWatchProgressBox;
-  final SettingsBox settingsBox;
   final bool isDesktop;
   final VoidCallback onRefresh;
 
   const _HomeContent({
     required this.homePage,
-    required this.animeWatchProgressBox,
-    required this.settingsBox,
     required this.isDesktop,
     required this.onRefresh,
   });
 
   @override
-  Widget build(BuildContext context) {
-    final uiSettings = settingsBox.getUISettings();
+  Widget build(BuildContext context, WidgetRef ref) {
+    final uiSettings = ref.watch(uiSettingsProvider);
     return RefreshIndicator(
       onRefresh: () async => onRefresh(),
       child: CustomScrollView(
@@ -115,9 +97,7 @@ class _HomeContent extends StatelessWidget {
           SliverToBoxAdapter(child: _SpotlightSection(homePage: homePage)),
           const SliverToBoxAdapter(child: SizedBox(height: 15)),
           SliverToBoxAdapter(
-            child: ContinueWatchingView(
-              animeWatchProgressBox: animeWatchProgressBox,
-            ),
+            child: ContinueWatchingView(),
           ),
           if (uiSettings.layoutStyle == 'horizontal') ...[
             HorizontalAnimeSection(

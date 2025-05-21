@@ -1,10 +1,10 @@
 import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:shonenx/data/hive/models/settings_offline_model.dart';
+import 'package:shonenx/data/hive/models/settings/theme_model.dart';
 
 class AppTheme {
-  static ThemeData light(ThemeSettingsModel settings) {
+  static ThemeData light(ThemeSettings settings) {
     return FlexThemeData.light(
       scheme: settings.flexSchemeEnum,
       appBarStyle: FlexAppBarStyle.primary,
@@ -26,7 +26,7 @@ class AppTheme {
     );
   }
 
-  static ThemeData dark(ThemeSettingsModel settings) {
+  static ThemeData dark(ThemeSettings settings) {
     return FlexThemeData.dark(
       scheme: settings.flexSchemeEnum,
       appBarStyle: FlexAppBarStyle.material,

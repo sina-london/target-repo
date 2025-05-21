@@ -2,75 +2,26 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shonenx/data/hive/boxes/settings_box.dart';
-import 'package:shonenx/data/hive/models/settings_offline_model.dart';
+import 'package:shonenx/data/hive/providers/player_provider.dart';
 import 'package:shonenx/widgets/ui/shonenx_settings.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
-
-// Riverpod provider for player settings
-final playerSettingsProvider =
-    StateNotifierProvider<PlayerSettingsNotifier, PlayerSettingsState>((ref) {
-  return PlayerSettingsNotifier();
-});
-
-class PlayerSettingsState {
-  final PlayerSettingsModel playerSettings;
-  final bool isLoading;
-
-  PlayerSettingsState({required this.playerSettings, this.isLoading = false});
-
-  PlayerSettingsState copyWith(
-      {PlayerSettingsModel? playerSettings, bool? isLoading}) {
-    return PlayerSettingsState(
-      playerSettings: playerSettings ?? this.playerSettings,
-      isLoading: isLoading ?? this.isLoading,
-    );
-  }
-}
-
-class PlayerSettingsNotifier extends StateNotifier<PlayerSettingsState> {
-  SettingsBox? _settingsBox;
-
-  PlayerSettingsNotifier()
-      : super(PlayerSettingsState(playerSettings: PlayerSettingsModel()));
-
-  Future<void> initializeSettings() async {
-    state = state.copyWith(isLoading: true);
-    _settingsBox = SettingsBox();
-    await _settingsBox?.init();
-    _loadSettings();
-    state = state.copyWith(isLoading: false);
-  }
-
-  void _loadSettings() {
-    final settings = _settingsBox?.getSettings();
-    if (settings != null) {
-      state = state.copyWith(playerSettings: settings.playerSettings);
-    }
-  }
-
-  void updatePlayerSettings(PlayerSettingsModel settings) {
-    state = state.copyWith(playerSettings: settings);
-    _settingsBox?.updatePlayerSettings(settings);
-  }
-}
 
 class PlayerSettingsScreen extends ConsumerWidget {
   const PlayerSettingsScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final settingsState = ref.watch(playerSettingsProvider);
+    // final settingsState = ref.watch(playerSettingsProvider);
 
-    if (settingsState.isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
+    // if (settingsState.isLoading) {
+    //   return const Center(child: CircularProgressIndicator());
+    // }
 
     return _buildContent(context, ref);
   }
 
   Widget _buildContent(BuildContext context, WidgetRef ref) {
-    final playerSettings = ref.watch(playerSettingsProvider).playerSettings;
+    final playerSettings = ref.watch(playerSettingsProvider);
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -122,7 +73,7 @@ class PlayerSettingsScreen extends ConsumerWidget {
 
   void _setEpisodeCompletionThreshold(
       BuildContext context, WidgetRef ref) async {
-    final playerSettings = ref.read(playerSettingsProvider).playerSettings;
+    final playerSettings = ref.read(playerSettingsProvider);
     double tempValue = playerSettings.episodeCompletionThreshold;
     final colorScheme = Theme.of(context).colorScheme;
 
@@ -184,8 +135,8 @@ class PlayerSettingsScreen extends ConsumerWidget {
 
     if (newThreshold != null &&
         newThreshold != playerSettings.episodeCompletionThreshold) {
-      ref.read(playerSettingsProvider.notifier).updatePlayerSettings(
-            playerSettings.copyWith(episodeCompletionThreshold: newThreshold),
+      ref.read(playerSettingsProvider.notifier).updateSettings(
+            (prev) => prev.copyWith(episodeCompletionThreshold: newThreshold),
           );
     }
   }
@@ -248,7 +199,7 @@ class PlayerSettingsScreen extends ConsumerWidget {
   }
 
   void _setSubtitleAppearance(BuildContext context, WidgetRef ref) async {
-    final playerSettings = ref.read(playerSettingsProvider).playerSettings;
+    final playerSettings = ref.read(playerSettingsProvider);
     double tempFontSize = playerSettings.subtitleFontSize;
     Color tempTextColor = Color(playerSettings.subtitleTextColor);
     double tempBackgroundOpacity = playerSettings.subtitleBackgroundOpacity;
@@ -256,6 +207,7 @@ class PlayerSettingsScreen extends ConsumerWidget {
     double tempShadowOpacity = playerSettings.subtitleShadowOpacity;
     double tempShadowBlur = playerSettings.subtitleShadowBlur;
     String tempFontFamily = playerSettings.subtitleFontFamily ?? 'Default';
+    // TODO : Fix type
     int tempPosition = playerSettings.subtitlePosition == 'bottom'
         ? 2
         : playerSettings.subtitlePosition == 'top'
@@ -940,18 +892,18 @@ class PlayerSettingsScreen extends ConsumerWidget {
 
     // Update settings if changed
     if (updated == true) {
-      ref
-          .read(playerSettingsProvider.notifier)
-          .updatePlayerSettings(playerSettings.copyWith(
-            subtitleFontSize: tempFontSize,
-            subtitleTextColor: tempTextColor.value,
-            subtitleBackgroundOpacity: tempBackgroundOpacity,
-            subtitleHasShadow: tempHasShadow,
-            subtitleShadowOpacity: tempShadowOpacity,
-            subtitleShadowBlur: tempShadowBlur,
-            subtitleFontFamily: tempFontFamily,
-            subtitlePosition: tempPosition,
-          ));
+      ref.read(playerSettingsProvider.notifier).updateSettings(
+            (prev) => prev.copyWith(
+              subtitleFontSize: tempFontSize,
+              subtitleTextColor: tempTextColor.value,
+              subtitleBackgroundOpacity: tempBackgroundOpacity,
+              subtitleHasShadow: tempHasShadow,
+              subtitleShadowOpacity: tempShadowOpacity,
+              subtitleShadowBlur: tempShadowBlur,
+              subtitleFontFamily: tempFontFamily,
+              subtitlePosition: tempPosition,
+            ),
+          );
     }
   }
 
