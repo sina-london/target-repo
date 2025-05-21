@@ -268,7 +268,7 @@ class AppRouterScreen extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(35),
         color: theme.colorScheme.surface,
-        border: Border.all(color: theme.colorScheme.primary),
+        border: Border.all(color: theme.colorScheme.primaryContainer),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.1),
@@ -296,7 +296,7 @@ class AppRouterScreen extends StatelessWidget {
                           )
                         : null,
                 color: isSelected
-                    ? theme.colorScheme.primary.withOpacity(0.2)
+                    ? theme.colorScheme.primaryContainer.withOpacity(0.2)
                     : null,
               ),
               padding: const EdgeInsets.symmetric(vertical: 15),
@@ -307,7 +307,7 @@ class AppRouterScreen extends StatelessWidget {
                   child: Icon(
                     item.icon,
                     color: isSelected
-                        ? theme.colorScheme.primary
+                        ? theme.colorScheme.primaryContainer
                         : theme.colorScheme.onSurface,
                   ),
                 ),
@@ -327,15 +327,15 @@ class AppRouterScreen extends StatelessWidget {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(100),
         child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
           child: Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(100),
               color: theme.colorScheme.surface.withOpacity(0.5),
-              border:
-                  Border.all(color: theme.colorScheme.primary.withOpacity(0.8)),
+              border: Border.all(
+                  color: theme.colorScheme.primaryContainer.withOpacity(0.8)),
             ),
-            padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 5),
+            padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 7),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: navItems.asMap().entries.map((entry) {
@@ -349,7 +349,8 @@ class AppRouterScreen extends StatelessWidget {
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(100),
                         color: isSelected
-                            ? theme.colorScheme.primary.withOpacity(0.2)
+                            ? theme.colorScheme.primaryContainer
+                                .withOpacity(0.2)
                             : null,
                       ),
                       padding: const EdgeInsets.symmetric(vertical: 12),
@@ -357,7 +358,7 @@ class AppRouterScreen extends StatelessWidget {
                         child: Icon(
                           item.icon,
                           color: isSelected
-                              ? theme.colorScheme.primary
+                              ? theme.colorScheme.primaryContainer
                               : theme.colorScheme.onSurface,
                         ),
                       ),
