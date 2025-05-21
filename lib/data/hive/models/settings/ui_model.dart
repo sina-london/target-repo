@@ -1,8 +1,9 @@
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:shonenx/data/hive/hive_type_ids.dart';
 
 part 'ui_model.g.dart';
 
-@HiveType(typeId: 4)
+@HiveType(typeId: HiveTypeIds.ui)
 class UiSettings extends HiveObject {
   @HiveField(0)
   final bool compactMode;

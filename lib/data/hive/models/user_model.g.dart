@@ -8,7 +8,7 @@ part of 'user_model.dart';
 
 class UserOfflineAdapter extends TypeAdapter<UserOffline> {
   @override
-  final int typeId = 0;
+  final int typeId = 1;
 
   @override
   UserOffline read(BinaryReader reader) {

@@ -8,7 +8,7 @@ part of 'provider_model.dart';
 
 class ProviderSettingsAdapter extends TypeAdapter<ProviderSettings> {
   @override
-  final int typeId = 2;
+  final int typeId = 6;
 
   @override
   ProviderSettings read(BinaryReader reader) {

@@ -10,7 +10,6 @@ import 'package:shonenx/core/models/anime/source_model.dart';
 import 'package:shonenx/core/sources/anime/aniwatch/parser.dart';
 import 'package:shonenx/core/sources/anime/anime_provider.dart';
 import 'package:html/parser.dart' show parse;
-import 'package:shonenx/data/hive/models/home_page_model.dart';
 
 class KaidoProvider extends AnimeProvider {
   KaidoProvider({String? customApiUrl})
@@ -47,15 +46,16 @@ class KaidoProvider extends AnimeProvider {
 
   @override
   Future<HomePage> getHome() async {
-    final document = await _fetchDocument('$baseUrl/home');
-    if (document == null) {
-      throw Exception("Failed to fetch HomePage from $baseUrl");
-    }
-    return HomePage(
-      spotlight: parseSpotlight(document, baseUrl),
-      trending: parseTrending(document, baseUrl),
-      featured: parseFeatured(document, baseUrl),
-    );
+    // final document = await _fetchDocument('$baseUrl/home');
+    return HomePage();
+    // if (document == null) {
+    //   throw Exception("Failed to fetch HomePage from $baseUrl");
+    // }
+    // return HomePage(
+    //   spotlight: parseSpotlight(document, baseUrl),
+    //   trending: parseTrending(document, baseUrl),
+    //   featured: parseFeatured(document, baseUrl),
+    // );
   }
 
   @override

@@ -1,8 +1,9 @@
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:shonenx/data/hive/hive_type_ids.dart';
 
 part 'provider_model.g.dart';
 
-@HiveType(typeId: 2)
+@HiveType(typeId: HiveTypeIds.provider)
 class ProviderSettings extends HiveObject {
   @HiveField(0)
   final String selectedProviderName;

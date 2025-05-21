@@ -6,11 +6,11 @@ import 'package:go_router/go_router.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:shonenx/core/models/anilist/anilist_media_list.dart';
 import 'package:shonenx/core/models/anilist/anilist_user.dart';
-import 'package:shonenx/data/hive/models/home_page_model.dart';
+import 'package:shonenx/core/models/anime/page_model.dart';
+import 'package:shonenx/data/hive/providers/home_page_provider.dart';
 import 'package:shonenx/data/hive/providers/ui_provider.dart';
 import 'package:shonenx/helpers/navigation.dart';
 import 'package:shonenx/providers/anilist/anilist_user_provider.dart';
-import 'package:shonenx/providers/homepage_provider.dart';
 import 'package:shonenx/utils/greeting_methods.dart';
 import 'package:shonenx/widgets/anime/anime_section.dart';
 import 'package:shonenx/widgets/anime/spotlight_card/anime_spotlight_card.dart';
@@ -23,21 +23,30 @@ class HomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isDesktop = MediaQuery.of(context).size.width > 900;
-
+    final homepageState = ref.watch(homepageProvider);
+    
     return Scaffold(
       extendBodyBehindAppBar: true,
       floatingActionButton: isDesktop ? _buildFAB(context) : null,
       body: SafeArea(
-        child: ref.watch(homePageProvider).when(
-              data: (homePage) => _HomeContent(
-                  homePage: homePage,
-                  isDesktop: isDesktop,
-                  onRefresh: () => ref.refresh(homePageProvider)),
-              error: (error, stackTrace) => const SizedBox(),
-              loading: () => const Center(
-                child: CircularProgressIndicator(),
+        child: homepageState.isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : _HomeContent(
+                homePage: homepageState.homePage,
+                isDesktop: isDesktop,
+                onRefresh: () =>
+                    ref.refresh(homepageProvider.notifier).fetchHomePage(),
               ),
-            ),
+        // child: ref.watch(homePageProvider).when(
+        //       data: (homePage) => _HomeContent(
+        //           homePage: homePage,
+        //           isDesktop: isDesktop,
+        //           onRefresh: () => ref.refresh(homePageProvider)),
+        //       error: (error, stackTrace) => const SizedBox(),
+        //       loading: () => const Center(
+        //         child: CircularProgressIndicator(),
+        //       ),
+        //     ),
       ),
     );
   }

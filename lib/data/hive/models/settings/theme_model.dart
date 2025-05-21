@@ -1,12 +1,12 @@
-// ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:convert';
 
 import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:shonenx/data/hive/hive_type_ids.dart';
 
 part 'theme_model.g.dart';
 
-@HiveType(typeId: 3)
+@HiveType(typeId: HiveTypeIds.theme)
 class ThemeSettings {
   @HiveField(0)
   final String themeMode;

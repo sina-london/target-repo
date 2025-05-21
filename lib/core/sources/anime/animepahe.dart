@@ -8,7 +8,6 @@ import 'package:shonenx/core/models/anime/server_model.dart';
 import 'package:shonenx/core/models/anime/source_model.dart';
 import 'package:shonenx/core/sources/anime/anime_provider.dart';
 import 'package:http/http.dart' as http;
-import 'package:shonenx/data/hive/models/home_page_model.dart';
 
 class AnimePaheProvider extends AnimeProvider {
   AnimePaheProvider({String? customApiUrl})
@@ -16,8 +15,7 @@ class AnimePaheProvider extends AnimeProvider {
             apiUrl: customApiUrl != null
                 ? '$customApiUrl/anime/animepahe'
                 : "${dotenv.env['API_URL']}/anime/animepahe",
-            baseUrl:
-                'https://animepahe.ru/',
+            baseUrl: 'https://animepahe.ru/',
             providerName: 'animepahe');
 
   // Map<String, String> _getHeaders() {
@@ -29,13 +27,11 @@ class AnimePaheProvider extends AnimeProvider {
 
   @override
   Future<HomePage> getHome() {
-    // TODO: implement getHome
     throw UnimplementedError();
   }
 
   @override
   Future<DetailPage> getDetails(String animeId) {
-    // TODO: implement getDetails
     throw UnimplementedError();
   }
 
@@ -61,19 +57,16 @@ class AnimePaheProvider extends AnimeProvider {
 
   @override
   Future<BaseServerModel> getServers(String episodeId) async {
-    // TODO: implement getWatch
     throw UnimplementedError();
   }
 
   @override
   Future<WatchPage> getWatch(String animeId) {
-    // TODO: implement getWatch
     throw UnimplementedError();
   }
 
   @override
   Future<SearchPage> getPage(String route, int page) {
-    // TODO: implement getPage
     throw UnimplementedError();
   }
 
