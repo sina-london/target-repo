@@ -51,6 +51,7 @@ app.*.map.json
 
 # Node (Unrelated to project but for personal fix automation)
 fixer.js
+read.js
 
 # env
 .env

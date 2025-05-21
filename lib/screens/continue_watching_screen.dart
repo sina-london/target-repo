@@ -413,20 +413,24 @@ class _AnimeSeriesCard extends StatelessWidget {
       ),
       content: ShonenXGridView(
         items: entry.episodesProgress.entries.map<Widget>((episode) {
-          return ContinueWatchingCard(
-            anime: entry,
-            episode: episode.value,
-            index: episode.key,
-            onTap: () {
-              context.push(
-                  '/watch/${entry.animeId}/${episode.value.episodeNumber}');
-            },
+          return SizedBox(
+            width: 330,
+            height: 180,
+            child: ContinueWatchingCard(
+              anime: entry,
+              episode: episode.value,
+              index: episode.key,
+              onTap: () {
+                context.push(
+                    '/watch/${entry.animeId}/${episode.value.episodeNumber}');
+              },
+            ),
           );
         }).toList(),
-        crossAxisExtent: 320,
+        crossAxisExtent: 330,
         mainAxisSpacing: 8.0,
         crossAxisSpacing: 8.0,
-        childAspectRatio: 1.8,
+        childAspectRatio: 16 / 12,
         padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 8.0),
       ),
       isExpanded: false,

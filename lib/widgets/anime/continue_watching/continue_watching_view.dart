@@ -89,14 +89,18 @@ class ContinueWatchingView extends ConsumerWidget {
 
                   return Padding(
                     padding: const EdgeInsets.only(right: 12.0),
-                    child: ContinueWatchingCard(
-                      anime: entries[index].anime,
-                      episode: entries[index].episode,
-                      index: index,
-                      onTap: () {
-                        context.push(
-                            '/watch/${entries[index].anime.animeId}/${entries[index].episode.episodeNumber}');
-                      },
+                    child: SizedBox(
+                      height: 120,
+                      width: 240,
+                      child: ContinueWatchingCard(
+                        anime: entries[index].anime,
+                        episode: entries[index].episode,
+                        index: index,
+                        onTap: () {
+                          context.push(
+                              '/watch/${entries[index].anime.animeId}/${entries[index].episode.episodeNumber}');
+                        },
+                      ),
                     ),
                   );
                 },
