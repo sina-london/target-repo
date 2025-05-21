@@ -5,55 +5,55 @@ import 'package:shonenx/widgets/ui/shonenx_grid.dart';
 class ShonenXAccordion extends StatefulWidget {
   /// The title widget displayed in the accordion header
   final Widget title;
-  
+
   /// The content widget displayed when the accordion is expanded
   final Widget content;
-  
+
   /// Whether the accordion is expanded by default
   final bool isExpanded;
-  
+
   /// The background color for the header or null to use theme surfaces
   final Color? headerColor;
-  
+
   /// The background color for the content area or null to use theme surfaces
   final Color? contentColor;
-  
+
   /// Icon to use for the expand/collapse indicator
   final IconData? expandIcon;
-  
+
   /// Optional widget to display at the start of the header
   final Widget? leading;
-  
+
   /// Additional padding for the header
   final EdgeInsets? headerPadding;
-  
+
   /// Additional padding for the content
   final EdgeInsets? contentPadding;
-  
+
   /// Border radius for the entire accordion
   final BorderRadius? borderRadius;
-  
+
   /// Optional border for the accordion
   final Border? border;
-  
+
   /// Optional elevation for the accordion
   final double elevation;
-  
+
   /// Callback when expansion state changes
   final ValueChanged<bool>? onExpansionChanged;
-  
+
   /// Duration for the expansion/collapse animation
   final Duration animationDuration;
-  
+
   /// Whether to show a divider between header and content
   final bool showDivider;
-  
+
   /// Optional custom divider widget
   final Widget? customDivider;
-  
+
   /// Whether to allow the accordion to be toggled
   final bool toggleable;
-  
+
   /// Whether the transition should maintain the content size or collapse it
   final bool maintainState;
 
@@ -160,7 +160,7 @@ class ShonenXAccordionState extends State<ShonenXAccordion>
 
   void _toggleExpand() {
     if (!widget.toggleable) return;
-    
+
     setState(() {
       _isExpanded = !_isExpanded;
       if (_isExpanded) {
@@ -176,29 +176,27 @@ class ShonenXAccordionState extends State<ShonenXAccordion>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    
+
     // Apply theme defaults for colors if not provided
-    final headerBackgroundColor = widget.headerColor ?? 
-        colorScheme.surfaceContainerLow;
-    final contentBackgroundColor = widget.contentColor ?? 
-        colorScheme.surfaceContainerLowest;
+    final headerBackgroundColor =
+        widget.headerColor ?? colorScheme.surfaceContainerLow;
+    final contentBackgroundColor =
+        widget.contentColor ?? colorScheme.surfaceContainerLowest;
     final headerActiveColor = Color.lerp(
       headerBackgroundColor,
       colorScheme.primary.withOpacity(0.1),
       _headerColorAnimation.value,
     );
-    
-    final borderRadius = widget.borderRadius ?? 
-        BorderRadius.circular(16);
-    final headerPadding = widget.headerPadding ?? 
+
+    final borderRadius = widget.borderRadius ?? BorderRadius.circular(16);
+    final headerPadding = widget.headerPadding ??
         const EdgeInsets.symmetric(horizontal: 16, vertical: 12);
-    final contentPadding = widget.contentPadding ?? 
-        const EdgeInsets.all(16);
-    
+    final contentPadding = widget.contentPadding ?? const EdgeInsets.all(16);
+
     final expandIcon = widget.expandIcon ?? Iconsax.arrow_down_1;
     final iconSize = 20.0;
     final iconColor = _isExpanded ? colorScheme.primary : colorScheme.onSurface;
-    
+
     // Create the default divider if requested
     final divider = widget.showDivider
         ? widget.customDivider ??
@@ -215,9 +213,9 @@ class ShonenXAccordionState extends State<ShonenXAccordion>
       margin: const EdgeInsets.symmetric(vertical: 6),
       decoration: BoxDecoration(
         borderRadius: borderRadius,
-        border: widget.border ?? 
+        border: widget.border ??
             Border.all(color: colorScheme.outlineVariant, width: 1),
-        boxShadow: widget.elevation > 0 
+        boxShadow: widget.elevation > 0
             ? [
                 BoxShadow(
                   color: colorScheme.shadow.withOpacity(0.1 * widget.elevation),
@@ -225,7 +223,7 @@ class ShonenXAccordionState extends State<ShonenXAccordion>
                   spreadRadius: 0.5 * widget.elevation,
                   offset: Offset(0, 1 * widget.elevation),
                 ),
-              ] 
+              ]
             : null,
       ),
       child: ClipRRect(
@@ -244,8 +242,10 @@ class ShonenXAccordionState extends State<ShonenXAccordion>
                 borderRadius: BorderRadius.only(
                   topLeft: borderRadius.topLeft,
                   topRight: borderRadius.topRight,
-                  bottomLeft: _isExpanded ? Radius.zero : borderRadius.bottomLeft,
-                  bottomRight: _isExpanded ? Radius.zero : borderRadius.bottomRight,
+                  bottomLeft:
+                      _isExpanded ? Radius.zero : borderRadius.bottomLeft,
+                  bottomRight:
+                      _isExpanded ? Radius.zero : borderRadius.bottomRight,
                 ),
                 child: Padding(
                   padding: headerPadding,
@@ -272,10 +272,10 @@ class ShonenXAccordionState extends State<ShonenXAccordion>
                 ),
               ),
             ),
-            
+
             // Conditional divider
             if (_isExpanded) divider,
-            
+
             // Content
             AnimatedBuilder(
               animation: _controller,
@@ -314,7 +314,8 @@ class AccordionShowcaseScreen extends StatefulWidget {
   const AccordionShowcaseScreen({super.key});
 
   @override
-  State<AccordionShowcaseScreen> createState() => _AccordionShowcaseScreenState();
+  State<AccordionShowcaseScreen> createState() =>
+      _AccordionShowcaseScreenState();
 }
 
 class _AccordionShowcaseScreenState extends State<AccordionShowcaseScreen> {
@@ -394,9 +395,9 @@ class _AccordionShowcaseScreenState extends State<AccordionShowcaseScreen> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              content: ShonenXGridView (
+              content: ShonenXGridView(
                 items: gridItems,
-                crossAxisExtent: 150,
+                crossAxisCount: 2,
                 mainAxisSpacing: 12,
                 crossAxisSpacing: 12,
                 childAspectRatio: 0.9,
@@ -407,9 +408,9 @@ class _AccordionShowcaseScreenState extends State<AccordionShowcaseScreen> {
               contentColor: colorScheme.surfaceVariant,
               borderRadius: BorderRadius.circular(16),
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // Custom styled accordion
             ShonenXAccordion(
               isExpanded: _isSecondExpanded,
@@ -502,9 +503,9 @@ class _AccordionShowcaseScreenState extends State<AccordionShowcaseScreen> {
                 endIndent: 16,
               ),
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // Stylized accordion with custom content
             ShonenXAccordion(
               isExpanded: _isThirdExpanded,
@@ -574,7 +575,7 @@ class _AccordionShowcaseScreenState extends State<AccordionShowcaseScreen> {
               borderRadius: BorderRadius.circular(20),
               border: Border.all(color: colorScheme.outlineVariant),
               headerColor: colorScheme.primaryContainer,
-              contentColor: colorScheme.surfaceVariant,
+              contentColor: colorScheme.surfaceContainerHighest,
             ),
           ],
         ),
@@ -590,7 +591,7 @@ class _AccordionShowcaseScreenState extends State<AccordionShowcaseScreen> {
   }) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    
+
     return Expanded(
       child: Container(
         padding: const EdgeInsets.all(16),

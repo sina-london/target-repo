@@ -7,6 +7,24 @@ final animeWatchProgressProvider = NotifierProvider<AnimeWatchProgressNotifier,
   AnimeWatchProgressNotifier.new,
 );
 
+// Enum for filter options
+enum AnimeFilter {
+  all,
+  completed,
+  inProgress,
+  recentlyUpdated,
+}
+
+// Enum for view mode
+enum ViewMode {
+  grouped,
+  ungrouped,
+}
+
+final animeFilterProvider =
+    StateProvider<AnimeFilter>((ref) => AnimeFilter.all);
+final viewModeProvider = StateProvider<ViewMode>((ref) => ViewMode.grouped);
+
 class AnimeWatchProgressNotifier
     extends Notifier<Map<int, AnimeWatchProgressEntry>> {
   static const _boxName = 'anime_watch_progress';
@@ -136,6 +154,48 @@ class AnimeWatchProgressNotifier
   }
 
   List<AnimeWatchProgressEntry> getAllEntries() => _box.values.toList();
+
+  // Get filtered anime entries
+  List<AnimeWatchProgressEntry> getFilteredEntries(AnimeFilter filter) {
+    final entries = _box.values.toList();
+    switch (filter) {
+      case AnimeFilter.all:
+        return entries;
+      case AnimeFilter.completed:
+        return entries
+            .where((entry) =>
+                entry.episodesProgress.entries.length == entry.totalEpisodes)
+            .toList();
+      case AnimeFilter.inProgress:
+        return entries
+            .where((entry) =>
+                entry.episodesProgress.entries.length < entry.totalEpisodes)
+            .toList();
+      case AnimeFilter.recentlyUpdated:
+        final sevenDaysAgo = DateTime.now().subtract(const Duration(days: 7));
+        return entries
+            .where((entry) =>
+                entry.lastUpdated != null &&
+                entry.lastUpdated!.isAfter(sevenDaysAgo))
+            .toList();
+    }
+  }
+
+  // New method for ungrouped mode: Get filtered episodes
+  List<({AnimeWatchProgressEntry anime, EpisodeProgress episode})>
+      getFilteredEpisodes(AnimeFilter filter) {
+    final filteredEntries = getFilteredEntries(filter);
+    final episodes = filteredEntries.expand((entry) {
+      return entry.episodesProgress.entries
+          .where((e) => e.value.watchedAt != null)
+          .map((e) => (anime: entry, episode: e.value));
+    }).toList();
+
+    // Sort by watchedAt (most recent first)
+    episodes
+        .sort((a, b) => b.episode.watchedAt!.compareTo(a.episode.watchedAt!));
+    return episodes;
+  }
 
   void deleteAnimeProgress(int animeId) {
     _box.delete(animeId);
