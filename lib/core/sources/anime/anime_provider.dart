@@ -2,6 +2,7 @@ import 'package:shonenx/core/models/anime/episode_model.dart';
 import 'package:shonenx/core/models/anime/page_model.dart';
 import 'package:shonenx/core/models/anime/server_model.dart';
 import 'package:shonenx/core/models/anime/source_model.dart';
+import 'package:shonenx/data/hive/models/home_page_model.dart';
 
 abstract class AnimeProvider {
   final String providerName;

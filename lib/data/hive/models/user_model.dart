@@ -1,8 +1,8 @@
 import 'package:hive/hive.dart';
 
-part 'user_offline_model.g.dart';  // This will generate the adapter code for the model
+part 'user_model.g.dart';
 
-@HiveType(typeId: 0)  // Use a unique typeId for the object type
+@HiveType(typeId: 0)
 class UserOffline extends HiveObject {
   @HiveField(0)
   final String name;

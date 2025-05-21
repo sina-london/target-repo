@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:shonenx/data/hive/models/subtitle_style_offline_model.dart';
+import 'package:shonenx/data/hive/models/subtitle_style_model.dart';
 
 part 'player_model.g.dart';
 
