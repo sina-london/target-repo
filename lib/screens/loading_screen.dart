@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shonenx/core/registery/anime_source_registery_provider.dart';
 import 'package:shonenx/data/hive/providers/home_page_provider.dart';
-import 'package:shonenx/data/hive/providers/theme_provider.dart';
 import 'package:shonenx/data/hive/providers/ui_provider.dart';
 import 'dart:async';
 import 'dart:developer' as dev;
@@ -77,10 +76,8 @@ class _LoadingScreenState extends ConsumerState<LoadingScreen>
       //     'Selected provider: ${selectedProviderState.selectedProviderKey}, API URL: $customApiUrl',
       //     name: 'LoadingScreen');
 
-      ref.read(animeSourceRegistryProvider.notifier).initialize(null);
-      ref.read(homepageProvider.notifier).initialize();
-      ref.read(themeSettingsProvider);
-      // ref.read(providerSettingsProvider);
+      await ref.read(animeSourceRegistryProvider.notifier).initialize(null);
+      await ref.read(homepageProvider.notifier).initialize();
 
       // Verify that the registry was initialized successfully
       final registryState = ref.read(animeSourceRegistryProvider);
