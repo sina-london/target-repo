@@ -132,7 +132,7 @@ void _showErrorSnackBar(BuildContext context, String title, String message) {
   );
 }
 
-/// Dialog for searching and selecting an anime match.
+/// Modern dialog for searching and selecting an anime match.
 class _AnimeSearchDialog extends ConsumerStatefulWidget {
   final List<BaseAnimeModel> initialResults;
   final AnimeProvider animeProvider;
@@ -152,60 +152,115 @@ class _AnimeSearchDialog extends ConsumerStatefulWidget {
   ConsumerState<_AnimeSearchDialog> createState() => _AnimeSearchDialogState();
 }
 
-class _AnimeSearchDialogState extends ConsumerState<_AnimeSearchDialog> {
+class _AnimeSearchDialogState extends ConsumerState<_AnimeSearchDialog>
+    with TickerProviderStateMixin {
   late final TextEditingController _searchController;
+  late final AnimationController _searchAnimationController;
+  late final AnimationController _resultsAnimationController;
+  late final Animation<double> _searchFadeAnimation;
+  late final Animation<double> _resultsFadeAnimation;
+
   List<BaseAnimeModel> _results = [];
   bool _isLoading = false;
   Timer? _debounceTimer;
+  final FocusNode _searchFocusNode = FocusNode();
 
   @override
   void initState() {
     super.initState();
-    AppLogger.d('Initializing AnimeSearchDialog');
+    AppLogger.d('Initializing Enhanced AnimeSearchDialog');
+
     _searchController = TextEditingController(text: widget.initialQuery);
     _results = widget.initialResults;
+
+    // Initialize animations
+    _searchAnimationController = AnimationController(
+      duration: const Duration(milliseconds: 400),
+      vsync: this,
+    );
+    _resultsAnimationController = AnimationController(
+      duration: const Duration(milliseconds: 600),
+      vsync: this,
+    );
+
+    _searchFadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+          parent: _searchAnimationController, curve: Curves.easeOutQuart),
+    );
+    _resultsFadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+          parent: _resultsAnimationController, curve: Curves.easeOutCubic),
+    );
+
+    // Start animations
+    _searchAnimationController.forward();
+    _resultsAnimationController.forward();
+
+    // Auto-focus search field
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _searchFocusNode.requestFocus();
+    });
   }
 
   @override
   void dispose() {
-    AppLogger.d('Disposing AnimeSearchDialog');
+    AppLogger.d('Disposing Enhanced AnimeSearchDialog');
     _debounceTimer?.cancel();
     _searchController.dispose();
+    _searchFocusNode.dispose();
+    _searchAnimationController.dispose();
+    _resultsAnimationController.dispose();
     super.dispose();
   }
 
-  /// Searches for anime based on the provided query.
+  /// Searches for anime with improved error handling and loading states.
   Future<void> _searchAnime(String query) async {
     AppLogger.d('Searching anime with query: $query');
+
     if (query.isEmpty) {
       setState(() => _results = widget.initialResults);
       return;
     }
 
+    if (query.length < 2) return; // Minimum query length
+
     setState(() => _isLoading = true);
+
     try {
       final encodedQuery = Uri.encodeComponent(query.trim());
       final response = await widget.animeProvider
           .getSearch(encodedQuery, widget.animeMedia.format, 1);
-      setState(() =>
-          _results = response.results.where((r) => r.id != null).toList());
-      AppLogger.d('Search returned ${response.results.length} results');
+
+      if (mounted) {
+        setState(() {
+          _results = response.results.where((r) => r.id != null).toList();
+        });
+        AppLogger.d('Search returned ${response.results.length} results');
+      }
     } catch (e, stackTrace) {
       AppLogger.e('Anime search failed', e, stackTrace);
       if (mounted) {
         _showErrorSnackBar(
-            context, 'Search Error', 'Failed to fetch search results.');
+          context,
+          'Search Error',
+          'Unable to fetch results. Please try again.',
+        );
+        setState(() => _results = []);
       }
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
-  /// Debounces search input to prevent excessive API calls.
+  /// Enhanced debounced search with minimum query validation.
   void _onSearchChanged(String value) {
     _debounceTimer?.cancel();
-    _debounceTimer = Timer(const Duration(milliseconds: 300), () {
-      _searchAnime(value);
+    _debounceTimer = Timer(const Duration(milliseconds: 500), () {
+      if (value.trim().isNotEmpty) {
+        _searchAnime(value);
+      }
     });
   }
 
@@ -213,208 +268,510 @@ class _AnimeSearchDialogState extends ConsumerState<_AnimeSearchDialog> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      backgroundColor: theme.colorScheme.surface,
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 400, maxHeight: 600),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.all(16),
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 480, maxHeight: 700),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surface,
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 20,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            _buildHeader(theme),
-            const Divider(height: 1),
-            _buildResults(theme),
-            const Divider(height: 1),
-            _buildCancelButton(theme),
+            _buildModernHeader(theme),
+            _buildSearchStats(theme),
+            Expanded(child: _buildEnhancedResults(theme)),
+            _buildActionButtons(theme),
           ],
         ),
       ),
     );
   }
 
-  /// Builds the dialog header with search bar.
-  Widget _buildHeader(ThemeData theme) {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  'Select Anime',
-                  style: theme.textTheme.titleLarge
-                      ?.copyWith(fontWeight: FontWeight.bold),
+  /// Modern header with glassmorphism effect and better typography.
+  Widget _buildModernHeader(ThemeData theme) {
+    return FadeTransition(
+      opacity: _searchFadeAnimation,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(24, 24, 16, 20),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surfaceContainerLowest,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primaryContainer,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    Iconsax.search_favorite,
+                    size: 20,
+                    color: theme.colorScheme.onPrimaryContainer,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Find Your Anime',
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: -0.5,
+                        ),
+                      ),
+                      Text(
+                        'Search and select the correct match',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton.filledTonal(
+                  icon: const Icon(Iconsax.close_circle, size: 20),
+                  onPressed: () => Navigator.of(context).pop(),
+                  tooltip: 'Close',
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            TextField(
+              controller: _searchController,
+              focusNode: _searchFocusNode,
+              decoration: InputDecoration(
+                hintText: 'Type anime title...',
+                prefixIcon: Container(
+                  margin: const EdgeInsets.all(8),
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    Iconsax.search_normal_1,
+                    size: 16,
+                    color: theme.colorScheme.primary,
+                  ),
+                ),
+                suffixIcon: _searchController.text.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Iconsax.close_circle, size: 18),
+                        onPressed: () {
+                          _searchController.clear();
+                          setState(() => _results = widget.initialResults);
+                        },
+                      )
+                    : null,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide.none,
+                ),
+                filled: true,
+                fillColor: theme.colorScheme.surfaceContainer,
+                contentPadding: const EdgeInsets.symmetric(
+                  vertical: 16,
+                  horizontal: 16,
                 ),
               ),
-              IconButton(
-                icon: const Icon(Iconsax.close_circle, size: 24),
-                onPressed: () => Navigator.of(context).pop(),
-                tooltip: 'Close',
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          TextField(
-            controller: _searchController,
-            decoration: InputDecoration(
-              hintText: 'Search anime...',
-              prefixIcon: const Icon(Iconsax.search_normal),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: theme.colorScheme.outlineVariant),
-              ),
-              filled: true,
-              fillColor: theme.colorScheme.surfaceContainerLowest,
-              contentPadding:
-                  const EdgeInsets.symmetric(vertical: 0, horizontal: 12),
+              style: theme.textTheme.bodyLarge,
+              onChanged: _onSearchChanged,
             ),
-            onChanged: _onSearchChanged,
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Search statistics and status indicator.
+  Widget _buildSearchStats(ThemeData theme) {
+    if (_isLoading) return const SizedBox.shrink();
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+      child: Row(
+        children: [
+          Icon(
+            Iconsax.info_circle,
+            size: 16,
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+          const SizedBox(width: 8),
+          Text(
+            '${_results.length} result${_results.length != 1 ? 's' : ''} found',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ],
       ),
     );
   }
 
-  /// Builds the results list or loading/empty state.
-  Widget _buildResults(ThemeData theme) {
-    return Flexible(
-      child: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _results.isEmpty
-              ? const Center(
-                  child:
-                      Text('No results found', style: TextStyle(fontSize: 16)))
-              : ListView.builder(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  itemCount: _results.length,
-                  itemBuilder: (context, index) {
-                    final result = _results[index];
-                    return _AnimeTile(
-                      anime: result,
-                      onTap: () {
-                        AppLogger.d(
-                            'Selected anime: ${result.name} (ID: ${result.id})');
-                        Navigator.of(context).pop();
-                        _navigateToWatch(
-                          context: context,
-                          ref: ref,
-                          animeId: result.id!,
-                          animeName: result.name ?? '',
-                          animeMedia: widget.animeMedia,
-                          plusEpisode: widget.plusEpisode,
-                        );
-                      },
-                    );
-                  },
-                ),
+  /// Enhanced results with better loading states and animations.
+  Widget _buildEnhancedResults(ThemeData theme) {
+    return FadeTransition(
+      opacity: _resultsFadeAnimation,
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 24),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: theme.colorScheme.outlineVariant.withOpacity(0.5),
+          ),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: _buildResultsContent(theme),
+        ),
+      ),
     );
   }
 
-  /// Builds the cancel button.
-  Widget _buildCancelButton(ThemeData theme) {
-    return Padding(
-      padding: const EdgeInsets.all(8),
-      child: TextButton(
-        onPressed: () {
-          AppLogger.d('Canceling anime search dialog');
-          Navigator.of(context).pop();
-        },
-        child: Text(
-          'Cancel',
-          style: TextStyle(fontSize: 16, color: theme.colorScheme.primary),
+  Widget _buildResultsContent(ThemeData theme) {
+    if (_isLoading) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(
+              strokeWidth: 3,
+              color: theme.colorScheme.primary,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Searching anime...',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
         ),
+      );
+    }
+
+    if (_results.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surfaceContainerHigh,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Iconsax.search_status,
+                size: 32,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No anime found',
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Try different search terms',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return ListView.separated(
+      padding: const EdgeInsets.all(8),
+      itemCount: _results.length,
+      separatorBuilder: (context, index) => Divider(
+        color: theme.colorScheme.outlineVariant.withOpacity(0.3),
+        height: 1,
       ),
+      itemBuilder: (context, index) {
+        return _EnhancedAnimeTile(
+          anime: _results[index],
+          index: index,
+          onTap: () => _selectAnime(_results[index]),
+        );
+      },
+    );
+  }
+
+  /// Action buttons with improved layout.
+  Widget _buildActionButtons(ThemeData theme) {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerLowest,
+        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(24)),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: OutlinedButton.icon(
+              onPressed: () {
+                AppLogger.d('Canceling anime search dialog');
+                Navigator.of(context).pop();
+              },
+              icon: const Icon(Iconsax.close_circle, size: 18),
+              label: const Text('Cancel'),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _selectAnime(BaseAnimeModel anime) {
+    AppLogger.d('Selected anime: ${anime.name} (ID: ${anime.id})');
+    Navigator.of(context).pop();
+    _navigateToWatch(
+      context: context,
+      ref: ref,
+      animeId: anime.id!,
+      animeName: anime.name ?? '',
+      animeMedia: widget.animeMedia,
+      plusEpisode: widget.plusEpisode,
     );
   }
 }
 
-/// Displays an anime tile with thumbnail, title, and details.
-class _AnimeTile extends StatelessWidget {
+/// Enhanced anime tile with better visual design and hover effects.
+class _EnhancedAnimeTile extends StatefulWidget {
   final BaseAnimeModel anime;
+  final int index;
   final VoidCallback onTap;
 
-  const _AnimeTile({required this.anime, required this.onTap});
+  const _EnhancedAnimeTile({
+    required this.anime,
+    required this.index,
+    required this.onTap,
+  });
+
+  @override
+  State<_EnhancedAnimeTile> createState() => _EnhancedAnimeTileState();
+}
+
+class _EnhancedAnimeTileState extends State<_EnhancedAnimeTile>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _hoverController;
+  late final Animation<double> _scaleAnimation;
+  bool _isHovered = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _hoverController = AnimationController(
+      duration: const Duration(milliseconds: 200),
+      vsync: this,
+    );
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 1.02).animate(
+      CurvedAnimation(parent: _hoverController, curve: Curves.easeOutCubic),
+    );
+  }
+
+  @override
+  void dispose() {
+    _hoverController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        child: Row(
-          children: [
-            // Thumbnail
-            _buildThumbnail(theme),
-            const SizedBox(width: 12),
-            // Title and Details
-            _buildDetails(theme),
-            const Icon(Iconsax.arrow_right_3, size: 20),
-          ],
-        ),
-      ),
-    );
-  }
 
-  /// Builds the anime thumbnail or placeholder.
-  Widget _buildThumbnail(ThemeData theme) {
-    if (anime.poster == null) {
-      return Container(
-        width: 50,
-        height: 70,
-        color: theme.colorScheme.surfaceContainerHighest,
-        child: const Icon(Iconsax.image, size: 20),
-      );
-    }
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(8),
-      child: CachedNetworkImage(
-        imageUrl: anime.poster!,
-        width: 50,
-        height: 70,
-        fit: BoxFit.cover,
-        placeholder: (context, url) => Container(
-          width: 50,
-          height: 70,
-          color: theme.colorScheme.surfaceContainerHighest,
-          child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
-        ),
-        errorWidget: (context, url, error) => Container(
-          width: 50,
-          height: 70,
-          color: theme.colorScheme.surfaceContainerHighest,
-          child: const Icon(Iconsax.image, size: 20),
-        ),
-      ),
-    );
-  }
-
-  /// Builds the anime title and details.
-  Widget _buildDetails(ThemeData theme) {
-    return Expanded(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            anime.name ?? 'Unknown',
-            style: theme.textTheme.titleMedium
-                ?.copyWith(fontWeight: FontWeight.w600),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-          if (anime.releaseDate != null || anime.type != null)
-            Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: Text(
-                [anime.releaseDate, anime.type]
-                    .where((e) => e != null)
-                    .join(' • '),
-                style: theme.textTheme.bodySmall
-                    ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+    return AnimatedBuilder(
+      animation: _scaleAnimation,
+      builder: (context, child) {
+        return Transform.scale(
+          scale: _scaleAnimation.value,
+          child: MouseRegion(
+            onEnter: (_) {
+              setState(() => _isHovered = true);
+              _hoverController.forward();
+            },
+            onExit: (_) {
+              setState(() => _isHovered = false);
+              _hoverController.reverse();
+            },
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: widget.onTap,
+                borderRadius: BorderRadius.circular(16),
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: _isHovered
+                        ? theme.colorScheme.surfaceContainerHigh
+                        : Colors.transparent,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Row(
+                    children: [
+                      _buildEnhancedThumbnail(theme),
+                      const SizedBox(width: 16),
+                      Expanded(child: _buildEnhancedDetails(theme)),
+                      _buildActionIcon(theme),
+                    ],
+                  ),
+                ),
               ),
             ),
+          ),
+        );
+      },
+    );
+  }
+
+  /// Enhanced thumbnail with better placeholders and loading states.
+  Widget _buildEnhancedThumbnail(ThemeData theme) {
+    return Container(
+      width: 56,
+      height: 80,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
         ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: widget.anime.poster != null
+            ? CachedNetworkImage(
+                imageUrl: widget.anime.poster!,
+                fit: BoxFit.cover,
+                placeholder: (context, url) => Container(
+                  color: theme.colorScheme.surfaceContainerHigh,
+                  child: Center(
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
+                ),
+                errorWidget: (context, url, error) => _buildPlaceholder(theme),
+              )
+            : _buildPlaceholder(theme),
+      ),
+    );
+  }
+
+  Widget _buildPlaceholder(ThemeData theme) {
+    return Container(
+      color: theme.colorScheme.surfaceContainerHigh,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Iconsax.image,
+            size: 20,
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'No\nImage',
+            textAlign: TextAlign.center,
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+              height: 1.2,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Enhanced details with better typography and metadata display.
+  Widget _buildEnhancedDetails(ThemeData theme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          widget.anime.name ?? 'Unknown Title',
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w600,
+            height: 1.3,
+          ),
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+        ),
+        const SizedBox(height: 6),
+        if (widget.anime.releaseDate != null || widget.anime.type != null)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surfaceContainerHigh,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              [widget.anime.releaseDate, widget.anime.type]
+                  .where((e) => e != null && e.toString().trim().isNotEmpty)
+                  .join(' • '),
+              style: theme.textTheme.labelMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  /// Action icon with animation.
+  Widget _buildActionIcon(ThemeData theme) {
+    return AnimatedRotation(
+      turns: _isHovered ? 0.1 : 0.0,
+      duration: const Duration(milliseconds: 200),
+      child: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: _isHovered
+              ? theme.colorScheme.primaryContainer
+              : theme.colorScheme.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Icon(
+          Iconsax.arrow_right_3,
+          size: 16,
+          color: _isHovered
+              ? theme.colorScheme.onPrimaryContainer
+              : theme.colorScheme.onSurfaceVariant,
+        ),
       ),
     );
   }
