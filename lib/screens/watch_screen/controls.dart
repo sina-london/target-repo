@@ -19,8 +19,8 @@ import 'package:shonenx/widgets/player/top_controls.dart';
 import 'dart:async';
 import 'dart:developer' as developer;
 import 'dart:io';
+import 'dart:ui';
 import 'package:flutter/services.dart';
-import 'package:shonenx/widgets/ui/shonenx_icon_btn.dart';
 import 'package:window_manager/window_manager.dart';
 
 // Intents for keyboard shortcuts
@@ -40,6 +40,7 @@ class ToggleFullscreenIntent extends Intent {
   const ToggleFullscreenIntent();
 }
 
+/// Modern video player controls with sleek design
 class CustomControls extends ConsumerStatefulWidget {
   final media_kit_video.VideoState state;
   final AnimationController panelAnimationController;
@@ -54,20 +55,31 @@ class CustomControls extends ConsumerStatefulWidget {
   ConsumerState<CustomControls> createState() => _CustomControlsState();
 }
 
-class _CustomControlsState extends ConsumerState<CustomControls> {
-  static const _autoHideDuration = Duration(seconds: 3);
+class _CustomControlsState extends ConsumerState<CustomControls>
+    with SingleTickerProviderStateMixin {
+  // Longer auto-hide duration for better UX
+  static const _autoHideDuration = Duration(seconds: 4);
   static const _seekDuration = Duration(seconds: 10);
 
+  // State variables
   bool _controlsVisible = true;
   Timer? _hideControlsTimer;
   bool _isFullscreen = (Platform.isAndroid && Platform.isIOS ? true : false);
   late GestureHandler _gestureHandler;
   late OverlayManager _overlayManager;
 
+  // Animation controller for fade effects
+  late AnimationController _fadeAnimationController;
+  late Animation<double> _fadeAnimation;
+
   @override
   void initState() {
     super.initState();
+
+    // Initialize overlay manager
     _overlayManager = OverlayManager();
+
+    // Initialize gesture handler
     _gestureHandler = GestureHandler(
       resetTimer: _resetTimer,
       showOverlay: (context, {required bool isBrightness}) {
@@ -81,19 +93,41 @@ class _CustomControlsState extends ConsumerState<CustomControls> {
         );
       },
     );
+
+    // Initialize fade animation controller
+    _fadeAnimationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+
+    _fadeAnimation = CurvedAnimation(
+      parent: _fadeAnimationController,
+      curve: Curves.easeInOut,
+    );
+
+    // Initialize player state
     _initializeState();
   }
 
   Future<void> _initializeState() async {
+    // Check fullscreen state
     _isFullscreen = (!Platform.isAndroid && !Platform.isIOS)
         ? await windowManager.isFullScreen()
         : false;
+
+    // Force landscape orientation
     await UIHelper.forceLandscape();
+
+    // Initialize gesture handler
     _gestureHandler.initialize();
+
+    // Show controls initially
+    _controlsVisible = true;
+    _fadeAnimationController.value = 1.0;
+
+    // Schedule hide if in fullscreen
     if (_isFullscreen) {
       _scheduleHideControls();
-    } else {
-      _controlsVisible = true;
     }
   }
 
@@ -105,8 +139,16 @@ class _CustomControlsState extends ConsumerState<CustomControls> {
 
   @override
   void dispose() {
+    // Cancel timers
     _hideControlsTimer?.cancel();
+
+    // Dispose animation controller
+    _fadeAnimationController.dispose();
+
+    // Dispose overlay manager
     _overlayManager.dispose();
+
+    // Clean up player and UI
     Future.wait([
       widget.state.widget.controller.player.pause(),
       widget.state.widget.controller.player.stop(),
@@ -114,34 +156,68 @@ class _CustomControlsState extends ConsumerState<CustomControls> {
       UIHelper.enableAutoRotate(),
       UIHelper.exitImmersiveMode()
     ]);
+
     // Avoid disposing widget.state here; let the parent widget handle it
     super.dispose();
   }
 
+  /// Schedule hiding controls with animation
   void _scheduleHideControls() {
+    // Cancel any existing timer
     _hideControlsTimer?.cancel();
+
+    // Don't schedule if controls are already hidden or not in fullscreen
     if (!_controlsVisible || !mounted || !_isFullscreen) return;
 
+    // Set timer to hide controls
     _hideControlsTimer = Timer(_autoHideDuration, () {
       if (mounted) {
-        setState(() => _controlsVisible = false);
+        // Animate controls out
+        _fadeAnimationController.reverse().then((_) {
+          if (mounted) {
+            setState(() => _controlsVisible = false);
+          }
+        });
         developer.log('Controls auto-hidden', name: 'CustomControls');
       }
     });
   }
 
+  /// Toggle controls visibility with animation
   void _toggleControls() {
     if (!mounted) return;
-    setState(() => _controlsVisible = !_controlsVisible);
-    _controlsVisible ? _scheduleHideControls() : _hideControlsTimer?.cancel();
+
+    if (_controlsVisible) {
+      // Hide controls with animation
+      _fadeAnimationController.reverse().then((_) {
+        if (mounted) {
+          setState(() => _controlsVisible = false);
+        }
+      });
+      _hideControlsTimer?.cancel();
+    } else {
+      // Show controls with animation
+      setState(() => _controlsVisible = true);
+      _fadeAnimationController.forward();
+      _scheduleHideControls();
+    }
   }
 
+  /// Show controls with animation
   void _showControls() {
     if (!mounted || _controlsVisible) return;
+
+    // Show controls immediately
     setState(() => _controlsVisible = true);
+
+    // Animate in
+    _fadeAnimationController.forward();
+
+    // Schedule hide
     _scheduleHideControls();
   }
 
+  /// Reset the auto-hide timer
   void _resetTimer() {
     if (mounted && _controlsVisible) {
       _scheduleHideControls();
@@ -150,12 +226,17 @@ class _CustomControlsState extends ConsumerState<CustomControls> {
 
   @override
   Widget build(BuildContext context) {
+    // Get state from providers
     final playerState = ref.watch(playerStateProvider);
     final playerNotifier = ref.read(playerStateProvider.notifier);
     final playerSettings = ref.watch(playerSettingsProvider);
     final watchState = ref.watch(watchProvider);
     final theme = Theme.of(context);
     final isDesktop = !Platform.isAndroid && !Platform.isIOS;
+
+    // Get screen dimensions for responsive design
+    final screenSize = MediaQuery.of(context).size;
+    final isSmallScreen = screenSize.width < 600;
 
     return Shortcuts(
       shortcuts: const {
@@ -191,16 +272,45 @@ class _CustomControlsState extends ConsumerState<CustomControls> {
                 : MouseCursor.defer,
             child: GestureDetector(
               onTap: _toggleControls,
+              // Double tap to seek forward/backward
+              onDoubleTapDown: (details) {
+                final screenWidth = MediaQuery.of(context).size.width;
+                final tapPosition = details.globalPosition.dx;
+
+                // If tap is on the right side of the screen, seek forward
+                if (tapPosition > screenWidth / 2) {
+                  _handleSeek(playerState, playerNotifier, forward: true);
+                } else {
+                  // Otherwise, seek backward
+                  _handleSeek(playerState, playerNotifier, forward: false);
+                }
+              },
               child: SafeArea(
                 child: Stack(
                   children: [
+                    // Subtitle overlay
                     _buildSubtitleOverlay(playerState, playerSettings),
-                    _buildControlsOverlay(
-                      context,
-                      playerState,
-                      playerNotifier,
-                      watchState,
-                      theme,
+
+                    // Controls overlay with fade animation
+                    AnimatedBuilder(
+                      animation: _fadeAnimation,
+                      builder: (context, child) {
+                        return Opacity(
+                          opacity: _fadeAnimation.value,
+                          child: IgnorePointer(
+                            ignoring: !_controlsVisible,
+                            child: child!,
+                          ),
+                        );
+                      },
+                      child: _buildControlsOverlay(
+                        context,
+                        playerState,
+                        playerNotifier,
+                        watchState,
+                        theme,
+                        isSmallScreen,
+                      ),
                     ),
                   ],
                 ),
@@ -212,138 +322,237 @@ class _CustomControlsState extends ConsumerState<CustomControls> {
     );
   }
 
+  /// Build modern subtitle overlay with improved visibility
   Widget _buildSubtitleOverlay(
       PlayerState playerState, PlayerSettings playerSettings) {
+    // Get screen dimensions for responsive positioning
+    final screenHeight = MediaQuery.of(context).size.height;
+
     return Positioned(
-      bottom: _controlsVisible ? 100 : 0,
+      // Position subtitles higher when controls are visible
+      bottom: _controlsVisible
+          ? screenHeight * 0.2 // 20% from bottom when controls visible
+          : screenHeight * 0.1, // 10% from bottom when controls hidden
       left: 0,
       right: 0,
       child: Center(
-        child: SubtitleOverlay(
-          subtitleStyle: playerSettings.toSubtitleStyle(),
-          subtitle: playerState.subtitle.firstOrNull ?? '',
+        child: AnimatedOpacity(
+          opacity: playerState.subtitle.isNotEmpty ? 1.0 : 0.0,
+          duration: const Duration(milliseconds: 300),
+          child: SubtitleOverlay(
+            subtitleStyle: playerSettings.toSubtitleStyle(),
+            subtitle: playerState.subtitle.firstOrNull ?? '',
+          ),
         ),
       ),
     );
   }
 
+  /// Build the main controls overlay with modern glass-morphic design
   Widget _buildControlsOverlay(
     BuildContext context,
     PlayerState playerState,
     PlayerStateNotifier playerNotifier,
     WatchState watchState,
     ThemeData theme,
+    bool isSmallScreen,
   ) {
-    return AnimatedOpacity(
-      opacity: _controlsVisible ? 1.0 : 0.0,
-      duration: const Duration(milliseconds: 300),
-      child: AbsorbPointer(
-        absorbing: !_controlsVisible,
-        child: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Colors.black.withOpacity(0.7), Colors.transparent],
-              begin: Alignment.bottomCenter,
-              end: Alignment.topCenter,
-            ),
-          ),
-          padding: const EdgeInsets.fromLTRB(10, 0, 10, 0),
-          child: Stack(
-            children: [
-              TopControls(
-                watchState: watchState,
-                onPanelToggle: () => _togglePanel(),
-                onQualityTap: () =>
-                    _showQualitySelector(context, ref, watchState),
-                onSubtitleTap: () =>
-                    _showSubtitleSelector(context, ref, watchState),
-                onFullscreenTap: () async => await _handleToggleFullscreen(),
-              ),
-              Align(
-                alignment: Alignment.center,
-                child: CenterControls(
-                  isPlaying: playerState.isPlaying,
-                  isBuffering: playerState.isBuffering,
-                  onTap: () => _handlePlayPause(playerNotifier),
-                  theme: theme,
+    return Container(
+      decoration: BoxDecoration(
+        // Modern gradient overlay for better visibility
+        gradient: LinearGradient(
+          colors: [
+            Colors.black.withOpacity(0.7), // Stronger at bottom
+            Colors.black.withOpacity(0.4), // Medium in middle
+            Colors.black.withOpacity(0.7), // Stronger at top
+          ],
+          begin: Alignment.bottomCenter,
+          end: Alignment.topCenter,
+          stops: const [0.0, 0.5, 1.0],
+        ),
+      ),
+      // Full screen container
+      child: ClipRect(
+        child: BackdropFilter(
+          // Apply subtle blur for glass effect
+          filter: ImageFilter.blur(sigmaX: 3.0, sigmaY: 3.0),
+          child: Container(
+            color: Colors.transparent,
+            padding: EdgeInsets.fromLTRB(
+                isSmallScreen ? 8 : 12, 0, isSmallScreen ? 8 : 12, 0),
+            child: Stack(
+              children: [
+                // Top controls with modern design
+                TopControls(
+                  watchState: watchState,
+                  onPanelToggle: () => _togglePanel(),
+                  onQualityTap: () =>
+                      _showQualitySelector(context, ref, watchState),
+                  onSubtitleTap: () =>
+                      _showSubtitleSelector(context, ref, watchState),
+                  onFullscreenTap: () async => await _handleToggleFullscreen(),
                 ),
-              ),
-              Positioned(
-                bottom: 0,
-                left: 0,
-                right: 0,
-                child: _buildBottomControls(
-                    playerState, watchState, playerNotifier, theme),
-              ),
-            ],
+
+                // Center play/pause controls
+                Align(
+                  alignment: Alignment.center,
+                  child: CenterControls(
+                    isPlaying: playerState.isPlaying,
+                    isBuffering: playerState.isBuffering,
+                    onTap: () => _handlePlayPause(playerNotifier),
+                    theme: theme,
+                  ),
+                ),
+
+                // Bottom controls with seek bar
+                Positioned(
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  child: _buildBottomControls(
+                    playerState,
+                    watchState,
+                    playerNotifier,
+                    theme,
+                    isSmallScreen,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
+  /// Build bottom controls with modern design
   Widget _buildBottomControls(
     PlayerState playerState,
     WatchState watchState,
     PlayerStateNotifier playerNotifier,
     ThemeData theme,
+    bool isSmallScreen,
   ) {
+    // Calculate if we're near the end of the episode
+    final isNearEnd = playerState.duration.inSeconds > 0 &&
+        (playerState.position.inSeconds / playerState.duration.inSeconds) *
+                100.0 >=
+            85;
+
+    // Get next episode number if available
+    final hasNextEpisode = watchState.episodes.isNotEmpty &&
+        watchState.selectedEpisodeIdx != null &&
+        (watchState.selectedEpisodeIdx! + 1) < watchState.episodes.length;
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        if ((playerState.position.inSeconds / playerState.duration.inSeconds) *
-                100.0 >=
-            85)
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              ShonenXIconButton(
-                icon: Iconsax.next5,
-                onPressed: () => ref.read(watchProvider.notifier).changeEpisode(
-                      (watchState.selectedEpisodeIdx ?? 0) + 1,
+        // Next episode button (only show when near the end)
+        if (isNearEnd && hasNextEpisode)
+          Container(
+            margin: EdgeInsets.only(
+              right: isSmallScreen ? 8 : 16,
+              bottom: isSmallScreen ? 4 : 8,
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                // Modern next episode button with glass effect
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color:
+                            theme.colorScheme.primaryContainer.withOpacity(0.7),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: theme.colorScheme.primaryContainer.withOpacity(0.3),
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Iconsax.next5,
+                            size: isSmallScreen ? 16 : 18,
+                            color: theme.colorScheme.onPrimaryContainer,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Next: EP ${watchState.episodes[(watchState.selectedEpisodeIdx ?? 0) + 1].number}',
+                            style: theme.textTheme.labelMedium?.copyWith(
+                              color: theme.colorScheme.onPrimaryContainer,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                label:
-                    'Episode ${watchState.episodes[(watchState.selectedEpisodeIdx ?? 0) + 1].number}',
-              ),
-            ],
+                  ),
+                ),
+              ],
+            ),
           ),
-        const SizedBox(height: 8),
+
+        // Main controls container with glass effect
         Container(
-          margin: const EdgeInsets.symmetric(horizontal: 16),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(10),
-            color: theme.colorScheme.surfaceContainerLowest.withOpacity(0.3),
-          ),
-          child: Column(
-            children: [
-              SeekBar(
-                position: playerState.position,
-                duration: playerState.duration,
-                onSeek: (position) {
-                  _resetTimer();
-                  playerNotifier.seek(position);
-                },
-                theme: theme,
+          margin: EdgeInsets.symmetric(horizontal: isSmallScreen ? 8 : 16),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  color: Colors.black.withOpacity(0.3),
+                  border: Border.all(
+                    color: Colors.white.withOpacity(0.1),
+                    width: 0.5,
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    // Modern seek bar
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: SeekBar(
+                        position: playerState.position,
+                        duration: playerState.duration,
+                        onSeek: (position) {
+                          _resetTimer();
+                          playerNotifier.seek(position);
+                        },
+                        theme: theme,
+                      ),
+                    ),
+
+                    // Bottom controls
+                    BottomControls(
+                      animeProvider: ref
+                          .read(animeSourceRegistryProvider.notifier)
+                          .getProvider(ref
+                              .read(providerSettingsProvider)
+                              .selectedProviderName)!,
+                      watchState: watchState,
+                      onChangeSource: _resetTimer,
+                      isPlaying: playerState.isPlaying,
+                      onPlayPause: () => _handlePlayPause(playerNotifier),
+                      position: playerState.position,
+                      duration: playerState.duration,
+                      isBuffering: playerState.isBuffering,
+                    ),
+                  ],
+                ),
               ),
-              const SizedBox(height: 8),
-              BottomControls(
-                animeProvider: ref
-                    .read(animeSourceRegistryProvider.notifier)
-                    .getProvider(ref
-                        .read(providerSettingsProvider)
-                        .selectedProviderName)!,
-                watchState: watchState,
-                onChangeSource: _resetTimer,
-                isPlaying: playerState.isPlaying,
-                onPlayPause: () => _handlePlayPause(playerNotifier),
-                position: playerState.position,
-                duration: playerState.duration,
-                isBuffering: playerState.isBuffering,
-              ),
-            ],
+            ),
           ),
-        )
+        ),
       ],
     );
   }
