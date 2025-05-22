@@ -132,8 +132,8 @@ class _ViewAllCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: colorScheme.primaryContainer.withOpacity(0.6),
           borderRadius: BorderRadius.circular(16),
-          border:
-              Border.all(color: colorScheme.primary.withOpacity(0.3), width: 1),
+          border: Border.all(
+              color: colorScheme.primaryContainer.withOpacity(0.3), width: 1),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -142,7 +142,7 @@ class _ViewAllCard extends StatelessWidget {
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: colorScheme.primary.withOpacity(0.2),
+                color: colorScheme.primaryContainer.withOpacity(0.2),
               ),
               child: Icon(
                 Iconsax.more_square,
@@ -218,10 +218,11 @@ class _Header extends StatelessWidget {
                 color: colorScheme.primaryContainer,
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(
-                    color: colorScheme.primary.withOpacity(0.3), width: 1),
+                    color: colorScheme.primaryContainer.withOpacity(0.3),
+                    width: 1),
                 boxShadow: [
                   BoxShadow(
-                    color: colorScheme.primary.withOpacity(0.1),
+                    color: colorScheme.primaryContainer.withOpacity(0.1),
                     blurRadius: 4,
                     offset: const Offset(0, 2),
                   ),

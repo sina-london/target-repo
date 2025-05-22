@@ -53,7 +53,7 @@ class ProviderSettingsScreen extends ConsumerWidget {
                     Icon(
                       Iconsax.info_circle,
                       size: 18,
-                      color: colorScheme.primary,
+                      color: colorScheme.primaryContainer,
                     ),
                     const SizedBox(width: 8),
                     Text(
@@ -159,8 +159,8 @@ class ProviderSettingsScreen extends ConsumerWidget {
                       icon: const Icon(Iconsax.refresh),
                       label: const Text('Retry'),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: colorScheme.primary,
-                        foregroundColor: colorScheme.onPrimary,
+                        backgroundColor: colorScheme.primaryContainer,
+                        foregroundColor: colorScheme.onPrimaryContainer,
                         padding: const EdgeInsets.symmetric(
                           horizontal: 24,
                           vertical: 12,
@@ -264,7 +264,9 @@ class _ProviderCard extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isSelected ? colorScheme.primary : colorScheme.outlineVariant,
+          color: isSelected
+              ? colorScheme.primaryContainer
+              : colorScheme.outlineVariant,
           width: isSelected ? 2 : 1,
         ),
         color: isSelected
@@ -273,7 +275,7 @@ class _ProviderCard extends StatelessWidget {
         boxShadow: isSelected
             ? [
                 BoxShadow(
-                  color: colorScheme.primary.withOpacity(0.1),
+                  color: colorScheme.primaryContainer.withOpacity(0.1),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -301,7 +303,8 @@ class _ProviderCard extends StatelessWidget {
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
                               color: isSelected
-                                  ? colorScheme.primary.withOpacity(0.2)
+                                  ? colorScheme.primaryContainer
+                                      .withOpacity(0.2)
                                   : colorScheme.surfaceVariant.withOpacity(0.5),
                               borderRadius: BorderRadius.circular(10),
                             ),
@@ -309,7 +312,7 @@ class _ProviderCard extends StatelessWidget {
                               Iconsax.cloud,
                               size: 20,
                               color: isSelected
-                                  ? colorScheme.primary
+                                  ? colorScheme.primaryContainer
                                   : colorScheme.onSurfaceVariant,
                             ),
                           ),
@@ -320,7 +323,7 @@ class _ProviderCard extends StatelessWidget {
                               style: theme.textTheme.titleMedium?.copyWith(
                                 fontWeight: FontWeight.bold,
                                 color: isSelected
-                                    ? colorScheme.primary
+                                    ? colorScheme.primaryContainer
                                     : colorScheme.onSurface,
                               ),
                             ),
@@ -332,21 +335,21 @@ class _ProviderCard extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.all(6),
                         decoration: BoxDecoration(
-                          color: colorScheme.primary.withOpacity(0.2),
+                          color: colorScheme.primaryContainer.withOpacity(0.2),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Icon(
                           Iconsax.tick_circle,
                           size: 18,
-                          color: colorScheme.primary,
+                          color: colorScheme.primaryContainer,
                         ),
                       )
                     else
                       ElevatedButton(
                         onPressed: onTap,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: colorScheme.primary,
-                          foregroundColor: colorScheme.onPrimary,
+                          backgroundColor: colorScheme.primaryContainer,
+                          foregroundColor: colorScheme.onPrimaryContainer,
                           elevation: 0,
                           padding: const EdgeInsets.symmetric(
                             horizontal: 16,

@@ -6,6 +6,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shonenx/app_initializer.dart';
 import 'package:shonenx/data/hive/providers/theme_provider.dart';
+import 'package:shonenx/data/hive/providers/ui_provider.dart';
+import 'package:shonenx/helpers/ui.dart';
 import 'package:shonenx/theme/app_theme.dart';
 import 'package:shonenx/router/router.dart';
 import 'package:window_manager/window_manager.dart';
@@ -41,17 +43,11 @@ class MyApp extends ConsumerStatefulWidget {
 }
 
 class _MyAppState extends ConsumerState<MyApp> {
-  bool _isFullscreen = false;
 
-  void _toggleFullscreen() {
-    setState(() => _isFullscreen = !_isFullscreen);
-    if (!Platform.isAndroid && !Platform.isIOS) {
-      windowManager.setFullScreen(_isFullscreen);
-    }
-    // Optionally adjust system UI for mobile
-    if (!_isFullscreen) {
-      SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-    }
+  @override
+  void initState() {
+    super.initState();
+    // ref.listen(uiSettingsProvider)
   }
 
   @override

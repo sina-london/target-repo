@@ -51,7 +51,7 @@ class SettingsSection extends StatelessWidget {
                       style: TextStyle(
                         fontSize: compact ? 14 : 16,
                         fontWeight: FontWeight.w600,
-                        color: colorScheme.primary,
+                        color: colorScheme.primaryContainer,
                         letterSpacing: 0.5,
                       ),
                     ),
@@ -62,7 +62,7 @@ class SettingsSection extends StatelessWidget {
                     Icon(
                       Iconsax.arrow_right_3,
                       size: 16,
-                      color: colorScheme.primary.withOpacity(0.5),
+                      color: colorScheme.primaryContainer.withOpacity(0.5),
                     )
                   ]
                 ],
@@ -176,13 +176,13 @@ class _SettingsItemState extends State<SettingsItem>
     final effectiveIconColor = widget.iconColor ??
         (widget.disabled
             ? colorScheme.onSurface.withOpacity(0.3)
-            : colorScheme.primary);
+            : colorScheme.primaryContainer);
 
     return Container(
       padding: EdgeInsets.all(widget.compact ? 8 : 10),
       decoration: BoxDecoration(
         color: widget.disabled
-            ? colorScheme.surfaceVariant.withOpacity(0.3)
+            ? colorScheme.surfaceContainerHighest.withOpacity(0.3)
             : effectiveIconColor.withOpacity(0.1),
         borderRadius: BorderRadius.circular(10),
       ),
@@ -247,15 +247,15 @@ class _SettingsItemState extends State<SettingsItem>
             child: InkWell(
               onTap: widget.disabled ? null : widget.onTap,
               borderRadius: BorderRadius.circular(16),
-              splashColor: colorScheme.primary.withOpacity(0.1),
-              highlightColor: colorScheme.primary.withOpacity(0.05),
+              splashColor: colorScheme.primaryContainer.withOpacity(0.1),
+              highlightColor: colorScheme.primaryContainer.withOpacity(0.05),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
                 padding: EdgeInsets.symmetric(
                     horizontal: 16, vertical: widget.compact ? 12 : 16),
                 decoration: BoxDecoration(
                   color: _isHovered && !widget.disabled
-                      ? colorScheme.surfaceVariant.withOpacity(0.3)
+                      ? colorScheme.surfaceContainerHighest.withOpacity(0.3)
                       : Colors.transparent,
                   borderRadius: BorderRadius.circular(16),
                 ),
@@ -510,7 +510,8 @@ class _SettingsItemDropdownState<T> extends State<SettingsItemDropdown<T>>
                         ),
                         decoration: BoxDecoration(
                           color: isSelected
-                              ? theme.colorScheme.primary.withOpacity(0.1)
+                              ? theme.colorScheme.primaryContainer
+                                  .withOpacity(0.1)
                               : Colors.transparent,
                         ),
                         child: Row(
@@ -524,7 +525,7 @@ class _SettingsItemDropdownState<T> extends State<SettingsItemDropdown<T>>
                                       ? FontWeight.w600
                                       : FontWeight.normal,
                                   color: isSelected
-                                      ? theme.colorScheme.primary
+                                      ? theme.colorScheme.primaryContainer
                                       : theme.colorScheme.onSurface,
                                 ),
                               ),
@@ -532,7 +533,7 @@ class _SettingsItemDropdownState<T> extends State<SettingsItemDropdown<T>>
                             if (isSelected)
                               Icon(
                                 Iconsax.tick_circle,
-                                color: theme.colorScheme.primary,
+                                color: theme.colorScheme.primaryContainer,
                                 size: 20,
                               ),
                           ],
@@ -710,7 +711,7 @@ class _SettingsSliderState extends State<SettingsSlider> {
               decoration: BoxDecoration(
                 color: widget.disabled
                     ? theme.colorScheme.surfaceContainerHighest.withOpacity(0.1)
-                    : theme.colorScheme.primary.withOpacity(0.1),
+                    : theme.colorScheme.primaryContainer.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(100),
               ),
               child: Text(
@@ -720,7 +721,7 @@ class _SettingsSliderState extends State<SettingsSlider> {
                   fontWeight: FontWeight.w500,
                   color: widget.disabled
                       ? theme.colorScheme.onSurface.withOpacity(0.4)
-                      : theme.colorScheme.primary,
+                      : theme.colorScheme.primaryContainer,
                 ),
               ),
             ),
@@ -733,7 +734,7 @@ class _SettingsSliderState extends State<SettingsSlider> {
                 thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
                 overlayShape: const RoundSliderOverlayShape(overlayRadius: 16),
                 trackShape: CustomTrackShape(),
-                activeTrackColor: theme.colorScheme.primary,
+                activeTrackColor: theme.colorScheme.primaryContainer,
                 inactiveTrackColor: theme.colorScheme.surfaceContainerHighest,
               ),
               child: Slider(
@@ -794,7 +795,7 @@ extension ColorExtension on Color {
 Widget _buildIconContainer(BuildContext context, IconData icon, bool disabled,
     [bool compact = false, Color? customColor]) {
   final theme = Theme.of(context);
-  final baseColor = customColor ?? theme.colorScheme.primary;
+  final baseColor = customColor ?? theme.colorScheme.primaryContainer;
 
   return Container(
     padding: EdgeInsets.all(compact ? 8 : 10),
@@ -877,7 +878,7 @@ class SettingsHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final color = accentColor ?? theme.colorScheme.primary;
+    final color = accentColor ?? theme.colorScheme.primaryContainer;
 
     return Container(
       width: double.infinity,

@@ -10,7 +10,8 @@ class HorizontalAnimeSection extends StatelessWidget {
   final List<Media>? animes;
   final UiSettings uiSettings;
 
-  const HorizontalAnimeSection({super.key, 
+  const HorizontalAnimeSection({
+    super.key,
     required this.title,
     required this.animes,
     required this.uiSettings,
@@ -77,7 +78,7 @@ class HorizontalAnimeSection extends StatelessWidget {
                 final anime = animes?[index];
                 final tag = const Uuid().v4();
                 return Padding(
-                  padding: const EdgeInsets.only(right: 16),
+                  padding: const EdgeInsets.only(right: 10),
                   child: SizedBox(
                     width: cardWidth,
                     child: AnimatedAnimeCard(
@@ -106,7 +107,8 @@ class VerticalAnimeSection extends StatelessWidget {
   final int crossAxisCount;
   final double aspectRatio;
 
-  const VerticalAnimeSection({super.key, 
+  const VerticalAnimeSection({
+    super.key,
     required this.title,
     required this.animes,
     required this.uiSettings,
@@ -188,7 +190,6 @@ class VerticalAnimeSection extends StatelessWidget {
             ),
           ),
           GridView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 15),
             physics: const NeverScrollableScrollPhysics(),
             shrinkWrap: true,
             gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(

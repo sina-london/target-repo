@@ -51,6 +51,18 @@ class PlayerSettings extends HiveObject {
   @HiveField(13)
   final bool skipOutro;
 
+  @HiveField(14)
+  final bool subtitleBoldText;
+  
+  @HiveField(15)
+  final bool subtitleForceUppercase;
+
+  @HiveField(16)
+  final bool showRemainingTime;
+
+  @HiveField(17)
+  final bool showNextEpisodeAutoPlay;
+
   PlayerSettings({
     this.episodeCompletionThreshold = 0.9,
     this.autoPlayNextEpisode = true,
@@ -66,6 +78,10 @@ class PlayerSettings extends HiveObject {
     this.defaultPlaybackSpeed = 1.0,
     this.skipIntro = true,
     this.skipOutro = true,
+    this.subtitleBoldText = true,
+    this.subtitleForceUppercase = false,
+    this.showRemainingTime = true,
+    this.showNextEpisodeAutoPlay = true,
   });
 
   // Convert to runtime SubtitleStyle
@@ -79,6 +95,8 @@ class PlayerSettings extends HiveObject {
       shadowBlur: subtitleShadowBlur,
       fontFamily: subtitleFontFamily,
       position: subtitlePosition,
+      boldText: subtitleBoldText,
+      forceUppercase: subtitleForceUppercase,
     );
   }
 
@@ -97,6 +115,10 @@ class PlayerSettings extends HiveObject {
     double? defaultPlaybackSpeed,
     bool? skipIntro,
     bool? skipOutro,
+    bool? subtitleBoldText,
+    bool? subtitleForceUppercase,
+    bool? showRemainingTime,
+    bool? showNextEpisodeAutoPlay,
   }) {
     return PlayerSettings(
       episodeCompletionThreshold:
@@ -116,6 +138,12 @@ class PlayerSettings extends HiveObject {
       defaultPlaybackSpeed: defaultPlaybackSpeed ?? this.defaultPlaybackSpeed,
       skipIntro: skipIntro ?? this.skipIntro,
       skipOutro: skipOutro ?? this.skipOutro,
+      subtitleBoldText: subtitleBoldText ?? this.subtitleBoldText,
+      subtitleForceUppercase:
+          subtitleForceUppercase ?? this.subtitleForceUppercase,
+      showRemainingTime: showRemainingTime ?? this.showRemainingTime,
+      showNextEpisodeAutoPlay:
+          showNextEpisodeAutoPlay ?? this.showNextEpisodeAutoPlay,
     );
   }
 }

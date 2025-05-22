@@ -168,7 +168,8 @@ class UISettingsScreen extends ConsumerWidget {
                     );
                 Navigator.pop(context);
               },
-              child: Text('Save', style: TextStyle(color: colorScheme.primary)),
+              child: Text('Save',
+                  style: TextStyle(color: colorScheme.primaryContainer)),
             ),
           ],
         );
@@ -252,7 +253,8 @@ class UISettingsScreen extends ConsumerWidget {
                 );
                 Navigator.pop(context);
               },
-              child: Text('Save', style: TextStyle(color: colorScheme.primary)),
+              child: Text('Save',
+                  style: TextStyle(color: colorScheme.primaryContainer)),
             ),
           ],
         );
@@ -341,7 +343,8 @@ class UISettingsScreen extends ConsumerWidget {
                 );
                 Navigator.pop(context);
               },
-              child: Text('Save', style: TextStyle(color: colorScheme.primary)),
+              child: Text('Save',
+                  style: TextStyle(color: colorScheme.primaryContainer)),
             ),
           ],
         );
