@@ -1,14 +1,17 @@
 import 'dart:async';
-import 'dart:developer' as dev;
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import 'package:shonenx/core/registery/anime_source_registery.dart';
+import 'package:shonenx/core/sources/anime/anime_provider.dart';
 import 'package:shonenx/core/sources/anime/animekai.dart';
 import 'package:shonenx/core/sources/anime/animepahe.dart';
 import 'package:shonenx/core/sources/anime/aniwatch/aniwatch.dart';
 import 'package:shonenx/core/sources/anime/aniwatch/hianime.dart';
-import 'package:shonenx/core/registery/anime_source_registery.dart';
-import 'package:shonenx/core/sources/anime/anime_provider.dart';
 import 'package:shonenx/core/sources/anime/aniwatch/kaido.dart';
 import 'package:shonenx/data/hive/providers/provider_provider.dart';
+
+import 'package:shonenx/core/utils/app_logger.dart'; 
 
 /// State class for the anime source registry
 class AnimeSourceRegistryState {
@@ -42,14 +45,13 @@ class AnimeSourceRegistryState {
 }
 
 /// Notifier for the anime source registry
-class AnimeSourceRegistryNotifier
-    extends StateNotifier<AnimeSourceRegistryState> {
+class AnimeSourceRegistryNotifier extends StateNotifier<AnimeSourceRegistryState> {
   // Flag to prevent multiple initializations
   bool _isInitializing = false;
 
   AnimeSourceRegistryNotifier()
       : super(AnimeSourceRegistryState(registry: AnimeSourceRegistery())) {
-    dev.log('AnimeSourceRegistryNotifier created', name: 'AnimeSourceRegistry');
+    AppLogger.d('AnimeSourceRegistryNotifier created');
   }
 
   /// Initialize the registry with the given API URL
@@ -57,8 +59,7 @@ class AnimeSourceRegistryNotifier
   Future<void> initialize(String? apiUrl) async {
     // Prevent multiple initializations
     if (_isInitializing) {
-      dev.log('Registry initialization already in progress',
-          name: 'AnimeSourceRegistry');
+      AppLogger.d('Registry initialization already in progress');
       return;
     }
 
@@ -106,6 +107,7 @@ class AnimeSourceRegistryNotifier
           error: errorMsg,
           customApiUrl: apiUrl,
         );
+        AppLogger.e(errorMsg);
         return;
       }
 
@@ -117,9 +119,8 @@ class AnimeSourceRegistryNotifier
         customApiUrl: apiUrl,
       );
 
-      dev.log(
-          'Registry initialized with ${state.registry.providerCount} providers',
-          name: 'AnimeSourceRegistry');
+      AppLogger.i(
+          'Registry initialized with ${state.registry.providerCount} providers');
     } catch (e, stackTrace) {
       final errorMsg = 'Error initializing registry: $e';
       state.registry.setStatus(RegistryStatus.error, errorMsg);
@@ -127,8 +128,7 @@ class AnimeSourceRegistryNotifier
         isInitializing: false,
         error: errorMsg,
       );
-      dev.log(errorMsg,
-          name: 'AnimeSourceRegistry', error: e, stackTrace: stackTrace);
+      AppLogger.e(errorMsg, e, stackTrace);
     } finally {
       _isInitializing = false;
     }
@@ -136,13 +136,13 @@ class AnimeSourceRegistryNotifier
 
   /// Update the API URL for all providers
   Future<void> updateApiUrl(String newApiUrl) async {
-    dev.log('Updating API URL to: $newApiUrl', name: 'AnimeSourceRegistry');
+    AppLogger.d('Updating API URL to: $newApiUrl');
     await initialize(newApiUrl);
   }
 
   /// Reset the API URL to the default
   Future<void> resetApiUrl() async {
-    dev.log('Resetting API URL to default', name: 'AnimeSourceRegistry');
+    AppLogger.d('Resetting API URL to default');
     await initialize(null);
   }
 
@@ -178,7 +178,6 @@ final currentAnimeProviderProvider = Provider<AnimeProvider?>((ref) {
     return null;
   }
 
-  // final selectedKey = selectedState.selectedProviderKey;
   return registryState.registry.getProvider(selectedKey);
 });
 

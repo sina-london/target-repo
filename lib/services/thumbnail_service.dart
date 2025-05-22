@@ -1,9 +1,9 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:developer';
 import 'package:flutter/foundation.dart';
 import 'package:image/image.dart' as img;
 import 'package:media_kit/media_kit.dart';
+import 'package:shonenx/core/utils/app_logger.dart';
 
 /// Service responsible for generating thumbnails from video frames
 class ThumbnailService {
@@ -14,11 +14,10 @@ class ThumbnailService {
   /// Generate a thumbnail from the current video frame
   /// Returns a base64-encoded JPEG image
   Future<String> generateThumbnail(Player player) async {
-    log("Starting thumbnail generation");
+    AppLogger.d('Starting thumbnail generation');
     try {
-      // Attempt screenshot capture
-      log("Player state: playing=${player.state.playing}, "
-          "width=${player.state.width}, height=${player.state.height}");
+      AppLogger.d('Player state: playing=${player.state.playing}, '
+          'width=${player.state.width}, height=${player.state.height}');
 
       if (player.state.playing &&
           player.state.width != null &&
@@ -27,40 +26,41 @@ class ThumbnailService {
           player.state.height! > 0) {
         for (int attempt = 0; attempt < 2; attempt++) {
           try {
-            log("Attempting screenshot capture (attempt ${attempt + 1})");
+            AppLogger.d(
+                'Attempting screenshot capture (attempt ${attempt + 1})');
             final rawScreenshot = await player.screenshot(format: 'image/jpeg');
             if (rawScreenshot != null && rawScreenshot.isNotEmpty) {
-              log("Screenshot captured: ${rawScreenshot.length} bytes");
+              AppLogger.d('Screenshot captured: ${rawScreenshot.length} bytes');
               final result = await compute(_processThumbnail, rawScreenshot);
               if (result != null && result.isNotEmpty) {
-                log("Thumbnail processed: ${result.length} bytes");
+                AppLogger.d('Thumbnail processed: ${result.length} bytes');
                 return result;
               }
-              log("Processed thumbnail is null or empty");
+              AppLogger.w('Processed thumbnail is null or empty');
             } else {
-              log("Screenshot is null or empty");
+              AppLogger.w('Screenshot is null or empty');
             }
           } catch (e, stackTrace) {
-            log("Screenshot attempt failed: $e\n$stackTrace");
+            AppLogger.e('Screenshot attempt failed (attempt ${attempt + 1})', e,
+                stackTrace);
           }
           await Future.delayed(Duration(milliseconds: 500));
         }
       } else {
-        log("Player not ready for screenshot");
+        AppLogger.w('Player not ready for screenshot');
       }
 
-      // Fallback to placeholder
-      log("Falling back to placeholder thumbnail");
+      AppLogger.d('Falling back to placeholder thumbnail');
       return await _generatePlaceholderThumbnail();
     } catch (e, stackTrace) {
-      log("Critical error in thumbnail generation: $e\n$stackTrace");
+      AppLogger.e('Critical error in thumbnail generation', e, stackTrace);
       return await _generatePlaceholderThumbnail();
     }
   }
 
   /// Generate a placeholder thumbnail with a solid color background
   Future<String> _generatePlaceholderThumbnail() async {
-    log("Generating placeholder thumbnail");
+    AppLogger.d('Generating placeholder thumbnail');
     try {
       final image = img.Image(width: thumbnailWidth, height: thumbnailHeight);
 
@@ -74,22 +74,23 @@ class ThumbnailService {
       // Encode to JPEG and base64
       final jpegData = img.encodeJpg(image, quality: thumbnailQuality);
       if (jpegData.isEmpty) {
-        log("ERROR: JPEG encoding produced empty data");
+        AppLogger.w('JPEG encoding produced empty data for placeholder');
         return _generateMinimalPlaceholder();
       }
 
       final base64Data = base64Encode(jpegData);
-      log("Placeholder thumbnail generated: ${base64Data.length} bytes");
+      AppLogger.d(
+          'Placeholder thumbnail generated: ${base64Data.length} bytes');
       return base64Data;
     } catch (e, stackTrace) {
-      log("Error generating placeholder: $e\n$stackTrace");
+      AppLogger.e('Error generating placeholder thumbnail', e, stackTrace);
       return _generateMinimalPlaceholder();
     }
   }
 
   /// Generate a minimal placeholder as a last resort
   String _generateMinimalPlaceholder() {
-    log("Generating minimal placeholder");
+    AppLogger.d('Generating minimal placeholder');
     try {
       final image = img.Image(width: thumbnailWidth, height: thumbnailHeight);
       for (int y = 0; y < thumbnailHeight; y++) {
@@ -99,10 +100,11 @@ class ThumbnailService {
       }
       final jpegData = img.encodeJpg(image, quality: thumbnailQuality);
       final base64Data = base64Encode(jpegData);
-      log("Minimal placeholder generated: ${base64Data.length} bytes");
+      AppLogger.d('Minimal placeholder generated: ${base64Data.length} bytes');
       return base64Data;
     } catch (e, stackTrace) {
-      log("Critical error in minimal placeholder: $e\n$stackTrace");
+      AppLogger.e(
+          'Critical error in minimal placeholder generation', e, stackTrace);
       // Hardcoded fallback
       return 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAAAAAAAD/4QAuRXhpZgAATU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAKADAAQAAAABAAAAAP/2wBDAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQH/2wBDAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQH/wAARCAABAAEDASIAAhEBAxEB/8QAFAABAAAAAAAAAAAAAAAAAAAAAP/EABQBAQAAAAAAAAAAAAAAAAAAAAH/xAAUAQEAAAAAAAAAAAAAAAAAAAAA/8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAwDAQACEQMRAD8AAAD/2Q==';
     }
@@ -111,11 +113,11 @@ class ThumbnailService {
   /// Process a raw screenshot into a thumbnail
   /// This method runs in a separate isolate via compute
   static String? _processThumbnail(Uint8List rawScreenshot) {
-    log("Processing thumbnail in isolate");
+    AppLogger.d('Processing thumbnail in isolate');
     try {
       final image = img.decodeImage(rawScreenshot);
       if (image == null) {
-        debugPrint("Failed to decode screenshot image");
+        AppLogger.w('Failed to decode screenshot image');
         return null;
       }
 
@@ -128,15 +130,15 @@ class ThumbnailService {
 
       final jpegData = img.encodeJpg(resizedImage, quality: thumbnailQuality);
       if (jpegData.isEmpty) {
-        debugPrint("JPEG encoding failed");
+        AppLogger.w('JPEG encoding failed for thumbnail');
         return null;
       }
 
       final base64Data = base64Encode(jpegData);
-      debugPrint("Thumbnail processed: ${base64Data.length} bytes");
+      AppLogger.d('Thumbnail processed: ${base64Data.length} bytes');
       return base64Data;
     } catch (e, stackTrace) {
-      debugPrint("Error processing thumbnail: $e\n$stackTrace");
+      AppLogger.e('Error processing thumbnail in isolate', e, stackTrace);
       return null;
     }
   }

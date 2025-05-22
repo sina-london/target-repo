@@ -1,9 +1,8 @@
-import 'dart:developer';
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive/hive.dart';
 import 'package:shonenx/core/anilist/services/anilist_service.dart';
 import 'package:shonenx/core/models/anime/page_model.dart';
+import 'package:shonenx/core/utils/app_logger.dart';
 import 'package:shonenx/data/hive/models/home_page_model.dart';
 
 class HomepageState {
@@ -58,6 +57,7 @@ class HomepageNotifier extends Notifier<HomepageState> {
             const Duration(hours: 6),
           ),
         )) {
+      AppLogger.d('Using cached homepage data, last updated: ${state.lastUpdated}');
       return Future.value(state);
     }
 
@@ -66,7 +66,7 @@ class HomepageNotifier extends Notifier<HomepageState> {
 
   Future<HomepageState> fetchHomePage() async {
     try {
-      log("Fetching Homepage");
+      AppLogger.d('Fetching homepage data from AnilistService');
       final trending = await anilistService.getTrendingAnime();
       final popular = await anilistService.getPopularAnime();
       // final recentlyUpdated = await anilistService.getRecentlyUpdatedAnime();
@@ -82,14 +82,17 @@ class HomepageNotifier extends Notifier<HomepageState> {
         mostWatchedAnime: [],
       );
 
+      AppLogger.d('Successfully fetched homepage data');
       updateHomePage(homePageData);
       return state;
-    } catch (err) {
+    } catch (err, stackTrace) {
+      AppLogger.e('Error fetching homepage data', err, stackTrace);
       return state.copyWith(error: err.toString(), isLoading: false);
     }
   }
 
   void updateHomePage(HomePage homePage) {
+    AppLogger.d('Updating homepage data in Hive');
     state = state.copyWith(homePage: homePage, isLoading: false);
     Hive.box<HomePageModel>(_boxName).put(
       0,

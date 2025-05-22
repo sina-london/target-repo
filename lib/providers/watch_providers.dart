@@ -1,6 +1,4 @@
 import 'dart:async';
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:media_kit/media_kit.dart';
@@ -9,9 +7,10 @@ import 'package:shonenx/core/models/anime/episode_model.dart';
 import 'package:shonenx/core/models/anime/source_model.dart';
 import 'package:shonenx/core/registery/anime_source_registery_provider.dart';
 import 'package:shonenx/core/sources/anime/anime_provider.dart';
+import 'package:shonenx/core/utils/app_logger.dart';
 import 'package:shonenx/utils/extractors.dart' as extractor;
 
-// Optimized WatchState
+/// Represents the state of the video player and episode selection.
 @immutable
 class WatchState {
   final String animeId;
@@ -27,18 +26,15 @@ class WatchState {
   final int? selectedSubtitleIdx;
   final int? selectedSourceIdx;
   final int? selectedEpisodeIdx;
-  final String? error; // Error message to be displayed or handled
+  final String? error;
   final bool episodesLoading;
   final bool sourceLoading;
   final String? loadingMessage;
-  final Map<String, int>? intro; // {start: seconds, end: seconds}
-  final Map<String, int>? outro; // {start: seconds, end: seconds}
+  final Map<String, int>? intro;
+  final Map<String, int>? outro;
 
   const WatchState({
     required this.animeId,
-    this.error,
-    this.sourceLoading = true,
-    this.episodesLoading = true,
     this.isExpanded = false,
     this.selectedCategory = 'sub',
     this.selectedSource,
@@ -47,19 +43,19 @@ class WatchState {
     this.episodes = const [],
     this.sources = const [],
     this.subtitles = const [],
-    this.selectedEpisodeIdx = 0,
-    this.selectedQualityIdx = 0,
-    this.selectedSourceIdx = 0,
+    this.selectedQualityIdx,
     this.selectedSubtitleIdx,
+    this.selectedSourceIdx,
+    this.selectedEpisodeIdx,
+    this.error,
+    this.episodesLoading = false,
+    this.sourceLoading = false,
     this.loadingMessage,
     this.intro,
     this.outro,
   });
 
   WatchState copyWith({
-    String? error,
-    bool? episodesLoading,
-    bool? sourceLoading,
     String? animeId,
     bool? isExpanded,
     String? selectedCategory,
@@ -73,14 +69,14 @@ class WatchState {
     int? selectedSubtitleIdx,
     int? selectedSourceIdx,
     int? selectedEpisodeIdx,
+    String? error,
+    bool? episodesLoading,
+    bool? sourceLoading,
     String? loadingMessage,
     Map<String, int>? intro,
     Map<String, int>? outro,
   }) {
     return WatchState(
-      error: error,
-      episodesLoading: episodesLoading ?? this.episodesLoading,
-      sourceLoading: sourceLoading ?? this.sourceLoading,
       animeId: animeId ?? this.animeId,
       isExpanded: isExpanded ?? this.isExpanded,
       selectedCategory: selectedCategory ?? this.selectedCategory,
@@ -94,14 +90,17 @@ class WatchState {
       selectedSubtitleIdx: selectedSubtitleIdx ?? this.selectedSubtitleIdx,
       selectedSourceIdx: selectedSourceIdx ?? this.selectedSourceIdx,
       selectedEpisodeIdx: selectedEpisodeIdx ?? this.selectedEpisodeIdx,
-      loadingMessage: loadingMessage ?? this.loadingMessage,
+      error: error,
+      episodesLoading: episodesLoading ?? this.episodesLoading,
+      sourceLoading: sourceLoading ?? this.sourceLoading,
+      loadingMessage: loadingMessage,
       intro: intro ?? this.intro,
       outro: outro ?? this.outro,
     );
   }
 }
 
-// Optimized WatchStateNotifier with Error Handling
+/// Manages the watch state, including episode selection, streaming, and player control.
 class WatchStateNotifier extends StateNotifier<WatchState> {
   final Player? player;
   final VideoController? controller;
@@ -114,29 +113,42 @@ class WatchStateNotifier extends StateNotifier<WatchState> {
     required this.animeProvider,
   }) : super(const WatchState(animeId: ''));
 
-  // Clear any existing error
+  // --- State Management ---
+
+  /// Clears any existing error message.
   void clearError() {
+    AppLogger.d('Clearing error message');
     state = state.copyWith(error: null);
   }
 
+  /// Resets the watch state to its initial state.
   void resetState() {
-    state = const WatchState(animeId: '');
+    AppLogger.d('Resetting watch state');
     _positionSubscription?.cancel();
+    state = const WatchState(animeId: '');
   }
 
+  /// Updates the selected category (e.g., sub/dub).
   void updateCategory(String category) {
+    AppLogger.d('Updating category to $category');
     state = state.copyWith(selectedCategory: category, error: null);
   }
 
+  /// Updates the selected server.
   void updateServer(String server) {
+    AppLogger.d('Updating server to $server');
     state = state.copyWith(selectedServer: server, error: null);
   }
 
+  // --- Episode and Stream Management ---
+
+  /// Changes the current episode and fetches stream data.
   Future<void> changeEpisode(int episodeIdx, {bool withPlay = true}) async {
-    if (episodeIdx < 0 || episodeIdx >= state.episodes.length) {
-      state = state.copyWith(error: 'Invalid episode index');
+    if (!_isValidEpisodeIndex(episodeIdx)) {
+      _handleError('Invalid episode index: $episodeIdx');
       return;
     }
+    AppLogger.d('Changing to episode index $episodeIdx, withPlay: $withPlay');
     try {
       await fetchStreamData(episodeIdx: episodeIdx, withPlay: withPlay);
       state = state.copyWith(error: null);
@@ -145,190 +157,49 @@ class WatchStateNotifier extends StateNotifier<WatchState> {
     }
   }
 
-  Future<void> togglePanel(AnimationController controller) async {
-    try {
-      state = state.copyWith(isExpanded: !state.isExpanded);
-      await (state.isExpanded ? controller.forward() : controller.reverse());
-      state = state.copyWith(error: null);
-    } catch (e, stackTrace) {
-      _handleError('Failed to toggle panel: $e', stackTrace);
-    }
-  }
-
-  Future<void> updateVideoSource({
-    required String? sourceUrl,
-    bool withPlay = true,
-    Duration startAt = Duration.zero,
+  /// Fetches episode data for the given anime ID.
+  Future<void> fetchEpisodes({
+    required dynamic animeId,
+    int episodeIdx = 0,
   }) async {
-    if (sourceUrl == null) {
-      state = state.copyWith(error: 'No video source provided');
-      return;
-    }
-    try {
-      state = state.copyWith(selectedSource: sourceUrl, error: null);
-      if (withPlay && player != null) {
-        await player?.open(Media(sourceUrl), play: false);
-        await player?.stream.duration.firstWhere((d) => d > Duration.zero);
-        await player?.seek(startAt);
-        await player?.play();
-        log('Video source updated: $sourceUrl, seeked to: $startAt');
-
-        // Cancel any existing position subscription
-        await _positionSubscription?.cancel();
-        // final settingsBox = SettingsBox);
-        // await settingsBox.init();
-        // final playerSettings = settingsBox.getPlayerSettings();
-
-        // // Set up position listener for intro/outro skipping
-        // if (state.intro != null || state.outro != null) {
-        //   _positionSubscription = player?.stream.position.listen((position) {
-        //     final positionSeconds = position.inSeconds;
-
-        //     // Skip intro
-        //     if (playerSettings.skipIntro &&
-        //         state.intro != null &&
-        //         positionSeconds >= state.intro!['start']! &&
-        //         positionSeconds < state.intro!['end']!) {
-        //       player?.seek(Duration(seconds: state.intro!['end']!));
-        //       log('Skipped intro from ${state.intro!['start']} to ${state.intro!['end']}');
-        //     }
-
-        //     // Skip outro
-        //     if (playerSettings.skipIntro &&
-        //         state.outro != null &&
-        //         positionSeconds >= state.outro!['start']! &&
-        //         positionSeconds < state.outro!['end']!) {
-        //       player?.seek(Duration(seconds: state.outro!['end']!));
-        //       log('Skipped outro from ${state.outro!['start']} to ${state.outro!['end']}');
-        //     }
-        //   });
-        // }
-      }
-    } catch (e, stackTrace) {
-      _handleError('Failed to update video source: $e', stackTrace);
-    }
-  }
-
-  Future<void> changeQuality({
-    required int qualityIdx,
-    required Duration lastPosition,
-  }) async {
-    if (state.qualityOptions.isEmpty) {
-      state = state.copyWith(error: 'No quality options available');
-      return;
-    }
-    if (qualityIdx < 0 || qualityIdx >= state.qualityOptions.length) {
-      state = state.copyWith(error: 'Invalid quality index');
-      return;
-    }
-    try {
-      state = state.copyWith(selectedQualityIdx: qualityIdx, error: null);
-      final quality = state.qualityOptions[qualityIdx];
-      await updateVideoSource(sourceUrl: quality['url'], startAt: lastPosition);
-    } catch (e, stackTrace) {
-      _handleError('Failed to change quality: $e', stackTrace);
-    }
-  }
-
-  Future<void> changeCategory(String category, {bool withPlay = true}) async {
-    try {
-      state = state.copyWith(selectedCategory: category, error: null);
-      await fetchStreamData(
-          episodeIdx: state.selectedEpisodeIdx ?? 0, withPlay: withPlay);
-    } catch (e, stackTrace) {
-      _handleError('Failed to change category: $e', stackTrace);
-    }
-  }
-
-  Future<void> changeSource({
-    required int sourceIdx,
-    required Duration lastPosition,
-  }) async {
-    if (state.sources.isEmpty) {
-      state = state.copyWith(error: 'No sources available');
-      return;
-    }
-    if (sourceIdx < 0 || sourceIdx >= state.sources.length) {
-      state = state.copyWith(error: 'Invalid source index');
-      return;
-    }
-    try {
-      state = state.copyWith(selectedSourceIdx: sourceIdx, error: null);
-      await updateVideoSource(sourceUrl: state.sources[sourceIdx].url);
-    } catch (e, stackTrace) {
-      _handleError('Failed to change source: $e', stackTrace);
-    }
-  }
-
-  Future<void> changeServer(String server) async {
-    try {
-      state = state.copyWith(selectedServer: server, error: null);
-      await fetchStreamData(episodeIdx: state.selectedEpisodeIdx ?? 0);
-    } catch (e, stackTrace) {
-      _handleError('Failed to change server: $e', stackTrace);
-    }
-  }
-
-  Future<void> updateSubtitleTrack({required int? subtitleIdx}) async {
-    if (player == null) {
-      state = state.copyWith(error: 'Player not initialized');
-      return;
-    }
-    try {
-      if (subtitleIdx == null) {
-        await player?.setSubtitleTrack(SubtitleTrack.no());
-        state = state.copyWith(selectedSubtitleIdx: null, error: null);
-      } else if (subtitleIdx >= 0 && subtitleIdx < state.subtitles.length) {
-        final subtitle = state.subtitles[subtitleIdx];
-        if (subtitle.url == null) {
-          state = state.copyWith(error: 'Subtitle URL is null');
-          return;
-        }
-        await player?.setSubtitleTrack(SubtitleTrack.uri(
-          subtitle.url!,
-          title: subtitle.lang,
-          language: subtitle.lang,
-        ));
-        state = state.copyWith(selectedSubtitleIdx: subtitleIdx, error: null);
-      } else {
-        state = state.copyWith(error: 'Invalid subtitle index');
-      }
-    } catch (e, stackTrace) {
-      _handleError('Failed to update subtitle track: $e', stackTrace);
-    }
-  }
-
-  Future<void> fetchEpisodes(
-      {required dynamic animeId, int episodeIdx = 0}) async {
+    AppLogger.d('Fetching episodes for animeId: $animeId');
     try {
       state = state.copyWith(
-          episodesLoading: true,
-          error: null,
-          loadingMessage: 'Loading episodes...');
+        episodesLoading: true,
+        error: null,
+        loadingMessage: 'Loading episodes...',
+      );
       final episodes =
           (await animeProvider.getEpisodes(animeId)).episodes ?? [];
       state = state.copyWith(
-          episodesLoading: false,
-          animeId: animeId,
-          episodes: episodes,
-          selectedServer: animeProvider.getSupportedServers().firstOrNull,
-          error: null,
-          loadingMessage: null);
-      await fetchStreamData(episodeIdx: episodeIdx);
+        episodesLoading: false,
+        animeId: animeId.toString(),
+        episodes: episodes,
+        selectedServer: animeProvider.getSupportedServers().firstOrNull,
+        error: null,
+        loadingMessage: null,
+      );
+      if (episodes.isNotEmpty) {
+        await fetchStreamData(episodeIdx: episodeIdx);
+      } else {
+        _handleError('No episodes found for animeId: $animeId');
+      }
     } catch (e, stackTrace) {
       _handleError('Failed to fetch episodes: $e', stackTrace);
       state = state.copyWith(episodesLoading: false, loadingMessage: null);
     }
   }
 
+  /// Fetches stream data for the selected episode.
   Future<void> fetchStreamData({
     required int episodeIdx,
     bool withPlay = true,
   }) async {
-    if (episodeIdx >= state.episodes.length) {
-      state = state.copyWith(error: 'Invalid episode index');
+    if (!_isValidEpisodeIndex(episodeIdx)) {
+      _handleError('Invalid episode index: $episodeIdx');
       return;
     }
+    AppLogger.d('Fetching stream data for episode index $episodeIdx');
     try {
       state = state.copyWith(
         selectedEpisodeIdx: episodeIdx,
@@ -336,9 +207,10 @@ class WatchStateNotifier extends StateNotifier<WatchState> {
         error: null,
         loadingMessage: 'Loading sources...',
       );
+      final episode = state.episodes[episodeIdx];
       final data = await animeProvider.getSources(
         state.animeId,
-        state.episodes[episodeIdx].id ?? '',
+        episode.id ?? '',
         state.selectedServer ?? '',
         state.selectedCategory ?? 'sub',
       );
@@ -361,14 +233,14 @@ class WatchStateNotifier extends StateNotifier<WatchState> {
       await _extractQualities();
       final qualityUrl = state.qualityOptions.isNotEmpty
           ? state.qualityOptions[0]['url']
-          : null;
+          : data.sources.isNotEmpty
+              ? data.sources.first.url
+              : null;
+
       if (qualityUrl != null) {
         await updateVideoSource(sourceUrl: qualityUrl, withPlay: withPlay);
-      } else if (data.sources.isNotEmpty) {
-        await updateVideoSource(
-            sourceUrl: data.sources.first.url, withPlay: withPlay);
       } else {
-        state = state.copyWith(error: 'No playable sources found');
+        _handleError('No playable sources found for episode: ${episode.id}');
       }
     } catch (e, stackTrace) {
       _handleError('Failed to fetch stream data: $e', stackTrace);
@@ -376,35 +248,175 @@ class WatchStateNotifier extends StateNotifier<WatchState> {
     }
   }
 
-  Future<void> _extractQualities() async {
-    if (state.selectedSource == null) {
-      state =
-          state.copyWith(error: 'No source selected for quality extraction');
+  // --- Player Control ---
+
+  /// Toggles the control panel visibility.
+  Future<void> togglePanel(AnimationController controller) async {
+    AppLogger.d('Toggling panel, current isExpanded: ${state.isExpanded}');
+    try {
+      state = state.copyWith(isExpanded: !state.isExpanded);
+      await (state.isExpanded ? controller.forward() : controller.reverse());
+      state = state.copyWith(error: null);
+    } catch (e, stackTrace) {
+      _handleError('Failed to toggle panel: $e', stackTrace);
+    }
+  }
+
+  /// Updates the video source and optionally plays it.
+  Future<void> updateVideoSource({
+    required String? sourceUrl,
+    bool withPlay = true,
+    Duration startAt = Duration.zero,
+  }) async {
+    if (sourceUrl == null) {
+      _handleError('No video source provided');
       return;
     }
+    AppLogger.d('Updating video source to $sourceUrl, startAt: $startAt');
+    try {
+      state = state.copyWith(selectedSource: sourceUrl, error: null);
+      if (withPlay && player != null) {
+        await player?.open(Media(sourceUrl), play: false);
+        await player?.stream.duration.firstWhere((d) => d > Duration.zero);
+        await player?.seek(startAt);
+        await player?.play();
+        AppLogger.d('Video source updated and playing: $sourceUrl');
+      }
+    } catch (e, stackTrace) {
+      _handleError('Failed to update video source: $e', stackTrace);
+    }
+  }
+
+  /// Changes the video quality and resumes at the last position.
+  Future<void> changeQuality({
+    required int qualityIdx,
+    required Duration lastPosition,
+  }) async {
+    if (state.qualityOptions.isEmpty) {
+      _handleError('No quality options available');
+      return;
+    }
+    if (qualityIdx < 0 || qualityIdx >= state.qualityOptions.length) {
+      _handleError('Invalid quality index: $qualityIdx');
+      return;
+    }
+    AppLogger.d('Changing quality to index $qualityIdx');
+    try {
+      state = state.copyWith(selectedQualityIdx: qualityIdx, error: null);
+      final quality = state.qualityOptions[qualityIdx];
+      await updateVideoSource(sourceUrl: quality['url'], startAt: lastPosition);
+    } catch (e, stackTrace) {
+      _handleError('Failed to change quality: $e', stackTrace);
+    }
+  }
+
+  /// Changes the source and resumes at the last position.
+  Future<void> changeSource({
+    required int sourceIdx,
+    required Duration lastPosition,
+  }) async {
+    if (state.sources.isEmpty) {
+      _handleError('No sources available');
+      return;
+    }
+    if (sourceIdx < 0 || sourceIdx >= state.sources.length) {
+      _handleError('Invalid source index: $sourceIdx');
+      return;
+    }
+    AppLogger.d('Changing source to index $sourceIdx');
+    try {
+      state = state.copyWith(selectedSourceIdx: sourceIdx, error: null);
+      await updateVideoSource(
+          sourceUrl: state.sources[sourceIdx].url, startAt: lastPosition);
+    } catch (e, stackTrace) {
+      _handleError('Failed to change source: $e', stackTrace);
+    }
+  }
+
+  /// Changes the server and refetches stream data.
+  Future<void> changeServer(String server) async {
+    AppLogger.d('Changing server to $server');
+    try {
+      state = state.copyWith(selectedServer: server, error: null);
+      await fetchStreamData(episodeIdx: state.selectedEpisodeIdx ?? 0);
+    } catch (e, stackTrace) {
+      _handleError('Failed to change server: $e', stackTrace);
+    }
+  }
+
+  /// Updates the subtitle track.
+  Future<void> updateSubtitleTrack({required int? subtitleIdx}) async {
+    if (player == null) {
+      _handleError('Player not initialized');
+      return;
+    }
+    AppLogger.d('Updating subtitle track to index $subtitleIdx');
+    try {
+      if (subtitleIdx == null) {
+        await player?.setSubtitleTrack(SubtitleTrack.no());
+        state = state.copyWith(selectedSubtitleIdx: null, error: null);
+      } else if (subtitleIdx >= 0 && subtitleIdx < state.subtitles.length) {
+        final subtitle = state.subtitles[subtitleIdx];
+        if (subtitle.url == null) {
+          _handleError('Subtitle URL is null');
+          return;
+        }
+        await player?.setSubtitleTrack(SubtitleTrack.uri(
+          subtitle.url!,
+          title: subtitle.lang,
+          language: subtitle.lang,
+        ));
+        state = state.copyWith(selectedSubtitleIdx: subtitleIdx, error: null);
+      } else {
+        _handleError('Invalid subtitle index: $subtitleIdx');
+      }
+    } catch (e, stackTrace) {
+      _handleError('Failed to update subtitle track: $e', stackTrace);
+    }
+  }
+
+  // --- Helper Methods ---
+
+  /// Extracts quality options from the selected source.
+  Future<void> _extractQualities() async {
+    if (state.selectedSource == null) {
+      _handleError('No source selected for quality extraction');
+      return;
+    }
+    AppLogger.d('Extracting qualities for source: ${state.selectedSource}');
     try {
       final qualities =
           await extractor.extractQualities(state.selectedSource!, {});
       state = state.copyWith(
-          qualityOptions: qualities, selectedQualityIdx: 0, error: null);
+        qualityOptions: qualities,
+        selectedQualityIdx: qualities.isNotEmpty ? 0 : null,
+        error: null,
+      );
     } catch (e, stackTrace) {
       _handleError('Failed to extract qualities: $e', stackTrace);
     }
   }
 
-  void _handleError(String message, StackTrace stackTrace) {
-    log(message, stackTrace: stackTrace, level: 1000);
+  /// Validates the episode index.
+  bool _isValidEpisodeIndex(int index) {
+    return index >= 0 && index < state.episodes.length;
+  }
+
+  /// Handles errors by logging and updating state.
+  void _handleError(String message, [StackTrace? stackTrace]) {
+    AppLogger.e(message, null, stackTrace);
     state = state.copyWith(error: message);
   }
 
   @override
   void dispose() {
+    AppLogger.d('Disposing WatchStateNotifier');
     _positionSubscription?.cancel();
     super.dispose();
   }
 }
 
-// Optimized PlayerState
+/// Represents the state of the media player.
 @immutable
 class PlayerState {
   final bool isPlaying;
@@ -446,7 +458,7 @@ class PlayerState {
   }
 }
 
-// Optimized PlayerStateNotifier
+/// Manages the media player state.
 class PlayerStateNotifier extends StateNotifier<PlayerState> {
   final Player player;
   late final List<StreamSubscription> _subscriptions;
@@ -476,6 +488,7 @@ class PlayerStateNotifier extends StateNotifier<PlayerState> {
 
   @override
   void dispose() {
+    AppLogger.d('Disposing PlayerStateNotifier');
     for (var sub in _subscriptions) {
       sub.cancel();
     }
@@ -483,14 +496,15 @@ class PlayerStateNotifier extends StateNotifier<PlayerState> {
   }
 }
 
-// Providers
+/// Riverpod providers for watch and player management.
 final watchProvider =
     StateNotifierProvider<WatchStateNotifier, WatchState>((ref) {
   final animeProvider = ref.watch(currentAnimeProviderProvider);
 
   if (animeProvider == null) {
+    AppLogger.w('No anime provider available');
     throw Exception(
-        'No anime provider available. Make sure the registry is initialized and a provider is selected.');
+        'No anime provider available. Ensure registry is initialized.');
   }
 
   return WatchStateNotifier(
@@ -502,7 +516,10 @@ final watchProvider =
 
 final playerProvider = Provider<Player>((ref) {
   final player = Player();
-  ref.onDispose(() => player.dispose());
+  ref.onDispose(() {
+    AppLogger.d('Disposing player');
+    player.dispose();
+  });
   return player;
 });
 

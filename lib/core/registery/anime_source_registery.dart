@@ -1,5 +1,5 @@
-import 'dart:developer' as dev;
 import 'package:shonenx/core/sources/anime/anime_provider.dart';
+import 'package:shonenx/core/utils/app_logger.dart';
 
 /// Enum representing the initialization status of the registry
 enum RegistryStatus { uninitialized, initializing, initialized, error }
@@ -29,22 +29,19 @@ class AnimeSourceRegistery {
   bool registerProvider(String key, AnimeProvider provider) {
     try {
       if (key.isEmpty) {
-        dev.log('Cannot register provider with empty key',
-            name: 'AnimeSourceRegistry');
+        AppLogger.w('Cannot register provider with empty key');
         return false;
       }
 
       if (_providers.containsKey(key)) {
-        dev.log('Provider with key $key already exists, replacing',
-            name: 'AnimeSourceRegistry');
+        AppLogger.w('Provider with key $key already exists, replacing');
       }
 
       _providers[key] = provider;
-      dev.log('Registered provider: $key', name: 'AnimeSourceRegistry');
+      AppLogger.i('Registered provider: $key');
       return true;
     } catch (e, stackTrace) {
-      dev.log('Error registering provider $key: $e',
-          name: 'AnimeSourceRegistry', error: e, stackTrace: stackTrace);
+      AppLogger.e('Error registering provider $key: $e', e, stackTrace);
       return false;
     }
   }
@@ -53,14 +50,13 @@ class AnimeSourceRegistery {
   /// Returns null if the provider doesn't exist
   AnimeProvider? getProvider(String key) {
     if (!isInitialized) {
-      dev.log('Registry not initialized, cannot get provider: $key',
-          name: 'AnimeSourceRegistry');
+      AppLogger.w('Registry not initialized, cannot get provider: $key');
       return null;
     }
 
     final provider = _providers[key];
     if (provider == null) {
-      dev.log('Provider not found for key: $key', name: 'AnimeSourceRegistry');
+      AppLogger.w('Provider not found for key: $key');
     }
     return provider;
   }
@@ -80,17 +76,16 @@ class AnimeSourceRegistery {
   /// Clear all providers
   void clear() {
     _providers.clear();
-    dev.log('Cleared all providers', name: 'AnimeSourceRegistry');
+    AppLogger.i('Cleared all providers');
   }
 
   /// Set the registry status
   void setStatus(RegistryStatus status, [String? errorMessage]) {
     _status = status;
     _errorMessage = errorMessage;
-    dev.log('Registry status changed to: $_status',
-        name: 'AnimeSourceRegistry');
+    AppLogger.i('Registry status changed to: $_status');
     if (errorMessage != null) {
-      dev.log('Registry error: $errorMessage', name: 'AnimeSourceRegistry');
+      AppLogger.e('Registry error: $errorMessage');
     }
   }
 }

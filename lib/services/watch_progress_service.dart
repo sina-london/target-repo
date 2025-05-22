@@ -1,9 +1,9 @@
 import 'dart:async';
-import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shonenx/core/models/anilist/anilist_media_list.dart'
     as anilist_media;
+import 'package:shonenx/core/utils/app_logger.dart';
 import 'package:shonenx/data/hive/models/anime_watch_progress_model.dart';
 import 'package:shonenx/data/hive/providers/anime_watch_progress_provider.dart';
 import 'package:shonenx/data/hive/providers/player_provider.dart';
@@ -18,6 +18,8 @@ class WatchProgressService {
 
   /// Start the progress saving timer
   void startProgressTimer(VoidCallback saveCallback) {
+    AppLogger.d(
+        'Starting progress save timer with interval ${_progressSaveInterval.inSeconds}s');
     _saveProgressTimer?.cancel();
     _saveProgressTimer = Timer.periodic(_progressSaveInterval, (_) {
       saveCallback();
@@ -26,6 +28,7 @@ class WatchProgressService {
 
   /// Stop the progress saving timer
   void stopProgressTimer() {
+    AppLogger.d('Stopping progress save timer');
     _saveProgressTimer?.cancel();
   }
 
@@ -38,11 +41,11 @@ class WatchProgressService {
     final hasValidPosition = playerState.position.inSeconds >= 10;
     final isPositionValid = playerState.position <= playerState.duration;
 
-    log("Should save progress check: "
-        "validEpisode=$hasValidEpisode, "
-        "validDuration=$hasValidDuration, "
-        "validPosition=$hasValidPosition, "
-        "positionValid=$isPositionValid");
+    AppLogger.d('Should save progress check: '
+        'validEpisode=$hasValidEpisode, '
+        'validDuration=$hasValidDuration, '
+        'validPosition=$hasValidPosition, '
+        'positionValid=$isPositionValid');
 
     return hasValidEpisode &&
         hasValidDuration &&
@@ -60,7 +63,8 @@ class WatchProgressService {
     final playerState = ref.read(playerStateProvider);
     final playerSettings = ref.read(playerSettingsProvider);
     if (!shouldSaveProgress(watchState, playerState)) {
-      log("Skipping progress save - conditions not met");
+      AppLogger.w(
+          'Skipping progress save for animeId ${animeMedia.id} - conditions not met');
       return;
     }
 
@@ -71,28 +75,32 @@ class WatchProgressService {
       final duration = playerState.duration;
 
       if (episode.number == null) {
-        log("Episode number is null, cannot save progress");
+        AppLogger.w(
+            'Episode number is null for animeId ${animeMedia.id}, cannot save progress');
         return;
       }
 
       final thumbnailBase64 =
           await _thumbnailService.generateThumbnail(ref.read(playerProvider));
 
-      log("Thumbnail generated: length=${thumbnailBase64.length}, "
-          "startsWith=${thumbnailBase64.substring(0, 20)}...");
+      AppLogger.d(
+          'Thumbnail generated for animeId ${animeMedia.id}, episode ${episode.number}: '
+          'length=${thumbnailBase64.length}, startsWith=${thumbnailBase64.substring(0, 20)}...');
 
       // Validate thumbnail
       if (thumbnailBase64.isEmpty) {
-        log("ERROR: Thumbnail is empty");
+        AppLogger.w(
+            'Thumbnail is empty for animeId ${animeMedia.id}, episode ${episode.number}');
         onError('Thumbnail generation failed, using fallback');
       }
 
       final isCompleted = progress.inSeconds >=
           (duration.inSeconds * playerSettings.episodeCompletionThreshold);
 
-      log("Saving progress for episode ${episode.number} - "
-          "Progress: ${progress.inSeconds}s / ${duration.inSeconds}s, "
-          "Thumbnail length: ${thumbnailBase64.length}");
+      AppLogger.d(
+          'Saving progress for animeId ${animeMedia.id}, episode ${episode.number}: '
+          'Progress: ${progress.inSeconds}s / ${duration.inSeconds}s, '
+          'Thumbnail length: ${thumbnailBase64.length}, isCompleted: $isCompleted');
 
       final animeProgressNotifier =
           ref.read(animeWatchProgressProvider.notifier);
@@ -127,15 +135,18 @@ class WatchProgressService {
         ),
       );
 
-      log("Progress saved successfully");
+      AppLogger.d(
+          'Progress saved successfully for animeId ${animeMedia.id}, episode ${episode.number}');
     } catch (e, stackTrace) {
-      log("Error saving progress: $e\n$stackTrace");
+      AppLogger.e(
+          'Error saving progress for animeId ${animeMedia.id}', e, stackTrace);
       onError('Failed to save progress: $e');
     }
   }
 
   /// Dispose the service
   void dispose() {
+    AppLogger.d('Disposing WatchProgressService');
     stopProgressTimer();
   }
 }

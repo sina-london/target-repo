@@ -1,9 +1,9 @@
-import 'dart:developer';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import 'package:shonenx/core/anilist/graphql_client.dart';
 import 'package:shonenx/core/anilist/queries.dart';
 import 'package:shonenx/core/models/anilist/anilist_media_list.dart';
 import 'package:shonenx/core/models/anilist/anilist_favorites.dart';
+import 'package:shonenx/core/utils/app_logger.dart';
 
 /// Custom exception for Anilist service errors
 class AnilistServiceException implements Exception {
@@ -37,6 +37,7 @@ class AnilistService {
     String operationName = '',
   }) async {
     try {
+      AppLogger.d('Executing $operationName with variables: $variables');
       final client = AnilistClient.getClient(accessToken: accessToken);
       final options = isMutation
           ? MutationOptions(
@@ -55,15 +56,16 @@ class AnilistService {
           : await client.query(options as QueryOptions);
 
       if (result.hasException) {
-        log('GraphQL Error', name: operationName, error: result.exception);
+        AppLogger.e('GraphQL Error in $operationName',
+            result.exception, StackTrace.current);
         throw AnilistServiceException(
             'GraphQL operation failed', result.exception);
       }
 
+      AppLogger.d('$operationName completed successfully');
       return result.data as T?;
     } catch (e, stackTrace) {
-      log('Operation Failed',
-          name: operationName, error: e, stackTrace: stackTrace);
+      AppLogger.e('Operation $operationName failed', e, stackTrace);
       throw AnilistServiceException('Failed to execute $operationName', e);
     }
   }
@@ -101,6 +103,7 @@ class AnilistService {
     required String status,
   }) async {
     if (accessToken.isEmpty) {
+      AppLogger.w('Empty accessToken for GetUserAnimeList');
       return MediaListCollection(lists: []);
     }
 
@@ -205,8 +208,7 @@ class AnilistService {
     required String? accessToken,
   }) async {
     if (userId == null || accessToken == null || accessToken.isEmpty) {
-      log('Invalid input: userId or accessToken is null/empty',
-          name: 'GetFavorites');
+      AppLogger.w('Invalid input: userId or accessToken is null/empty for GetFavorites');
       return null;
     }
 
@@ -231,7 +233,7 @@ class AnilistService {
     required String? accessToken,
   }) async {
     if (accessToken == null || accessToken.isEmpty) {
-      log('Invalid accessToken', name: 'ToggleFavorite');
+      AppLogger.w('Invalid accessToken for ToggleFavorite');
       return [];
     }
 
@@ -283,6 +285,7 @@ class AnilistService {
   }) async {
     final validatedStatus = validateMediaListStatus(newStatus);
     if (validatedStatus == 'INVALID') {
+      AppLogger.w('Invalid MediaListStatus: $newStatus for UpdateAnimeStatus');
       throw AnilistServiceException('Invalid MediaListStatus: $newStatus');
     }
 
@@ -305,6 +308,7 @@ class AnilistService {
     );
 
     if (data?['SaveMediaListEntry'] == null) {
+      AppLogger.e('Failed to update anime status for mediaId: $mediaId');
       throw AnilistServiceException('Failed to update anime status');
     }
   }
@@ -329,6 +333,7 @@ class AnilistService {
     );
 
     if (data?['DeleteMediaListEntry']?['deleted'] != true) {
+      AppLogger.e('Failed to delete anime entry with id: $entryId');
       throw AnilistServiceException('Failed to delete anime entry');
     }
   }
@@ -359,8 +364,7 @@ class AnilistService {
   String validateMediaListStatus(String status) {
     final upperStatus = status.toUpperCase();
     if (!_validStatuses.contains(upperStatus)) {
-      log('Invalid MediaListStatus: $status. Valid values: $_validStatuses',
-          name: 'ValidateMediaListStatus');
+      AppLogger.w('Invalid MediaListStatus: $status. Valid values: $_validStatuses');
       return 'INVALID';
     }
     return upperStatus;
