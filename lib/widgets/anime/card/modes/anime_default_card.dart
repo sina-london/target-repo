@@ -80,8 +80,8 @@ class DefaultCard extends StatelessWidget {
                     if (anime?.averageScore != null)
                       Tag(
                         text: '${anime!.averageScore}',
-                        color: theme.colorScheme.primary,
-                        textColor: theme.colorScheme.onPrimary,
+                        color: theme.colorScheme.primaryContainer,
+                        textColor: theme.colorScheme.onPrimaryContainer,
                         icon: Iconsax.star1,
                         hasShadow: true,
                       ),
@@ -136,7 +136,8 @@ class _EpisodesInfo extends StatelessWidget {
 
   const _EpisodesInfo({
     required this.anime,
-    this.enhanced = false, required this.compact,
+    this.enhanced = false,
+    required this.compact,
   });
 
   @override

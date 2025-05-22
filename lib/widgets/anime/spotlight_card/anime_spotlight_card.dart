@@ -422,9 +422,8 @@ class _InfoTag extends StatelessWidget {
       decoration: BoxDecoration(
         color: color,
         borderRadius: BorderRadius.circular(16),
-        border: isGlass
-            ? Border.all(color: Colors.white.withOpacity(0.2))
-            : null,
+        border:
+            isGlass ? Border.all(color: Colors.white.withOpacity(0.2)) : null,
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

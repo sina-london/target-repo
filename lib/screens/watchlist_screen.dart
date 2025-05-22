@@ -110,7 +110,7 @@ class _WatchlistScreenState extends ConsumerState<WatchlistScreen>
               Icon(
                 Iconsax.video_play,
                 size: 64,
-                color: Theme.of(context).colorScheme.primary,
+                color: Theme.of(context).colorScheme.primaryContainer,
               ),
               const SizedBox(height: 24),
               Text(
@@ -136,8 +136,10 @@ class _WatchlistScreenState extends ConsumerState<WatchlistScreen>
                 style: ElevatedButton.styleFrom(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                  backgroundColor: Theme.of(context).colorScheme.primary,
-                  foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                  backgroundColor:
+                      Theme.of(context).colorScheme.primaryContainer,
+                  foregroundColor:
+                      Theme.of(context).colorScheme.onPrimaryContainer,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -244,13 +246,13 @@ class _WatchlistScreenState extends ConsumerState<WatchlistScreen>
                   color: isSelected
                       ? Theme.of(context)
                           .colorScheme
-                          .primary
+                          .primaryContainer
                           .withOpacity(0.1)
                       : Colors.transparent,
                   borderRadius: BorderRadius.circular(30),
                   border: Border.all(
                     color: isSelected
-                        ? Theme.of(context).colorScheme.primary
+                        ? Theme.of(context).colorScheme.primaryContainer
                         : Theme.of(context)
                             .colorScheme
                             .onSurface
@@ -263,7 +265,7 @@ class _WatchlistScreenState extends ConsumerState<WatchlistScreen>
                     entry.value,
                     style: TextStyle(
                       color: isSelected
-                          ? Theme.of(context).colorScheme.primary
+                          ? Theme.of(context).colorScheme.primaryContainer
                           : Theme.of(context).colorScheme.onSurface,
                       fontWeight: FontWeight.w600,
                       fontSize: 14,
@@ -303,12 +305,12 @@ class _WatchlistScreenState extends ConsumerState<WatchlistScreen>
               .compareTo(b.media.title?.romaji ?? ''));
           break;
         case 'Progress':
-          animeList.sort((a, b) => (a.progress)
-              .compareTo(b.progress)); // Null-safe comparison
+          animeList.sort((a, b) =>
+              (a.progress).compareTo(b.progress)); // Null-safe comparison
           break;
         case 'Score':
-          animeList.sort((a, b) =>
-              (a.score).compareTo(b.score)); // Null-safe comparison
+          animeList.sort(
+              (a, b) => (a.score).compareTo(b.score)); // Null-safe comparison
           break;
       }
     } catch (e) {
@@ -382,7 +384,7 @@ class _WatchlistScreenState extends ConsumerState<WatchlistScreen>
                     colors: [
                       Theme.of(context)
                           .colorScheme
-                          .primary
+                          .primaryContainer
                           .withOpacity(0.1),
                       Theme.of(context).colorScheme.surface,
                     ],
@@ -391,7 +393,7 @@ class _WatchlistScreenState extends ConsumerState<WatchlistScreen>
                 child: Icon(
                   Iconsax.video_play,
                   size: 60,
-                  color: Theme.of(context).colorScheme.primary,
+                  color: Theme.of(context).colorScheme.primaryContainer,
                 ),
               ),
               const SizedBox(height: 24),
@@ -450,7 +452,8 @@ class _WatchlistScreenState extends ConsumerState<WatchlistScreen>
               onPressed: () => Navigator.pop(context),
               child: Text(
                 "Close",
-                style: TextStyle(color: Theme.of(context).colorScheme.primary),
+                style: TextStyle(
+                    color: Theme.of(context).colorScheme.primaryContainer),
               ),
             ),
           ],
@@ -466,12 +469,13 @@ class _WatchlistScreenState extends ConsumerState<WatchlistScreen>
         option,
         style: TextStyle(
           color: option == currentSort
-              ? Theme.of(context).colorScheme.primary
+              ? Theme.of(context).colorScheme.primaryContainer
               : Theme.of(context).colorScheme.onSurface,
         ),
       ),
       trailing: option == currentSort
-          ? Icon(Icons.check, color: Theme.of(context).colorScheme.primary)
+          ? Icon(Icons.check,
+              color: Theme.of(context).colorScheme.primaryContainer)
           : null,
       onTap: () {
         ref.read(sortOptionProvider.notifier).state = option;
@@ -518,13 +522,13 @@ class _WatchlistScreenState extends ConsumerState<WatchlistScreen>
                     genre ?? 'All Genres',
                     style: TextStyle(
                       color: genre == currentGenre
-                          ? Theme.of(context).colorScheme.primary
+                          ? Theme.of(context).colorScheme.primaryContainer
                           : Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
                   trailing: genre == currentGenre
                       ? Icon(Icons.check,
-                          color: Theme.of(context).colorScheme.primary)
+                          color: Theme.of(context).colorScheme.primaryContainer)
                       : null,
                   onTap: () {
                     ref.read(filterGenreProvider.notifier).state = genre;
@@ -539,7 +543,8 @@ class _WatchlistScreenState extends ConsumerState<WatchlistScreen>
               onPressed: () => Navigator.pop(context),
               child: Text(
                 "Close",
-                style: TextStyle(color: Theme.of(context).colorScheme.primary),
+                style: TextStyle(
+                    color: Theme.of(context).colorScheme.primaryContainer),
               ),
             ),
           ],
