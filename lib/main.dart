@@ -1,16 +1,11 @@
-import 'dart:io';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:desktop_webview_window/desktop_webview_window.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shonenx/app_initializer.dart';
 import 'package:shonenx/data/hive/providers/theme_provider.dart';
-import 'package:shonenx/data/hive/providers/ui_provider.dart';
-import 'package:shonenx/helpers/ui.dart';
 import 'package:shonenx/theme/app_theme.dart';
 import 'package:shonenx/router/router.dart';
-import 'package:window_manager/window_manager.dart';
 
 class ToggleFullscreenIntent extends Intent {
   const ToggleFullscreenIntent();
@@ -36,22 +31,19 @@ void main(List<String> args) async {
   runApp(const ProviderScope(child: MyApp()));
 }
 
-class MyApp extends ConsumerStatefulWidget {
+// class MyApp extends ConsumerStatefulWidget {
+//   const MyApp({super.key});
+//   @override
+//   ConsumerState<MyApp> createState() => _MyAppState();
+// }
+
+// class _MyAppState extends ConsumerState<MyApp> {
+class MyApp extends ConsumerWidget {
   const MyApp({super.key});
-  @override
-  ConsumerState<MyApp> createState() => _MyAppState();
-}
 
-class _MyAppState extends ConsumerState<MyApp> {
 
   @override
-  void initState() {
-    super.initState();
-    // ref.listen(uiSettingsProvider)
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = ref.watch(themeSettingsProvider);
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,

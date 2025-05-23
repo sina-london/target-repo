@@ -197,6 +197,23 @@ class AnimeWatchProgressNotifier
     return episodes;
   }
 
+  void removeEpisodeProgress(int animeId, int episodeNumber) {
+    final entry = state[animeId];
+    if (entry == null) return;
+
+    final updatedEpisodes = {...entry.episodesProgress}..remove(episodeNumber);
+    final updatedEntry = entry.copyWith(
+      episodesProgress: updatedEpisodes,
+      lastUpdated: DateTime.now(),
+    );
+
+    _box.put(animeId, updatedEntry);
+    state = {
+      ...state,
+      animeId: updatedEntry,
+    };
+  }
+
   void deleteAnimeProgress(int animeId) {
     _box.delete(animeId);
     final newState = {...state}..remove(animeId);

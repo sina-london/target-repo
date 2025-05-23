@@ -98,7 +98,7 @@ class ContinueWatchingView extends ConsumerWidget {
                         index: index,
                         onTap: () {
                           context.push(
-                              '/watch/${entries[index].anime.animeId}/${entries[index].episode.episodeNumber}');
+                              '/watch/${entries[index].anime.animeId}?episode=${entries[index].episode.episodeNumber}&startAt=${entries[index].episode.progressInSeconds}');
                         },
                       ),
                     ),

@@ -25,6 +25,8 @@ class HomeScreen extends ConsumerWidget {
     final isDesktop = MediaQuery.of(context).size.width > 900;
     final homepageState = ref.watch(homepageProvider);
 
+    
+
     return Scaffold(
       extendBodyBehindAppBar: true,
       floatingActionButton: isDesktop ? _buildFAB(context) : null,

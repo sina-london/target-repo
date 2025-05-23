@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_xlider/flutter_xlider.dart';
+import 'package:shonenx/utils/formatter.dart';
 
 class SeekBar extends StatefulWidget {
   final Duration position;
@@ -28,11 +29,22 @@ class _SeekBarState extends State<SeekBar> {
     _currentPosition = widget.position.inSeconds.toDouble();
   }
 
+  // @override
+  // void didUpdateWidget(SeekBar oldWidget) {
+  //   super.didUpdateWidget(oldWidget);
+  //   // Update the current position if the widget's position changes
+  //   if (oldWidget.position != widget.position) {
+  //     setState(() {
+  //       _currentPosition = widget.position.inSeconds.toDouble();
+  //     });
+  //   }
+  // }
+
   @override
-  void didUpdateWidget(SeekBar oldWidget) {
-    super.didUpdateWidget(oldWidget);
+  void didChangeDependencies() {
+    super.didChangeDependencies();
     // Update the current position if the widget's position changes
-    if (oldWidget.position != widget.position) {
+    if (widget.position != widget.duration) {
       setState(() {
         _currentPosition = widget.position.inSeconds.toDouble();
       });
@@ -55,58 +67,72 @@ class _SeekBarState extends State<SeekBar> {
             isLandscape ? screenHeight * 0.1 : screenHeight * 0.05;
         final handlerHeight = sliderHeight * 0.4; // Responsive handler height
         final handlerWidth =
-            constraints.maxWidth * 0.005; // Responsive handler width
+            constraints.maxWidth * 0.007; // Responsive handler width
 
-        return Container(
-          height:
-              sliderHeight.clamp(28, 38), // Ensure a minimum and maximum height
-          padding: const EdgeInsets.symmetric(horizontal: 5),
-          child: FlutterSlider(
-            values: [_currentPosition],
-            min: 0,
-            max: maxDuration,
-            handler: FlutterSliderHandler(
-              decoration: BoxDecoration(
+        return FlutterSlider(
+          values: [_currentPosition],
+          min: 0,
+          max: maxDuration,
+          handler: FlutterSliderHandler(
+            decoration: BoxDecoration(
+              color: widget.theme.colorScheme.onSurface,
+              borderRadius: BorderRadius.circular(3),
+            ),
+            child: const SizedBox.shrink(),
+          ),
+          trackBar: FlutterSliderTrackBar(
+            activeTrackBar: BoxDecoration(
                 color: widget.theme.colorScheme.primaryContainer,
                 borderRadius: BorderRadius.circular(5),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.2),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: const SizedBox.shrink(),
+                border: Border.all(
+                    color: widget.theme.colorScheme.onPrimaryContainer
+                        .withOpacity(0.8))),
+            inactiveTrackBar: BoxDecoration(
+              color:
+                  widget.theme.colorScheme.onPrimaryContainer.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(5),
+              border: Border.all(
+                  color: widget.theme.colorScheme.onPrimaryContainer
+                      .withOpacity(0.3)),
             ),
-            trackBar: FlutterSliderTrackBar(
-              activeTrackBar: BoxDecoration(
-                color: widget.theme.colorScheme.primaryContainer,
-                borderRadius: BorderRadius.circular(4),
-              ),
-              inactiveTrackBar: BoxDecoration(
-                color: widget.theme.colorScheme.primaryContainer
-                    .withOpacity(0.2),
-                borderRadius: BorderRadius.circular(4),
-              ),
-              activeTrackBarHeight: 4,
-              inactiveTrackBarHeight: 4,
-            ),
-            handlerHeight: handlerHeight,
-            handlerWidth: handlerWidth,
-            onDragging: (handlerIndex, lowerValue, upperValue) {
-              setState(() {
-                _currentPosition = lowerValue as double;
-              });
-            },
-            onDragCompleted: (handlerIndex, lowerValue, upperValue) {
-              final newPosition = Duration(seconds: lowerValue.toInt());
-              widget.onSeek(newPosition);
-              setState(() {
-                _currentPosition = newPosition.inSeconds.toDouble();
-              });
-            },
+            activeTrackBarHeight: 8,
+            inactiveTrackBarHeight: 8,
           ),
+          tooltip: FlutterSliderTooltip(
+            boxStyle: FlutterSliderTooltipBox(
+              decoration: BoxDecoration(
+                color: widget.theme.colorScheme.surfaceContainerHighest,
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            textStyle: TextStyle(
+              color: widget.theme.colorScheme.onSurface,
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            ),
+            custom: (value) => Text(
+              formatDuration(Duration(seconds: value.toInt())),
+              style: TextStyle(
+                color: widget.theme.colorScheme.onSurface,
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          handlerHeight: handlerHeight,
+          handlerWidth: handlerWidth,
+          onDragging: (handlerIndex, lowerValue, upperValue) {
+            setState(() {
+              _currentPosition = lowerValue as double;
+            });
+          },
+          onDragCompleted: (handlerIndex, lowerValue, upperValue) {
+            final newPosition = Duration(seconds: lowerValue.toInt());
+            widget.onSeek(newPosition);
+            setState(() {
+              _currentPosition = newPosition.inSeconds.toDouble();
+            });
+          },
         );
       },
     );

@@ -627,6 +627,9 @@ class _SettingsSwitchState extends State<SettingsSwitch> {
         trailing: Switch.adaptive(
           value: widget.value,
           onChanged: widget.disabled ? null : widget.onChanged,
+          activeColor: Theme.of(context).colorScheme.primaryContainer,
+          activeTrackColor:
+              Theme.of(context).colorScheme.primaryContainer.withOpacity(0.5),
         ),
       ),
     );

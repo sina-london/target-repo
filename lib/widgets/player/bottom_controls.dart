@@ -1,14 +1,15 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:shonenx/core/sources/anime/anime_provider.dart';
 import 'package:shonenx/providers/watch_providers.dart';
 import 'package:shonenx/utils/formatter.dart';
+import 'package:shonenx/widgets/player/seek_bar.dart';
+import 'package:shonenx/widgets/ui/modern_settings_panel.dart';
 import 'package:shonenx/widgets/ui/shonenx_dropdown.dart';
 
-/// Modern bottom controls with sleek glass-morphic design
-class BottomControls extends ConsumerWidget {
+/// Ultra-modern bottom controls with dynamic glass morphism and micro-interactions
+class BottomControls extends ConsumerStatefulWidget {
   final AnimeProvider animeProvider;
   final WatchState watchState;
   final bool isPlaying;
@@ -31,333 +32,96 @@ class BottomControls extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-
-    // Get screen dimensions for responsive design
-    final screenSize = MediaQuery.of(context).size;
-    final isSmallScreen = screenSize.width < 600;
-
-    // Padding based on screen size
-    final horizontalPadding = isSmallScreen ? 8.0 : 12.0;
-    final verticalPadding = isSmallScreen ? 4.0 : 6.0;
-
-    return Padding(
-      padding: EdgeInsets.symmetric(
-        horizontal: horizontalPadding,
-        vertical: verticalPadding,
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Play/Pause button with modern design
-          _buildPlayPauseButton(theme, isSmallScreen),
-
-          SizedBox(width: isSmallScreen ? 10 : 14),
-
-          // Time display with modern style
-          _TimeDisplay(
-            position: position,
-            duration: duration,
-            style: TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.w500,
-              fontSize: isSmallScreen ? 11 : 12,
-              letterSpacing: 0.5,
-            ),
-          ),
-
-          SizedBox(width: isSmallScreen ? 10 : 14),
-
-          // Settings button with glass effect
-          _buildSettingsButton(context, theme, isSmallScreen),
-        ],
-      ),
-    );
-  }
-
-  /// Build modern play/pause button with glass effect
-  Widget _buildPlayPauseButton(ThemeData theme, bool isSmallScreen) {
-    final buttonSize = isSmallScreen ? 36.0 : 40.0;
-
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(buttonSize / 2),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: onPlayPause,
-            borderRadius: BorderRadius.circular(buttonSize / 2),
-            child: Container(
-              width: buttonSize,
-              height: buttonSize,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: theme.colorScheme.primaryContainer.withOpacity(0.3),
-                border: Border.all(
-                  color: Colors.white.withOpacity(0.1),
-                  width: 0.5,
-                ),
-              ),
-              child: Center(
-                child: Icon(
-                  isPlaying ? Iconsax.pause : Iconsax.play,
-                  size: isSmallScreen ? 18 : 20,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  /// Build modern settings button with glass effect
-  Widget _buildSettingsButton(
-      BuildContext context, ThemeData theme, bool isSmallScreen) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(20),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: () => _showSettingsPanel(context, position: position),
-            borderRadius: BorderRadius.circular(20),
-            child: Container(
-              padding: EdgeInsets.symmetric(
-                horizontal: isSmallScreen ? 10 : 12,
-                vertical: isSmallScreen ? 6 : 8,
-              ),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(20),
-                color: Colors.black.withOpacity(0.3),
-                border: Border.all(
-                  color: Colors.white.withOpacity(0.1),
-                  width: 0.5,
-                ),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Iconsax.setting_4,
-                    size: isSmallScreen ? 14 : 16,
-                    color: theme.colorScheme.primaryContainer,
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    _getSettingsLabel(),
-                    style: TextStyle(
-                      fontSize: isSmallScreen ? 11 : 12,
-                      color: Colors.white,
-                      fontWeight: FontWeight.w500,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(width: 4),
-                  Icon(
-                    Iconsax.arrow_down_1,
-                    size: isSmallScreen ? 14 : 16,
-                    color: Colors.white.withOpacity(0.7),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  // Helper methods to avoid repeated calculations
-  String _getSourceQuality() {
-    if (watchState.sources.isEmpty || watchState.selectedSourceIdx == null) {
-      return 'default';
-    }
-    return watchState.sources[watchState.selectedSourceIdx!].quality ??
-        'default';
-  }
-
-  String _getSettingsLabel() {
-    final server = watchState.selectedServer ?? 'N/A';
-    final category = watchState.selectedCategory ?? 'N/A';
-    final quality = _getSourceQuality();
-
-    // More compact label format
-    return '$server, $category, $quality';
-  }
-
-  void _showSettingsPanel(BuildContext context, {required Duration position}) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (modalContext) => _SettingsPanel(
-        animeProvider: animeProvider,
-        watchState: watchState,
-        position: position,
-        onClose: () => Navigator.of(modalContext).pop(),
-      ),
-    ).whenComplete(() => null);
-  }
+  ConsumerState<BottomControls> createState() => _BottomControlsState();
 }
 
-class _TimeDisplay extends StatelessWidget {
-  final Duration position;
-  final Duration duration;
-  final TextStyle? style;
+class _BottomControlsState extends ConsumerState<BottomControls>
+    with TickerProviderStateMixin {
+  late AnimationController _slideController;
+  late AnimationController _pulseController;
+  late AnimationController _playButtonController;
+  late Animation<Offset> _slideAnimation;
+  late Animation<double> _fadeAnimation;
 
-  const _TimeDisplay(
-      {required this.position, required this.duration, this.style});
+  @override
+  void initState() {
+    super.initState();
+    _slideController = AnimationController(
+      duration: const Duration(milliseconds: 600),
+      vsync: this,
+    );
+    _pulseController = AnimationController(
+      duration: const Duration(milliseconds: 1500),
+      vsync: this,
+    );
+    _playButtonController = AnimationController(
+      duration: const Duration(milliseconds: 150),
+      vsync: this,
+    );
+
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, 1),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(
+      parent: _slideController,
+      curve: Curves.easeOutCubic,
+    ));
+
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _slideController,
+      curve: const Interval(0.2, 1.0, curve: Curves.easeOut),
+    ));
+
+    _slideController.forward();
+    _pulseController.repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _slideController.dispose();
+    _pulseController.dispose();
+    _playButtonController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      '${formatDuration(position)} / ${formatDuration(duration)}',
-      style: style,
-    );
-  }
-}
-
-/// Modern settings panel with glass-morphic design
-class _SettingsPanel extends ConsumerWidget {
-  final AnimeProvider animeProvider;
-  final WatchState watchState;
-  final Duration position;
-  final VoidCallback onClose;
-
-  const _SettingsPanel({
-    required this.animeProvider,
-    required this.watchState,
-    required this.position,
-    required this.onClose,
-  });
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-
-    // Get screen dimensions for responsive design
     final screenSize = MediaQuery.of(context).size;
-    final isSmallScreen = screenSize.width < 600;
+    final isCompact = screenSize.width < 600;
 
-    // Extract episode information
-    final String episodeTitle = _getEpisodeTitle();
-    final String episodeNumber = _getEpisodeNumber();
-
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(16),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+    // Dynamic color scheme based on theme
+    final isDark = theme.brightness == Brightness.dark;
+    return SlideTransition(
+      position: _slideAnimation,
+      child: FadeTransition(
+        opacity: _fadeAnimation,
         child: Container(
           decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.5),
-            borderRadius: BorderRadius.circular(16),
+            color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.5),
+            // borderRadius: BorderRadius.only(
+            //     topLeft: Radius.circular(12), topRight: Radius.circular(12)),
             border: Border.all(
-              color: Colors.white.withOpacity(0.1),
-              width: 0.5,
+              color: isDark
+                  ? Colors.white.withOpacity(0.1)
+                  : Colors.black.withOpacity(0.05),
+              width: 1,
             ),
           ),
-          padding: EdgeInsets.all(isSmallScreen ? 12 : 16),
-          margin: EdgeInsets.all(isSmallScreen ? 12 : 16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+          padding: EdgeInsets.symmetric(
+            horizontal: isCompact ? 14 : 20,
+            vertical: isCompact ? 12 : 16,
+          ),
+          child: Row(
             children: [
-              // Modern header with close button
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Video Settings',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: isSmallScreen ? 16 : 18,
-                    ),
-                  ),
-                  Material(
-                    color: Colors.transparent,
-                    borderRadius: BorderRadius.circular(20),
-                    child: InkWell(
-                      onTap: onClose,
-                      borderRadius: BorderRadius.circular(20),
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Icon(
-                          Iconsax.close_circle,
-                          color: Colors.white.withOpacity(0.8),
-                          size: isSmallScreen ? 20 : 22,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 16),
-
-              // Episode info with modern design
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-                decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.3),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: Colors.white.withOpacity(0.05),
-                    width: 0.5,
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    // Episode badge
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 4),
-                      margin: const EdgeInsets.only(right: 12),
-                      decoration: BoxDecoration(
-                        color:
-                            theme.colorScheme.primaryContainer.withOpacity(0.8),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        episodeNumber,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ),
-                    // Episode title
-                    Expanded(
-                      child: Text(
-                        episodeTitle,
-                        style: TextStyle(
-                          color: Colors.white.withOpacity(0.9),
-                          fontWeight: FontWeight.w500,
-                          fontSize: 14,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 16),
-
-              // Settings options with modern design
-              _buildSettingsOptions(ref, theme, isSmallScreen),
+              // _buildPlayPauseSection(context, isCompact, isDark),
+              // const SizedBox(width: 20),
+              Expanded(child: _buildTimeSection(context, isCompact, isDark)),
+              const SizedBox(width: 20),
+              _buildSettingsSection(context, isCompact, isDark),
             ],
           ),
         ),
@@ -365,173 +129,230 @@ class _SettingsPanel extends ConsumerWidget {
     );
   }
 
-  // Helper methods to avoid repeated calculations
-  String _getEpisodeTitle() {
-    final episodeIdx = watchState.selectedEpisodeIdx ?? 0;
-    if (watchState.episodes.isEmpty) {
-      return 'Loading...';
-    }
-    return watchState.episodes[episodeIdx].title ?? 'Untitled';
-  }
-
-  String _getEpisodeNumber() {
-    final episodeIdx = watchState.selectedEpisodeIdx ?? 0;
-    if (watchState.episodes.isEmpty) {
-      return 'EP N/A';
-    }
-    return 'EP ${watchState.episodes[episodeIdx].number}';
-  }
-
-  /// Build modern settings options container
-  Widget _buildSettingsOptions(
-      WidgetRef ref, ThemeData theme, bool isSmallScreen) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.3),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: Colors.white.withOpacity(0.05),
-          width: 0.5,
-        ),
-      ),
-      padding: const EdgeInsets.all(12),
-      child: Column(
-        children: _buildSettingsRows(ref, theme, isSmallScreen),
-      ),
-    );
-  }
-
-  /// Build settings rows with modern design
-  List<Widget> _buildSettingsRows(
-      WidgetRef ref, ThemeData theme, bool isSmallScreen) {
-    final List<Widget> rows = [];
-    final divider = Divider(color: Colors.white.withOpacity(0.1), height: 24);
-
-    // Add category selector if supported
-    if (animeProvider.getDubSubParamSupport()) {
-      rows.add(
-        _buildSettingsRow(
-          icon: Iconsax.language_circle,
-          label: 'Category',
-          child: ShonenxDropdown(
-            icon: Iconsax.language_circle,
-            value: watchState.selectedCategory ?? 'sub',
-            items: const ['dub', 'sub'],
-            onChanged: (value) =>
-                ref.read(watchProvider.notifier).updateCategory(value),
-          ),
-          theme: theme,
-          isSmallScreen: isSmallScreen,
-        ),
-      );
-
-      if (animeProvider.getSupportedServers().isNotEmpty &&
-              animeProvider.getSupportedServers().length > 1 ||
-          watchState.sources.isNotEmpty && watchState.sources.length > 1) {
-        rows.add(divider);
-      }
-    }
-
-    // Add server selector if multiple servers available
-    if (animeProvider.getSupportedServers().isNotEmpty &&
-        animeProvider.getSupportedServers().length > 1) {
-      rows.add(
-        _buildSettingsRow(
-          icon: Iconsax.devices,
-          label: 'Servers',
-          child: ShonenxDropdown(
-            icon: Iconsax.devices,
-            value: watchState.selectedServer ?? 'Default',
-            items: animeProvider.getSupportedServers(),
-            onChanged: (value) =>
-                ref.read(watchProvider.notifier).changeServer(value),
-          ),
-          theme: theme,
-          isSmallScreen: isSmallScreen,
-        ),
-      );
-
-      if (watchState.sources.isNotEmpty && watchState.sources.length > 1) {
-        rows.add(divider);
-      }
-    }
-
-    // Add source selector if multiple sources available
-    if (watchState.sources.isNotEmpty && watchState.sources.length > 1) {
-      rows.add(
-        _buildSettingsRow(
-          icon: Iconsax.cloud,
-          label: 'Sources',
-          child: ShonenxDropdown(
-            icon: Iconsax.cloud,
-            value:
-                watchState.sources[watchState.selectedSourceIdx ?? 0].quality ??
-                    'Default',
-            items: watchState.sources
-                .map((source) => source.quality ?? 'Default')
-                .toList(),
-            onChanged: (value) => _handleQualityChange(value, ref),
-          ),
-          theme: theme,
-          isSmallScreen: isSmallScreen,
-        ),
-      );
-    }
-
-    return rows;
-  }
-
-  /// Build a single settings row with modern design
-  Widget _buildSettingsRow({
-    required IconData icon,
-    required String label,
-    required Widget child,
-    required ThemeData theme,
-    required bool isSmallScreen,
-  }) {
+  Widget _buildTimeSection(BuildContext context, bool isCompact, bool isDark) {
+    final theme = Theme.of(context);
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        // Icon with accent color
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: theme.colorScheme.primaryContainer.withOpacity(0.2),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(
-            icon,
-            color: theme.colorScheme.primaryContainer,
-            size: isSmallScreen ? 16 : 18,
-          ),
+        Consumer(
+          builder: (context, ref, child) {
+            return Text(
+              formatDuration(widget.position),
+              style: theme.textTheme.labelLarge?.copyWith(
+                color: theme.colorScheme.onSurface,
+                fontWeight: FontWeight.w500,
+              ),
+            );
+          },
         ),
-        const SizedBox(width: 12),
-        // Label
+        const SizedBox(width: 10),
         Expanded(
-          flex: 1,
-          child: Text(
-            label,
-            style: TextStyle(
-              fontWeight: FontWeight.w500,
-              color: Colors.white,
-              fontSize: isSmallScreen ? 13 : 14,
-            ),
-          ),
+          child: Consumer(builder: (context, ref, child) {
+            return SeekBar(
+              position: widget.position,
+              duration: widget.duration,
+              onSeek: (value) async {
+                widget.onChangeSource();
+                await ref.read(playerProvider).seek(value);
+              },
+              theme: theme,
+            );
+          }),
         ),
-        // Dropdown or other control
-        Expanded(child: child),
+        const SizedBox(width: 10),
+        Consumer(
+          builder: (context, ref, child) {
+            return Text(
+              formatDuration(widget.duration),
+              style: theme.textTheme.labelLarge?.copyWith(
+                color: theme.colorScheme.onSurface,
+                fontWeight: FontWeight.w500,
+              ),
+            );
+          },
+        )
       ],
     );
   }
 
-  void _handleQualityChange(String? value, WidgetRef ref) {
+  Widget _buildSettingsSection(
+      BuildContext context, bool isCompact, bool isDark) {
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark
+            ? Colors.white.withOpacity(0.08)
+            : Colors.black.withOpacity(0.03),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDark
+              ? Colors.white.withOpacity(0.1)
+              : Colors.black.withOpacity(0.05),
+        ),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => _showSettingsPanel(context, position: widget.position),
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: isCompact ? 12 : 16,
+              vertical: isCompact ? 10 : 12,
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context)
+                        .colorScheme
+                        .primaryContainer
+                        .withOpacity(0.2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Iconsax.setting_4,
+                    size: isCompact ? 14 : 16,
+                    color: Theme.of(context).colorScheme.primaryContainer,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Text(
+                    _getSettingsLabel(),
+                    style: TextStyle(
+                      fontSize: isCompact ? 11 : 12,
+                      color: isDark ? Colors.white : Colors.black87,
+                      fontWeight: FontWeight.w500,
+                      letterSpacing: -0.1,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Icon(
+                  Iconsax.arrow_up_2,
+                  size: isCompact ? 14 : 16,
+                  color:
+                      (isDark ? Colors.white : Colors.black87).withOpacity(0.6),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _getSourceQuality() {
+    if (widget.watchState.sources.isEmpty ||
+        widget.watchState.selectedSourceIdx == null) {
+      return 'Auto';
+    }
+    return widget
+            .watchState.sources[widget.watchState.selectedSourceIdx!].quality ??
+        'Auto';
+  }
+
+  String _getSettingsLabel() {
+    final server = widget.watchState.selectedServer ?? 'Default';
+    final category = widget.watchState.selectedCategory ?? 'Sub';
+    final quality = _getSourceQuality();
+
+    return '$server • $category • $quality';
+  }
+
+  void _showSettingsPanel(BuildContext context, {required Duration position}) {
+    // Create settings rows based on available options
+    final List<SettingsRowData> settingsRows = [];
+
+    // Add category selector if supported
+    if (widget.animeProvider.getDubSubParamSupport()) {
+      settingsRows.add(
+        SettingsRowData(
+          icon: Iconsax.language_circle,
+          label: 'Category',
+          child: ShonenxDropdown(
+            icon: Iconsax.language_circle,
+            value: widget.watchState.selectedCategory ?? 'sub',
+            items: const ['dub', 'sub'],
+            onChanged: (value) =>
+                ref.read(watchProvider.notifier).updateCategory(value),
+          ),
+        ),
+      );
+    }
+
+    // Add server selector if multiple servers available
+    if (widget.animeProvider.getSupportedServers().isNotEmpty &&
+        widget.animeProvider.getSupportedServers().length > 1) {
+      settingsRows.add(
+        SettingsRowData(
+          icon: Iconsax.devices,
+          label: 'Servers',
+          child: ShonenxDropdown(
+            icon: Iconsax.devices,
+            value: widget.watchState.selectedServer ?? 'Default',
+            items: widget.animeProvider.getSupportedServers(),
+            onChanged: (value) =>
+                ref.read(watchProvider.notifier).changeServer(value),
+          ),
+        ),
+      );
+    }
+
+    // Add source selector if multiple sources available
+    if (widget.watchState.sources.isNotEmpty &&
+        widget.watchState.sources.length > 1) {
+      settingsRows.add(
+        SettingsRowData(
+          icon: Iconsax.cloud,
+          label: 'Sources',
+          child: ShonenxDropdown(
+            icon: Iconsax.cloud,
+            value: widget
+                    .watchState
+                    .sources[widget.watchState.selectedSourceIdx ?? 0]
+                    .quality ??
+                'Default',
+            items: widget.watchState.sources
+                .map((source) => source.quality ?? 'Default')
+                .toList(),
+            onChanged: (value) => _handleQualityChange(value, ref, position),
+          ),
+        ),
+      );
+    }
+
+    // Get episode info for subtitle
+    String subtitle = '';
+    if (widget.watchState.episodes.isNotEmpty &&
+        widget.watchState.selectedEpisodeIdx != null) {
+      final episode =
+          widget.watchState.episodes[widget.watchState.selectedEpisodeIdx!];
+      subtitle = 'Episode ${episode.number}: ${episode.title ?? 'Untitled'}';
+    }
+
+    // Show the settings panel using the reusable component
+    ModernSettingsPanel.showAsModalBottomSheet(
+      context: context,
+      title: 'Video Settings',
+      titleIcon: Iconsax.setting_4,
+      settingsRows: settingsRows,
+      subtitle: subtitle,
+    );
+  }
+
+  void _handleQualityChange(String? value, WidgetRef ref, Duration position) {
     if (value == null) return;
-    final index =
-        watchState.sources.indexWhere((source) => source.quality == value);
+    final index = widget.watchState.sources
+        .indexWhere((source) => source.quality == value);
     if (index != -1) {
-      ref
-          .read(watchProvider.notifier)
-          .changeSource(sourceIdx: index, lastPosition: position);
+      ref.read(watchProvider.notifier).changeSource(
+            sourceIdx: index,
+            lastPosition: position,
+          );
     }
   }
 }

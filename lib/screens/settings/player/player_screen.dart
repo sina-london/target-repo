@@ -3,7 +3,7 @@ import 'package:iconsax/iconsax.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shonenx/data/hive/providers/player_provider.dart';
 import 'package:shonenx/widgets/ui/shonenx_settings.dart';
-import 'package:shonenx/widgets/ui/subtitle_customization_modal.dart';
+import 'package:shonenx/widgets/ui/subtitle_customization_panel.dart';
 
 class PlayerSettingsScreen extends ConsumerWidget {
   const PlayerSettingsScreen({super.key});
@@ -46,7 +46,9 @@ class PlayerSettingsScreen extends ConsumerWidget {
             title: 'Subtitle Appearance',
             description:
                 'Font size: ${playerSettings.subtitleFontSize.round()}px, Color: ${playerSettings.subtitleTextColor.toRadixString(16).substring(2)}',
-            onTap: () => setSubtitleAppearance(context, ref),
+            onTap: () =>
+                ModernSubtitleCustomizationPanel.showAsModalBottomSheet(
+                    context: context),
           ),
           SettingsItem(
             onTap: () {},
