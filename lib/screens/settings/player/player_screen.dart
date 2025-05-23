@@ -99,7 +99,7 @@ class PlayerSettingsScreen extends ConsumerWidget {
                     max: 1.0,
                     divisions: 10,
                     label: '${(tempValue * 100).toStringAsFixed(0)}%',
-                    activeColor: colorScheme.primary,
+                    activeColor: colorScheme.primaryContainer,
                     inactiveColor: colorScheme.surfaceContainerHighest,
                     onChanged: (value) {
                       setDialogState(() {
@@ -127,7 +127,8 @@ class PlayerSettingsScreen extends ConsumerWidget {
             ),
             TextButton(
               onPressed: () => Navigator.pop(context, tempValue),
-              child: Text('Save', style: TextStyle(color: colorScheme.primary)),
+              child: Text('Save',
+                  style: TextStyle(color: colorScheme.primaryContainer)),
             ),
           ],
         );
@@ -149,14 +150,68 @@ class PlayerSettingsScreen extends ConsumerWidget {
 
     final newSpeed = await showDialog<double>(
       context: context,
+      barrierColor: Colors.black.withOpacity(0.6),
       builder: (context) {
         return AlertDialog(
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: const Text(
-            'Default Playback Speed',
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
+          // child: Container(
+          //   constraints: const BoxConstraints(maxWidth: 340),
+          //   decoration: BoxDecoration(
+          //     gradient: LinearGradient(
+          //       begin: Alignment.topLeft,
+          //       end: Alignment.bottomRight,
+          //       colors: [
+          //         Theme.of(context).colorScheme.surface,
+          //         Theme.of(context).colorScheme.surfaceContainerHigh,
+          //       ],
+          //     ),
+          //     borderRadius: BorderRadius.circular(24),
+          //     boxShadow: [
+          //       BoxShadow(
+          //         color: Colors.black.withOpacity(0.2),
+          //         blurRadius: 20,
+          //         offset: const Offset(0, 10),
+          //       ),
+          //     ],
+          //   ),
+          //   child: Padding(
+          //     padding: const EdgeInsets.all(24.0),
+          //     child: Column(
+          //       mainAxisSize: MainAxisSize.min,
+          //       children: [
+          //         Container(
+          //           padding: const EdgeInsets.all(12),
+          //           decoration: BoxDecoration(
+          //             color: Theme.of(context).colorScheme.primaryContainer,
+          //             shape: BoxShape.circle,
+          //           ),
+          //           child: Icon(
+          //             Iconsax.forward,
+          //             size: 24,
+          //             color: Theme.of(context).colorScheme.onPrimaryContainer,
+          //           ),
+          //         ),
+          //         const SizedBox(height: 16),
+          //         Text(
+          //           "Playback speed",
+          //           style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+          //                 fontWeight: FontWeight.bold,
+          //               ),
+          //         ),
+          //         const SizedBox(height: 8),
+          //         Text(
+          //           "Choose your preferred playback speed",
+          //           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+          //                 color: Theme.of(context).colorScheme.onSurfaceVariant,
+          //               ),
+          //           textAlign: TextAlign.center,
+          //         ),
+          //         const SizedBox(height: 24),
+          //       ],
+          //     ),
+          //   ),
+          // ),
           content: StatefulBuilder(
             builder: (context, setDialogState) {
               return Column(
@@ -167,7 +222,7 @@ class PlayerSettingsScreen extends ConsumerWidget {
                         title: Text('${speed}x'),
                         value: speed,
                         groupValue: tempSpeed,
-                        activeColor: colorScheme.primary,
+                        activeColor: colorScheme.primaryContainer,
                         onChanged: (value) {
                           setDialogState(() {
                             tempSpeed = value!;
@@ -187,7 +242,8 @@ class PlayerSettingsScreen extends ConsumerWidget {
             ),
             TextButton(
               onPressed: () => Navigator.pop(context, tempSpeed),
-              child: Text('Save', style: TextStyle(color: colorScheme.primary)),
+              child: Text('Save',
+                  style: TextStyle(color: colorScheme.primaryContainer)),
             ),
           ],
         );
