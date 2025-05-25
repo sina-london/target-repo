@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shonenx/core/registery/anime_source_registery_provider.dart';
-import 'package:shonenx/data/hive/providers/provider_provider.dart';
+import 'package:iconsax/iconsax.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:iconsax/iconsax.dart';
+
+// Assuming these are your provider imports
+import 'package:shonenx/core/registery/anime_source_registery_provider.dart';
+import 'package:shonenx/data/hive/providers/provider_provider.dart';
 
 // Provider to store the status data
 final providerStatusProvider =
@@ -17,8 +19,36 @@ final providerStatusProvider =
   throw Exception('Failed to load provider status');
 });
 
+// Method to show ProviderSettingsScreen as a bottom sheet
+void showProviderSettingsBottomSheet(
+    BuildContext context, Function(bool) callback) {
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true, // Allows dynamic height
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+    ),
+    backgroundColor: Theme.of(context).colorScheme.surface,
+    builder: (context) => DraggableScrollableSheet(
+      initialChildSize: 0.6, // Compact initial height
+      minChildSize: 0.4,
+      maxChildSize: 0.9,
+      expand: false,
+      builder: (context, scrollController) => ProviderSettingsScreen(
+        callback: callback,
+        scrollController: scrollController, // Pass controller for scrolling
+      ),
+    ),
+  );
+}
+
 class ProviderSettingsScreen extends ConsumerWidget {
-  const ProviderSettingsScreen({super.key});
+  final Function(bool)? callback;
+  final ScrollController?
+      scrollController; // Optional controller for bottom sheet
+
+  const ProviderSettingsScreen(
+      {super.key, this.scrollController, this.callback});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -28,81 +58,79 @@ class ProviderSettingsScreen extends ConsumerWidget {
     final animeSources =
         ref.read(animeSourceRegistryProvider).registry.allProviderKeys;
     final providerStatus = ref.watch(providerStatusProvider);
+    final isSmallScreen = MediaQuery.of(context).size.width < 400;
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(10, 10, 10, 0),
+      padding: const EdgeInsets.fromLTRB(8, 12, 8, 8), // Reduced padding
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min, // Minimize vertical space
         children: [
-          // Header with explanation
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: colorScheme.surfaceVariant.withOpacity(0.5),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: colorScheme.outlineVariant,
-                width: 1,
+          // Drag handle for bottom sheet
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              margin: const EdgeInsets.only(bottom: 8),
+              decoration: BoxDecoration(
+                color: colorScheme.onSurface.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(2),
               ),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          ),
+          // Compact header
+          Container(
+            padding: const EdgeInsets.all(8), // Reduced padding
+            decoration: BoxDecoration(
+              color: colorScheme.surfaceContainerHighest.withOpacity(0.4),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
               children: [
-                Row(
-                  children: [
-                    Icon(
-                      Iconsax.info_circle,
-                      size: 18,
-                      color: colorScheme.primaryContainer,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Anime Source Providers',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
+                Icon(
+                  Iconsax.info_circle,
+                  size: 16, // Smaller icon
+                  color: colorScheme.primary,
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  'Choose your preferred anime source provider. The provider status indicates whether the source is currently available.',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    'Select Anime Source',
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: colorScheme.onSurface,
+                      fontSize: isSmallScreen ? 14 : 16,
+                    ),
                   ),
                 ),
               ],
             ),
           ),
-
-          const SizedBox(height: 24),
-
-          // Status legend
-          Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Row(
-              children: [
-                _StatusIndicator(
-                  color: Colors.green,
-                  label: 'Online',
-                ),
-                const SizedBox(width: 16),
-                _StatusIndicator(
-                  color: Colors.orange,
-                  label: 'Degraded',
-                ),
-                const SizedBox(width: 16),
-                _StatusIndicator(
-                  color: Colors.red,
-                  label: 'Offline',
-                ),
-              ],
-            ),
+          const SizedBox(height: 12), // Reduced spacing
+          // Compact status legend
+          Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              _StatusIndicator(
+                color: Colors.green,
+                label: 'Online',
+                isCompact: true,
+              ),
+              const SizedBox(width: 12),
+              _StatusIndicator(
+                color: Colors.orange,
+                label: 'Degraded',
+                isCompact: true,
+              ),
+              const SizedBox(width: 12),
+              _StatusIndicator(
+                color: Colors.red,
+                label: 'Offline',
+                isCompact: true,
+              ),
+            ],
           ),
-
           const SizedBox(height: 8),
-
           // Provider list
           Expanded(
             child: providerStatus.when(
@@ -111,20 +139,28 @@ class ProviderSettingsScreen extends ConsumerWidget {
                 statusData: statusData,
                 selectedProvider: providerSettings.selectedProviderName,
                 onProviderSelected: (provider) {
+                  if (callback != null) {
+                    callback!(true);
+                  }
                   ref.read(providerSettingsProvider.notifier).updateSettings(
                         (prev) => prev.copyWith(
                           selectedProviderName: provider,
                         ),
                       );
+                  Navigator.pop(context); // Close bottom sheet on selection
                 },
+                scrollController: scrollController,
               ),
               loading: () => const Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    CircularProgressIndicator(),
-                    SizedBox(height: 16),
-                    Text('Checking provider status...'),
+                    CircularProgressIndicator(strokeWidth: 3), // Thinner
+                    SizedBox(height: 8),
+                    Text(
+                      'Loading...',
+                      style: TextStyle(fontSize: 12), // Smaller text
+                    ),
                   ],
                 ),
               ),
@@ -134,38 +170,38 @@ class ProviderSettingsScreen extends ConsumerWidget {
                   children: [
                     Icon(
                       Iconsax.wifi_square,
-                      size: 64,
-                      color: colorScheme.error.withOpacity(0.7),
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Could not load provider status',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        color: colorScheme.error,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      size: 48, // Smaller icon
+                      color: colorScheme.error.withOpacity(0.6),
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Please check your internet connection and try again.',
-                      textAlign: TextAlign.center,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
+                      'Failed to Load',
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        color: colorScheme.error,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
                       ),
                     ),
-                    const SizedBox(height: 24),
-                    ElevatedButton.icon(
+                    const SizedBox(height: 4),
+                    Text(
+                      'Check your connection.',
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                        fontSize: 12,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextButton(
                       onPressed: () => ref.refresh(providerStatusProvider),
-                      icon: const Icon(Iconsax.refresh),
-                      label: const Text('Retry'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: colorScheme.primaryContainer,
-                        foregroundColor: colorScheme.onPrimaryContainer,
+                      style: TextButton.styleFrom(
+                        foregroundColor: colorScheme.primary,
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 24,
-                          vertical: 12,
+                          horizontal: 16,
+                          vertical: 8,
                         ),
                       ),
+                      child: const Text('Retry'),
                     ),
                   ],
                 ),
@@ -183,17 +219,20 @@ class _ProviderList extends StatelessWidget {
   final Map<String, dynamic> statusData;
   final String selectedProvider;
   final Function(String) onProviderSelected;
+  final ScrollController? scrollController;
 
   const _ProviderList({
     required this.animeSources,
     required this.statusData,
     required this.selectedProvider,
     required this.onProviderSelected,
+    this.scrollController,
   });
 
   @override
   Widget build(BuildContext context) {
     return ListView.builder(
+      controller: scrollController, // Use provided controller
       itemCount: animeSources.length,
       itemBuilder: (context, index) {
         final String provider = animeSources[index];
@@ -254,126 +293,81 @@ class _ProviderCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final isSmallScreen = MediaQuery.of(context).size.width < 400;
 
     final String statusText = status != null ? status['status'] : 'unknown';
     final statusColor = _getStatusColor(statusText);
     final statusIcon = _getStatusIcon(statusText);
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: 8), // Reduced margin
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(12), // Smaller radius
         border: Border.all(
-          color: isSelected
-              ? colorScheme.primaryContainer
-              : colorScheme.outlineVariant,
-          width: isSelected ? 2 : 1,
+          color: isSelected ? colorScheme.primary : colorScheme.outlineVariant,
+          width: isSelected ? 1.5 : 1,
         ),
         color: isSelected
-            ? colorScheme.primaryContainer.withOpacity(0.2)
+            ? colorScheme.primary.withOpacity(0.1)
             : colorScheme.surface,
-        boxShadow: isSelected
-            ? [
-                BoxShadow(
-                  color: colorScheme.primaryContainer.withOpacity(0.1),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ]
-            : null,
       ),
       child: Material(
         color: Colors.transparent,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(12),
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(12),
           child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            padding: const EdgeInsets.all(8), // Reduced padding
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: isSelected
-                                  ? colorScheme.primaryContainer
-                                      .withOpacity(0.2)
-                                  : colorScheme.surfaceVariant.withOpacity(0.5),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Icon(
-                              Iconsax.cloud,
-                              size: 20,
-                              color: isSelected
-                                  ? colorScheme.primaryContainer
-                                  : colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              provider.toUpperCase(),
-                              style: theme.textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: isSelected
-                                    ? colorScheme.primaryContainer
-                                    : colorScheme.onSurface,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    if (isSelected)
+                Expanded(
+                  child: Row(
+                    children: [
                       Container(
-                        padding: const EdgeInsets.all(6),
+                        padding: const EdgeInsets.all(6), // Smaller padding
                         decoration: BoxDecoration(
-                          color: colorScheme.primaryContainer.withOpacity(0.2),
+                          color: isSelected
+                              ? colorScheme.primary.withOpacity(0.15)
+                              : colorScheme.surfaceVariant.withOpacity(0.3),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Icon(
-                          Iconsax.tick_circle,
-                          size: 18,
-                          color: colorScheme.primaryContainer,
+                          Iconsax.cloud,
+                          size: 16, // Smaller icon
+                          color: isSelected
+                              ? colorScheme.primary
+                              : colorScheme.onSurfaceVariant,
                         ),
-                      )
-                    else
-                      ElevatedButton(
-                        onPressed: onTap,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: colorScheme.primaryContainer,
-                          foregroundColor: colorScheme.onPrimaryContainer,
-                          elevation: 0,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 8,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                        child: const Text('Select'),
                       ),
-                  ],
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          provider.toUpperCase(),
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: isSelected
+                                ? colorScheme.primary
+                                : colorScheme.onSurface,
+                            fontSize: isSmallScreen ? 14 : 15,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 12),
                 Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
+                    horizontal: 8,
+                    vertical: 4,
                   ),
                   decoration: BoxDecoration(
                     color: statusColor.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(6),
                     border: Border.all(
-                      color: statusColor.withOpacity(0.3),
+                      color: statusColor.withOpacity(0.2),
                       width: 1,
                     ),
                   ),
@@ -382,43 +376,21 @@ class _ProviderCard extends StatelessWidget {
                     children: [
                       Icon(
                         statusIcon,
-                        size: 16,
+                        size: 14, // Smaller icon
                         color: statusColor,
                       ),
-                      const SizedBox(width: 6),
+                      const SizedBox(width: 4),
                       Text(
-                        'Status: ${statusText.toUpperCase()}',
-                        style: theme.textTheme.labelMedium?.copyWith(
+                        statusText.toUpperCase(),
+                        style: theme.textTheme.labelSmall?.copyWith(
                           fontWeight: FontWeight.w600,
                           color: statusColor,
+                          fontSize: 12,
                         ),
                       ),
                     ],
                   ),
                 ),
-                if (status != null && status['message'] != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Iconsax.message,
-                          size: 14,
-                          color: colorScheme.onSurfaceVariant,
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            status['message'],
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: colorScheme.onSurfaceVariant,
-                              fontStyle: FontStyle.italic,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
               ],
             ),
           ),
@@ -431,10 +403,12 @@ class _ProviderCard extends StatelessWidget {
 class _StatusIndicator extends StatelessWidget {
   final Color color;
   final String label;
+  final bool isCompact;
 
   const _StatusIndicator({
     required this.color,
     required this.label,
+    this.isCompact = false,
   });
 
   @override
@@ -444,17 +418,19 @@ class _StatusIndicator extends StatelessWidget {
     return Row(
       children: [
         Container(
-          width: 12,
-          height: 12,
+          width: isCompact ? 10 : 12, // Smaller in compact mode
+          height: isCompact ? 10 : 12,
           decoration: BoxDecoration(
             color: color,
             shape: BoxShape.circle,
           ),
         ),
-        const SizedBox(width: 6),
+        const SizedBox(width: 4), // Reduced spacing
         Text(
           label,
-          style: theme.textTheme.bodySmall,
+          style: theme.textTheme.labelSmall?.copyWith(
+            fontSize: isCompact ? 11 : 12,
+          ),
         ),
       ],
     );

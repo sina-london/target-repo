@@ -17,12 +17,12 @@ class WatchProgressService {
   static const Duration _progressSaveInterval = Duration(seconds: 10);
 
   /// Start the progress saving timer
-  void startProgressTimer(VoidCallback saveCallback) {
+  void startProgressTimer(Function(Timer) saveCallback) {
     AppLogger.d(
         'Starting progress save timer with interval ${_progressSaveInterval.inSeconds}s');
     _saveProgressTimer?.cancel();
-    _saveProgressTimer = Timer.periodic(_progressSaveInterval, (_) {
-      saveCallback();
+    _saveProgressTimer = Timer.periodic(_progressSaveInterval, (timer) {
+      saveCallback(timer);
     });
   }
 

@@ -41,9 +41,6 @@ class _WatchScreenState extends ConsumerState<WatchScreen>
   // Services
   final WatchProgressService _progressService = WatchProgressService();
 
-  // Timer for progress saving to reduce frequent disk writes
-  Timer? _progressSaveTimer;
-
   // Controllers
   late AnimationController _animationController;
   late final VideoController _controller;
@@ -52,7 +49,6 @@ class _WatchScreenState extends ConsumerState<WatchScreen>
   void initState() {
     super.initState();
     AppLogger.d('Initializing WatchScreen for anime: ${widget.animeId}');
-
     // Setup orientation
     _setupOrientation();
 
@@ -81,37 +77,7 @@ class _WatchScreenState extends ConsumerState<WatchScreen>
   /// Initialize async components and set up progress tracking
   Future<void> _initializeAsync() async {
     AppLogger.d('Initializing async components');
-
-    // Set up throttled progress saving (every 10 seconds instead of 5)
-    _progressSaveTimer = Timer.periodic(const Duration(seconds: 10), (_) {
-      if (mounted) _saveProgress();
-    });
-  }
-
-  /// Save watch progress with error handling
-  Future<void> _saveProgress() async {
-    AppLogger.d('Saving watch progress');
-    try {
-      await _progressService.saveProgress(
-        animeMedia: widget.animeMedia,
-        ref: ref,
-        onError: (errorMessage) {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(errorMessage),
-                backgroundColor: Theme.of(context).colorScheme.error,
-                behavior:
-                    SnackBarBehavior.floating, // Use floating for better UX
-                duration: const Duration(seconds: 3), // Shorter duration
-              ),
-            );
-          }
-        },
-      );
-    } catch (e) {
-      AppLogger.e('Error saving progress: $e');
-    }
+    _progressService.startProgressTimer((timer) {});
   }
 
   /// Fetch initial episode data
@@ -169,7 +135,7 @@ class _WatchScreenState extends ConsumerState<WatchScreen>
     AppLogger.d('Disposing WatchScreen');
 
     // Cancel progress timer
-    _progressSaveTimer?.cancel();
+    _progressService.dispose();
 
     // Clean up providers
     if (ref.context.mounted) {
@@ -178,6 +144,8 @@ class _WatchScreenState extends ConsumerState<WatchScreen>
 
     // Dispose animation controller
     _animationController.dispose();
+
+    ref.read(playerProvider).dispose();
 
     // Reset UI orientation
     if (mounted) {

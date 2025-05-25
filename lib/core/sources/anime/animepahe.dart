@@ -30,9 +30,11 @@ class AnimePaheProvider extends AnimeProvider {
 
   @override
   Future<BaseEpisodeModel> getEpisodes(String animeId) async {
-    AppLogger.d('Fetching episodes for animeId: $animeId from $apiUrl/info/$animeId');
+    AppLogger.d(
+        'Fetching episodes for animeId: $animeId from $apiUrl/info/$animeId');
     final response = await http.get(Uri.parse('$apiUrl/info/$animeId'));
     final data = jsonDecode(response.body);
+
     AppLogger.d('Received episodes data for animeId: $animeId');
     return BaseEpisodeModel(
         totalEpisodes: data['totalEpisodes'],
@@ -69,7 +71,8 @@ class AnimePaheProvider extends AnimeProvider {
     AppLogger.d('Searching for keyword: $keyword, type: $type, page: $page');
     final response = await http.get(Uri.parse('$apiUrl/$keyword'));
     final data = jsonDecode(response.body);
-    AppLogger.d('Search results for $keyword: ${data['results'].length} items');
+    AppLogger.d(data);
+    // AppLogger.d('Search results for $keyword: ${data['results'].length} items');
     return SearchPage(
       totalPages: data['totalPages'],
       currentPage: data['cucurrentPage'],
@@ -100,7 +103,8 @@ class AnimePaheProvider extends AnimeProvider {
     String? serverName,
     String? category,
   ) async {
-    AppLogger.d('Fetching sources for animeId: $animeId, episodeId: $episodeId');
+    AppLogger.d(
+        'Fetching sources for animeId: $animeId, episodeId: $episodeId');
     try {
       final response =
           await http.get(Uri.parse('$apiUrl/watch?episodeId=$episodeId'));
@@ -119,7 +123,8 @@ class AnimePaheProvider extends AnimeProvider {
             .toList(),
       );
     } catch (e, stackTrace) {
-      AppLogger.e('Error fetching sources for episodeId: $episodeId', e, stackTrace);
+      AppLogger.e(
+          'Error fetching sources for episodeId: $episodeId', e, stackTrace);
       rethrow; // Propagate the error to the caller (e.g., WatchScreen)
     }
   }

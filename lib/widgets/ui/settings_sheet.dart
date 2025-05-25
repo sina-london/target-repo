@@ -3,9 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:iconsax/iconsax.dart';
 
-/// A modern, reusable settings panel with glass morphism effects
+/// A reusable settings panel with glass morphism effects
 /// Can be used across different screens in the app
-class ModernSettingsPanel extends ConsumerStatefulWidget {
+class SettingsSheet extends ConsumerStatefulWidget {
+  /// Additional actions to display in the header
+  final List<Widget>? actions;
+
   /// Title displayed at the top of the panel
   final String title;
 
@@ -30,8 +33,9 @@ class ModernSettingsPanel extends ConsumerStatefulWidget {
   /// Whether to use a compact layout
   final bool? isCompact;
 
-  const ModernSettingsPanel({
+  const SettingsSheet({
     super.key,
+    this.actions,
     required this.title,
     this.titleIcon = Iconsax.setting_4,
     required this.onClose,
@@ -43,13 +47,13 @@ class ModernSettingsPanel extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<ModernSettingsPanel> createState() =>
-      _ModernSettingsPanelState();
+  ConsumerState<SettingsSheet> createState() => _SettingsSheetState();
 
   /// Helper method to show the panel as a modal bottom sheet
   static Future<void> showAsModalBottomSheet({
     required BuildContext context,
     required String title,
+    List<Widget>? actions,
     IconData titleIcon = Iconsax.setting_4,
     required List<SettingsRowData> settingsRows,
     String? subtitle,
@@ -62,7 +66,8 @@ class ModernSettingsPanel extends ConsumerStatefulWidget {
       isScrollControlled: true,
       useSafeArea: true,
       backgroundColor: Colors.transparent,
-      builder: (modalContext) => ModernSettingsPanel(
+      builder: (modalContext) => SettingsSheet(
+        actions: actions,
         title: title,
         titleIcon: titleIcon,
         onClose: () => Navigator.of(modalContext).pop(),
@@ -76,7 +81,7 @@ class ModernSettingsPanel extends ConsumerStatefulWidget {
   }
 }
 
-class _ModernSettingsPanelState extends ConsumerState<ModernSettingsPanel>
+class _SettingsSheetState extends ConsumerState<SettingsSheet>
     with TickerProviderStateMixin {
   late AnimationController _slideController;
   late Animation<Offset> _slideAnimation;
@@ -127,14 +132,22 @@ class _ModernSettingsPanelState extends ConsumerState<ModernSettingsPanel>
       child: FadeTransition(
         opacity: _fadeAnimation,
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(24),
+          // borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(24),
+            topRight: Radius.circular(24),
+          ),
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
             child: Container(
               decoration: BoxDecoration(
                 color:
                     theme.colorScheme.surfaceContainerHighest.withOpacity(0.5),
-                borderRadius: BorderRadius.circular(24),
+                // borderRadius: BorderRadius.circular(24),
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(24),
+                  topRight: Radius.circular(24),
+                ),
                 border: Border.all(
                   color: isDark
                       ? Colors.white.withOpacity(0.1)
@@ -154,7 +167,7 @@ class _ModernSettingsPanelState extends ConsumerState<ModernSettingsPanel>
                 children: [
                   // Header section
                   widget.customHeader ??
-                      _buildHeader(context, isCompact, isDark),
+                      _buildHeader(context, isCompact, isDark, widget.actions),
 
                   // Subtitle if provided
                   if (widget.subtitle != null)
@@ -176,7 +189,7 @@ class _ModernSettingsPanelState extends ConsumerState<ModernSettingsPanel>
                   // Settings rows
                   Flexible(
                     child: SingleChildScrollView(
-                      padding: EdgeInsets.all(isCompact ? 20 : 24),
+                      padding: EdgeInsets.all(isCompact ? 16 : 20),
                       child: _buildSettingsOptions(theme, isCompact, isDark),
                     ),
                   ),
@@ -192,9 +205,10 @@ class _ModernSettingsPanelState extends ConsumerState<ModernSettingsPanel>
     );
   }
 
-  Widget _buildHeader(BuildContext context, bool isCompact, bool isDark) {
+  Widget _buildHeader(BuildContext context, bool isCompact, bool isDark,
+      List<Widget>? actions) {
     return Container(
-      padding: EdgeInsets.all(isCompact ? 20 : 24),
+      padding: EdgeInsets.all(isCompact ? 16 : 20),
       decoration: BoxDecoration(
         border: Border(
           bottom: BorderSide(
@@ -237,6 +251,7 @@ class _ModernSettingsPanelState extends ConsumerState<ModernSettingsPanel>
               ),
             ),
           ),
+          if (actions != null) ...actions,
           Container(
             decoration: BoxDecoration(
               color: (isDark ? Colors.white : Colors.black87).withOpacity(0.1),
@@ -306,7 +321,7 @@ class _ModernSettingsPanelState extends ConsumerState<ModernSettingsPanel>
     required bool isDark,
   }) {
     return Container(
-      padding: EdgeInsets.all(isCompact ? 16 : 18),
+      padding: EdgeInsets.all(isCompact ? 5 : 8),
       decoration: BoxDecoration(
         color: (isDark ? Colors.white : Colors.black87).withOpacity(0.05),
         borderRadius: BorderRadius.circular(16),

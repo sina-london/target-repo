@@ -100,7 +100,7 @@ class _ShonenxDropdownState extends State<ShonenxDropdown>
             child: Container(
               width: widget.width,
               padding: widget.padding ??
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
@@ -224,8 +224,8 @@ class _ShonenxDropdownState extends State<ShonenxDropdown>
                   duration: const Duration(milliseconds: 150),
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
+                    horizontal: 10,
+                    vertical: 10,
                   ),
                   decoration: BoxDecoration(
                     color: item == currentValue

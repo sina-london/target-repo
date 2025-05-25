@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:media_kit/media_kit.dart';
@@ -8,10 +9,9 @@ import 'package:shonenx/core/models/anime/source_model.dart';
 import 'package:shonenx/core/registery/anime_source_registery_provider.dart';
 import 'package:shonenx/core/sources/anime/anime_provider.dart';
 import 'package:shonenx/core/utils/app_logger.dart';
+import 'package:shonenx/providers/watch_providers.dart';
 import 'package:shonenx/utils/extractors.dart' as extractor;
 
-/// Represents the state of the video player and episode selection.
-@immutable
 class WatchState {
   final String animeId;
   final bool isExpanded;
@@ -159,14 +159,6 @@ class WatchStateNotifier extends StateNotifier<WatchState> {
     }
   }
 
-  Future<void> refreshEpisodes() async {
-    await fetchEpisodes(
-      animeId: state.animeId,
-      episodeIdx: state.selectedEpisodeIdx ?? 0,
-      withPlay: true,
-    );
-  }
-
   /// Fetches episode data for the given anime ID.
   Future<void> fetchEpisodes({
     required dynamic animeId,
@@ -264,7 +256,6 @@ class WatchStateNotifier extends StateNotifier<WatchState> {
   }
 
   // --- Player Control ---
-
   /// Toggles the control panel visibility.
   Future<void> togglePanel(AnimationController controller) async {
     AppLogger.d('Toggling panel, current isExpanded: ${state.isExpanded}');
@@ -432,87 +423,6 @@ class WatchStateNotifier extends StateNotifier<WatchState> {
   }
 }
 
-/// Represents the state of the media player.
-@immutable
-class PlayerState {
-  final bool isPlaying;
-  final bool isBuffering;
-  final Duration position;
-  final Duration duration;
-  final double volume;
-  final bool isCompleted;
-  final List<String> subtitle;
-
-  const PlayerState({
-    this.isPlaying = false,
-    this.isBuffering = false,
-    this.position = Duration.zero,
-    this.duration = Duration.zero,
-    this.volume = 100.0,
-    this.isCompleted = false,
-    this.subtitle = const [],
-  });
-
-  PlayerState copyWith({
-    bool? isPlaying,
-    bool? isBuffering,
-    Duration? position,
-    Duration? duration,
-    double? volume,
-    bool? isCompleted,
-    List<String>? subtitle,
-  }) {
-    return PlayerState(
-      isPlaying: isPlaying ?? this.isPlaying,
-      isBuffering: isBuffering ?? this.isBuffering,
-      position: position ?? this.position,
-      duration: duration ?? this.duration,
-      volume: volume ?? this.volume,
-      isCompleted: isCompleted ?? this.isCompleted,
-      subtitle: subtitle ?? this.subtitle,
-    );
-  }
-}
-
-/// Manages the media player state.
-class PlayerStateNotifier extends StateNotifier<PlayerState> {
-  final Player player;
-  late final List<StreamSubscription> _subscriptions;
-
-  PlayerStateNotifier(this.player) : super(const PlayerState()) {
-    _subscriptions = [
-      player.stream.playing
-          .listen((playing) => state = state.copyWith(isPlaying: playing)),
-      player.stream.buffering.listen(
-          (buffering) => state = state.copyWith(isBuffering: buffering)),
-      player.stream.position
-          .listen((position) => state = state.copyWith(position: position)),
-      player.stream.duration
-          .listen((duration) => state = state.copyWith(duration: duration)),
-      player.stream.volume
-          .listen((volume) => state = state.copyWith(volume: volume)),
-      player.stream.completed.listen(
-          (completed) => state = state.copyWith(isCompleted: completed)),
-      player.stream.subtitle
-          .listen((subtitle) => state = state.copyWith(subtitle: subtitle)),
-    ];
-  }
-
-  Future<void> playOrPause() => player.playOrPause();
-  Future<void> seek(Duration position) => player.seek(position);
-  Future<void> setVolume(double volume) => player.setVolume(volume);
-
-  @override
-  void dispose() {
-    AppLogger.d('Disposing PlayerStateNotifier');
-    for (var sub in _subscriptions) {
-      sub.cancel();
-    }
-    super.dispose();
-  }
-}
-
-/// Riverpod providers for watch and player management.
 final watchProvider =
     StateNotifierProvider<WatchStateNotifier, WatchState>((ref) {
   final animeProvider = ref.watch(currentAnimeProviderProvider);
@@ -528,23 +438,4 @@ final watchProvider =
     controller: ref.watch(controllerProvider),
     animeProvider: animeProvider,
   );
-});
-
-final playerProvider = Provider<Player>((ref) {
-  final player = Player();
-  ref.onDispose(() {
-    AppLogger.d('Disposing player');
-    player.dispose();
-  });
-  return player;
-});
-
-final controllerProvider = Provider<VideoController>((ref) {
-  final controller = VideoController(ref.watch(playerProvider));
-  return controller;
-});
-
-final playerStateProvider =
-    StateNotifierProvider<PlayerStateNotifier, PlayerState>((ref) {
-  return PlayerStateNotifier(ref.watch(playerProvider));
 });
