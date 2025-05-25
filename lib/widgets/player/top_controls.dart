@@ -240,20 +240,20 @@ class _TopControlsState extends ConsumerState<TopControls>
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _buildButton(
-            context,
-            icon: Iconsax.cloud,
-            isEnabled: true,
-            onPressed: () =>
-                showProviderSettingsBottomSheet(context, (isChanged) async {
-              if (isChanged) {
-                widget.onPanelToggle();
-                await ref.read(watchProvider.notifier).refreshEpisodes();
-              }
-            }),
-            isCompact: isCompact,
-            isDark: isDark,
-          ),
+          // _buildButton(
+          //   context,
+          //   icon: Iconsax.cloud,
+          //   isEnabled: true,
+          //   onPressed: () =>
+          //       showProviderSettingsBottomSheet(context, (isChanged) async {
+          //     if (isChanged) {
+          //       widget.onPanelToggle();
+          //       await ref.read(watchProvider.notifier).refreshEpisodes();
+          //     }
+          //   }),
+          //   isCompact: isCompact,
+          //   isDark: isDark,
+          // ),
           SizedBox(width: isCompact ? 8 : 12),
           _buildButton(
             context,

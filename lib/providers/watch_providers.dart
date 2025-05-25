@@ -133,6 +133,7 @@ class WatchStateNotifier extends StateNotifier<WatchState> {
     if (category == null) return;
     AppLogger.d('Updating category to $category');
     state = state.copyWith(selectedCategory: category, error: null);
+    fetchStreamData(episodeIdx: state.selectedEpisodeIdx ?? 0);
   }
 
   /// Updates the selected server.
@@ -140,6 +141,7 @@ class WatchStateNotifier extends StateNotifier<WatchState> {
     if (server == null) return;
     AppLogger.d('Updating server to $server');
     state = state.copyWith(selectedServer: server, error: null);
+    fetchStreamData(episodeIdx: state.selectedEpisodeIdx ?? 0);
   }
 
   // --- Episode and Stream Management ---

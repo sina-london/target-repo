@@ -20,57 +20,54 @@ class LoadingOverlay extends ConsumerWidget {
       return const SizedBox.shrink();
     }
 
-    return Positioned(
-      bottom: 16,
-      right: 16,
-      child: AnimatedSlide(
-        duration: const Duration(milliseconds: 300),
-        offset: watchState.sourceLoading || watchState.episodesLoading
-            ? Offset.zero
-            : const Offset(1, 0),
-        child: Material(
-          elevation: 4,
-          borderRadius: BorderRadius.circular(16),
-          color: Theme.of(context).colorScheme.surface,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+    return AnimatedSlide(
+      duration: const Duration(milliseconds: 300),
+      offset: watchState.sourceLoading || watchState.episodesLoading
+          ? Offset.zero
+          : const Offset(1, 0),
+      child: Material(
+        elevation: 4,
+        borderRadius: BorderRadius.circular(16),
+        color: Theme.of(context).colorScheme.surface,
+        child: Container(
+          width: 250,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation(
+                    Theme.of(context).colorScheme.primary,
+                  ),
+                ),
               ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation(
-                      Theme.of(context).colorScheme.primary,
+              const SizedBox(width: 12),
+              Text(
+                watchState.loadingMessage ?? 'Loading...',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
-                  ),
+              ),
+              const SizedBox(width: 8),
+              GestureDetector(
+                onTap: onRetry,
+                child: Icon(
+                  Iconsax.repeat_circle,
+                  size: 20,
+                  color: Theme.of(context).colorScheme.primary,
                 ),
-                const SizedBox(width: 12),
-                Text(
-                  watchState.loadingMessage ?? 'Loading...',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurface,
-                      ),
-                ),
-                const SizedBox(width: 8),
-                GestureDetector(
-                  onTap: onRetry,
-                  child: Icon(
-                    Iconsax.repeat_circle,
-                    size: 20,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
