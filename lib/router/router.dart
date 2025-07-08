@@ -1,9 +1,11 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:shonenx/core/models/anilist/anilist_media_list.dart';
+import 'package:shonenx/providers/initialization_provider.dart';
 import 'package:shonenx/screens/browse_screen.dart';
 import 'package:shonenx/screens/continue_watching_screen.dart';
 import 'package:shonenx/screens/details_screen.dart';
@@ -23,7 +25,6 @@ import 'package:shonenx/screens/settings/settings_screen.dart';
 import 'package:shonenx/screens/settings/source/provider_screen.dart';
 import 'package:shonenx/screens/watch_screen/watch_screen.dart';
 import 'package:shonenx/screens/watchlist_screen.dart';
-import 'package:shonenx/utils/updater.dart';
 import 'package:shonenx/widgets/ui/layouts/settings_layout.dart';
 
 // Navigation item configuration
@@ -47,17 +48,12 @@ final List<NavItem> navItems = [
 // Router configuration
 final GoRouter router = GoRouter(
   errorBuilder: (context, state) => ErrorScreen(error: state.error),
-  initialLocation: '/loading',
+  initialLocation: '/',
   routes: [
-    GoRoute(
-      path: '/loading',
-      builder: (context, state) => const LoadingScreen(),
-    ),
     StatefulShellRoute.indexedStack(
       builder: (context, state, navigationShell) =>
           AppRouterScreen(navigationShell: navigationShell),
       branches: navItems.asMap().entries.map((entry) {
-        // final index = entry.key;
         final item = entry.value;
         return StatefulShellBranch(
           routes: [
@@ -212,28 +208,18 @@ List<GoRoute> _buildSettingsSubRoutes(List<_SettingsRouteConfig> configs) {
   }).toList();
 }
 
-// AppRouterScreen
-class AppRouterScreen extends StatefulWidget {
+class AppRouterScreen extends ConsumerWidget {
   final StatefulNavigationShell navigationShell;
 
   const AppRouterScreen({super.key, required this.navigationShell});
 
   @override
-  State<AppRouterScreen> createState() => _AppRouterScreenState();
-}
-
-class _AppRouterScreenState extends State<AppRouterScreen> {
-  
-  @override
-  initState() {
-    super.initState();
-    checkForUpdates(context);
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isWideScreen = MediaQuery.of(context).size.width > 800;
-
+    final initializationState = ref.watch(initializationProvider);
+    if (initializationState.status != InitializationStatus.success) {
+      return const LoadingScreen();
+    }
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, result) {
@@ -253,7 +239,7 @@ class _AppRouterScreenState extends State<AppRouterScreen> {
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(15),
-                child: widget.navigationShell,
+                child: navigationShell,
               ),
             ),
             Positioned(
@@ -293,7 +279,7 @@ class _AppRouterScreenState extends State<AppRouterScreen> {
         children: navItems.asMap().entries.map((entry) {
           final index = entry.key;
           final item = entry.value;
-          final isSelected = widget.navigationShell.currentIndex == index;
+          final isSelected = navigationShell.currentIndex == index;
           return Expanded(
             child: Container(
               decoration: BoxDecoration(
@@ -314,7 +300,7 @@ class _AppRouterScreenState extends State<AppRouterScreen> {
               padding: const EdgeInsets.symmetric(vertical: 15),
               margin: const EdgeInsets.all(5),
               child: InkWell(
-                onTap: () => widget.navigationShell.goBranch(index),
+                onTap: () => navigationShell.goBranch(index),
                 child: Center(
                   child: Icon(
                     item.icon,
@@ -353,10 +339,10 @@ class _AppRouterScreenState extends State<AppRouterScreen> {
               children: navItems.asMap().entries.map((entry) {
                 final index = entry.key;
                 final item = entry.value;
-                final isSelected = widget.navigationShell.currentIndex == index;
+                final isSelected = navigationShell.currentIndex == index;
                 return Expanded(
                   child: InkWell(
-                    onTap: () => widget.navigationShell.goBranch(index),
+                    onTap: () => navigationShell.goBranch(index),
                     child: Container(
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(100),

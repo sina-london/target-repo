@@ -2,22 +2,24 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:desktop_webview_window/desktop_webview_window.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:isar/isar.dart';
 import 'package:shonenx/app_initializer.dart';
+import 'package:shonenx/core/utils/app_logger.dart';
 import 'package:shonenx/data/hive/providers/theme_provider.dart';
+import 'package:shonenx/services/isar_service.dart';
 import 'package:shonenx/theme/app_theme.dart';
 import 'package:shonenx/router/router.dart';
 
-class ToggleFullscreenIntent extends Intent {
-  const ToggleFullscreenIntent();
-}
-
+late Isar isar;
 void main(List<String> args) async {
   await dotenv.load(fileName: '.env');
   WidgetsFlutterBinding.ensureInitialized();
   try {
+    AppLogger.i('Starting app initialization');
+    isar = await IsarService.instance;
     await AppInitializer.initialize();
   } catch (e) {
-    // Log error or show error screen
+    AppLogger.e('Error initializing app: $e');
     runApp(const MaterialApp(
       home: Scaffold(body: Center(child: Text('Initialization failed'))),
     ));
@@ -25,19 +27,9 @@ void main(List<String> args) async {
   }
 
   if (runWebViewTitleBarWidget(args)) return;
-  // runApp(MaterialApp(
-  //   home: SearchBarExample(),
-  // ));
   runApp(const ProviderScope(child: MyApp()));
 }
 
-// class MyApp extends ConsumerStatefulWidget {
-//   const MyApp({super.key});
-//   @override
-//   ConsumerState<MyApp> createState() => _MyAppState();
-// }
-
-// class _MyAppState extends ConsumerState<MyApp> {
 class MyApp extends ConsumerWidget {
   const MyApp({super.key});
 
