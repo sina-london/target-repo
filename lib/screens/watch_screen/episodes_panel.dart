@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:iconsax/iconsax.dart';
-import 'package:shonenx/providers/watch_providers.dart';
+import 'package:shonenx/providers/episodeDataProvider.dart'; // Ensure this path is correct
 
 class EpisodesPanel extends ConsumerStatefulWidget {
   final String animeId;
@@ -11,228 +11,85 @@ class EpisodesPanel extends ConsumerStatefulWidget {
   ConsumerState<EpisodesPanel> createState() => _EpisodesPanelState();
 }
 
-class _EpisodesPanelState extends ConsumerState<EpisodesPanel>
-    with TickerProviderStateMixin {
+class _EpisodesPanelState extends ConsumerState<EpisodesPanel> {
+  // Local UI state for the panel
   int _rangeSize = 50;
   int _currentStart = 1;
-  late AnimationController _slideController;
-  late AnimationController _fadeController;
-  late Animation<Offset> _slideAnimation;
-  late Animation<double> _fadeAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _slideController = AnimationController(
-      duration: const Duration(milliseconds: 300),
-      vsync: this,
-    );
-    _fadeController = AnimationController(
-      duration: const Duration(milliseconds: 400),
-      vsync: this,
-    );
-
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.05),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _slideController,
-      curve: Curves.easeOut,
-    ));
-
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _fadeController,
-      curve: Curves.easeOut,
-    ));
-
-    _slideController.forward();
-    _fadeController.forward();
-  }
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void dispose() {
-    _slideController.dispose();
-    _fadeController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
-  List<Map<String, int>> _generateRanges(int totalEpisodes, int rangeSize) {
+  // Helper to generate the list of ranges for the dropdown
+  List<Map<String, int>> _generateRanges(int totalEpisodes) {
+    if (totalEpisodes == 0) return [];
     final ranges = <Map<String, int>>[];
-    for (int start = 1; start <= totalEpisodes; start += rangeSize) {
-      final end = (start + rangeSize - 1).clamp(0, totalEpisodes);
+    for (int start = 1; start <= totalEpisodes; start += _rangeSize) {
+      final end = (start + _rangeSize - 1).clamp(0, totalEpisodes);
       ranges.add({'start': start, 'end': end});
       if (end >= totalEpisodes) break;
     }
     return ranges;
   }
 
-  void _showRangeSizeDialog() {
+  // A redesigned, theme-aware dialog for changing the range size
+  void _showRangeSizeDialog(BuildContext context) {
+    int? selectedSize = _rangeSize;
     showDialog(
       context: context,
-      barrierColor: Colors.black.withOpacity(0.6),
       builder: (context) {
-        return Dialog(
-          backgroundColor: Colors.transparent,
-          child: Container(
-            constraints: const BoxConstraints(maxWidth: 340),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Theme.of(context).colorScheme.surface,
-                  Theme.of(context).colorScheme.surfaceContainerHigh,
-                ],
-              ),
-              borderRadius: BorderRadius.circular(24),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.2),
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
-                ),
-              ],
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
+        return StatefulBuilder(
+          // Use StatefulBuilder for temporary state inside the dialog
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: const Text("Episode Range Size"),
+              content: Column(
                 mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.primaryContainer,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      Iconsax.setting_2,
-                      size: 24,
-                      color: Theme.of(context).colorScheme.onPrimaryContainer,
-                    ),
-                  ),
+                  const Text("Choose how many episodes to show."),
                   const SizedBox(height: 16),
-                  Text(
-                    "Episode Range Size",
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    "Choose how many episodes to display at once",
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 24),
                   Wrap(
-                    spacing: 12.0,
-                    runSpacing: 12.0,
+                    spacing: 8.0,
                     children: [10, 25, 50, 100].map((size) {
-                      final isSelected = _rangeSize == size;
-                      return AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            onTap: () {
-                              setState(() {
-                                _rangeSize = size;
-                                _currentStart = 1;
-                              });
-                              Navigator.pop(context);
-                            },
-                            borderRadius: BorderRadius.circular(20),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 20, vertical: 12),
-                              decoration: BoxDecoration(
-                                gradient: isSelected
-                                    ? LinearGradient(
-                                        colors: [
-                                          Theme.of(context)
-                                              .colorScheme
-                                              .primaryContainer,
-                                          Theme.of(context)
-                                              .colorScheme
-                                              .primaryContainer
-                                              .withOpacity(0.8),
-                                        ],
-                                      )
-                                    : null,
-                                color: isSelected
-                                    ? null
-                                    : Theme.of(context)
-                                        .colorScheme
-                                        .surfaceContainerHighest,
-                                borderRadius: BorderRadius.circular(20),
-                                border: isSelected
-                                    ? null
-                                    : Border.all(
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .outline
-                                            .withOpacity(0.3),
-                                      ),
-                                boxShadow: isSelected
-                                    ? [
-                                        BoxShadow(
-                                          color: Theme.of(context)
-                                              .colorScheme
-                                              .primaryContainer
-                                              .withOpacity(0.3),
-                                          blurRadius: 8,
-                                          offset: const Offset(0, 2),
-                                        ),
-                                      ]
-                                    : null,
-                              ),
-                              child: Text(
-                                "$size",
-                                style: TextStyle(
-                                  color: isSelected
-                                      ? Theme.of(context)
-                                          .colorScheme
-                                          .onPrimaryContainer
-                                      : Theme.of(context).colorScheme.onSurface,
-                                  fontWeight: isSelected
-                                      ? FontWeight.bold
-                                      : FontWeight.w500,
-                                  fontSize: 16,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
+                      return ChoiceChip(
+                        label: Text("$size"),
+                        selected: selectedSize == size,
+                        onSelected: (isSelected) {
+                          if (isSelected) {
+                            setDialogState(() {
+                              selectedSize = size;
+                            });
+                          }
+                        },
                       );
                     }).toList(),
                   ),
-                  const SizedBox(height: 24),
-                  SizedBox(
-                    width: double.infinity,
-                    child: TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: const Text(
-                        "Close",
-                        style: TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.w500),
-                      ),
-                    ),
-                  ),
                 ],
               ),
-            ),
-          ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text("Cancel"),
+                ),
+                TextButton(
+                  onPressed: () {
+                    if (selectedSize != null) {
+                      setState(() {
+                        _rangeSize = selectedSize!;
+                        _currentStart = 1; // Reset to the first range
+                      });
+                    }
+                    Navigator.pop(context);
+                  },
+                  child: const Text("OK"),
+                ),
+              ],
+            );
+          },
         );
       },
     );
@@ -241,140 +98,103 @@ class _EpisodesPanelState extends ConsumerState<EpisodesPanel>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final watchState = ref.watch(watchProvider);
-    final totalEpisodes = watchState.episodes.length;
-    final ranges = _generateRanges(totalEpisodes, _rangeSize);
+    final episodeData = ref.watch(episodeDataProvider);
+    final episodeNotifier = ref.read(episodeDataProvider.notifier);
 
-    final filteredEpisodes = watchState.episodes.where((episode) {
+    final totalEpisodes = episodeData.episodes.length;
+    final ranges = _generateRanges(totalEpisodes);
+
+    // Filter episodes based on the selected range
+    final filteredEpisodes = episodeData.episodes.where((episode) {
       final epNumber = int.tryParse(episode.number.toString()) ?? 0;
       return epNumber >= _currentStart &&
           epNumber <= (_currentStart + _rangeSize - 1);
     }).toList();
 
-    return SlideTransition(
-      position: _slideAnimation,
-      child: FadeTransition(
-        opacity: _fadeAnimation,
-        child: Padding(
-          padding: const EdgeInsets.all(12.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Compact header
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: Row(
-                          children: ranges.map((range) {
-                            final isSelected = _currentStart == range['start'];
-                            return Padding(
-                              padding: const EdgeInsets.only(right: 4.0),
-                              child: InkWell(
-                                onTap: () {
-                                  setState(() {
-                                    _currentStart = range['start'] ?? 1;
-                                  });
-                                },
-                                borderRadius: BorderRadius.circular(8),
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 12, vertical: 6),
-                                  decoration: BoxDecoration(
-                                    color: isSelected
-                                        ? theme.colorScheme.primary
-                                        : Colors.transparent,
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Text(
-                                    "${range['start']}-${range['end']}",
-                                    style: TextStyle(
-                                      color: isSelected
-                                          ? theme.colorScheme.onPrimary
-                                          : theme.colorScheme.onSurfaceVariant,
-                                      fontWeight: isSelected
-                                          ? FontWeight.w600
-                                          : FontWeight.w500,
-                                      fontSize: 13,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            );
-                          }).toList(),
-                        ),
-                      ),
-                    ),
-                    IconButton(
-                      icon: Icon(Iconsax.setting_2, size: 18),
-                      onPressed: _showRangeSizeDialog,
-                      visualDensity: VisualDensity.compact,
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 8),
-              // Simple episode count
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4),
-                child: Text(
-                  "${filteredEpisodes.length} of $totalEpisodes episodes",
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // --- REDESIGNED HEADER ---
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4.0),
+            child: Row(
+              children: [
+                Text("Episodes", style: theme.textTheme.titleMedium),
+                const Spacer(),
+                // A standard DropdownButton for a better, more consistent UX
+                if (ranges.isNotEmpty)
+                  DropdownButton<int>(
+                    value: _currentStart,
+                    underline:
+                        const SizedBox.shrink(), // Hides the default underline
+                    items: ranges.map((range) {
+                      return DropdownMenuItem<int>(
+                        value: range['start'],
+                        child: Text("${range['start']}-${range['end']}"),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      if (value != null) {
+                        setState(() {
+                          _currentStart = value;
+                          // Scroll to the top of the list when changing range
+                          if (_scrollController.hasClients) {
+                            _scrollController.jumpTo(0);
+                          }
+                        });
+                      }
+                    },
                   ),
+                IconButton(
+                  icon: const Icon(Iconsax.setting_2, size: 20),
+                  onPressed: () => _showRangeSizeDialog(context),
+                  tooltip: "Change episode range size",
                 ),
-              ),
-              const SizedBox(height: 8),
-              // Compact episodes list
-              Expanded(
-                child: ListView.builder(
-                  padding: EdgeInsets.zero,
-                  itemCount: filteredEpisodes.length,
-                  itemBuilder: (context, index) {
-                    final episode = filteredEpisodes[index];
-                    final actualIndex = watchState.episodes.indexOf(episode);
-                    final isSelected =
-                        watchState.selectedEpisodeIdx == actualIndex;
-
-                    return CompactEpisodeTile(
-                      isFiller: episode.isFiller ?? false,
-                      episodeNumber: episode.number.toString(),
-                      episodeTitle:
-                          episode.title ?? 'Episode ${episode.number}',
-                      isSelected: isSelected,
-                      onTap: () async {
-                        await ref
-                            .read(watchProvider.notifier)
-                            .changeEpisode(actualIndex, withPlay: true);
-                      },
-                    );
-                  },
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
+          const SizedBox(height: 8),
+          // --- REDESIGNED EPISODE LIST ---
+          Expanded(
+            child: ListView.builder(
+              controller: _scrollController,
+              padding: EdgeInsets.zero,
+              itemCount: filteredEpisodes.length,
+              itemBuilder: (context, index) {
+                final episode = filteredEpisodes[index];
+                // Get the actual index from the original, unfiltered list
+                final actualIndex = episodeData.episodes.indexOf(episode);
+                final isSelected =
+                    episodeData.selectedEpisodeIdx == actualIndex;
+
+                return EpisodeTile(
+                  isFiller: episode.isFiller ?? false,
+                  episodeNumber: episode.number.toString(),
+                  episodeTitle: episode.title ?? 'Episode ${episode.number}',
+                  isSelected: isSelected,
+                  onTap: () => episodeNotifier.changeEpisode(actualIndex),
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
 }
 
-class CompactEpisodeTile extends StatefulWidget {
+// --- REDESIGNED EPISODE TILE ---
+// Now a stateless ConsumerWidget, relying on theme colors.
+class EpisodeTile extends ConsumerWidget {
   final bool isFiller;
   final String episodeNumber;
   final String episodeTitle;
   final bool isSelected;
   final VoidCallback onTap;
 
-  const CompactEpisodeTile({
+  const EpisodeTile({
     super.key,
     this.isFiller = false,
     required this.episodeNumber,
@@ -384,121 +204,106 @@ class CompactEpisodeTile extends StatefulWidget {
   });
 
   @override
-  State<CompactEpisodeTile> createState() => _CompactEpisodeTileState();
-}
-
-class _CompactEpisodeTileState extends State<CompactEpisodeTile> {
-  bool _isHovered = false;
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
 
-    return MouseRegion(
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() => _isHovered = false),
-      child: InkWell(
-        onTap: widget.onTap,
-        borderRadius: BorderRadius.circular(8),
-        child: Container(
-          margin: const EdgeInsets.only(bottom: 2),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          decoration: BoxDecoration(
-            color: widget.isSelected
-                ? theme.colorScheme.primaryContainer.withOpacity(0.8)
-                : _isHovered
-                    ? theme.colorScheme.surfaceVariant.withOpacity(0.5)
-                    : null,
-            borderRadius: BorderRadius.circular(8),
-            border: widget.isFiller
-                ? Border.all(
-                    color: Colors.orange.withOpacity(0.4),
-                    width: 1,
-                  )
-                : null,
-          ),
-          child: Row(
-            children: [
-              // Compact episode number
-              Container(
-                width: 28,
-                height: 28,
-                decoration: BoxDecoration(
-                  color: widget.isSelected
-                      ? theme.colorScheme.primary
-                      : theme.colorScheme.surfaceVariant,
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Center(
-                  child: Text(
-                    widget.episodeNumber,
-                    style: TextStyle(
-                      color: widget.isSelected
-                          ? theme.colorScheme.onPrimary
-                          : theme.colorScheme.onSurfaceVariant,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 12,
-                    ),
+    // Determine colors based on theme and selection state
+    final Color backgroundColor =
+        isSelected ? theme.colorScheme.primaryContainer : Colors.transparent;
+    final Color numberBackgroundColor = isSelected
+        ? theme.colorScheme.primary
+        : theme.colorScheme.surfaceContainerHighest;
+    final Color numberTextColor = isSelected
+        ? theme.colorScheme.onPrimary
+        : theme.colorScheme.onSurfaceVariant;
+    final Color titleTextColor = isSelected
+        ? theme.colorScheme.onPrimaryContainer
+        : theme.colorScheme.onSurface;
+    final FontWeight titleFontWeight =
+        isSelected ? FontWeight.bold : FontWeight.normal;
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      // Use theme-aware hover and splash colors
+      hoverColor: theme.colorScheme.onSurface.withOpacity(0.08),
+      splashColor: theme.colorScheme.primary.withOpacity(0.12),
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 2),
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: backgroundColor,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          children: [
+            // Episode Number Box
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: numberBackgroundColor,
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Center(
+                child: Text(
+                  episodeNumber,
+                  style: TextStyle(
+                    color: numberTextColor,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
-              // Episode title
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      widget.episodeTitle,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: widget.isSelected
-                            ? theme.colorScheme.onPrimaryContainer
-                            : theme.colorScheme.onSurface,
-                        fontWeight: widget.isSelected
-                            ? FontWeight.w600
-                            : FontWeight.w500,
-                      ),
-                      overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(width: 12),
+            // Title and Filler Tag
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    episodeTitle,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: titleTextColor,
+                      fontWeight: titleFontWeight,
                     ),
-                    if (widget.isFiller) ...[
-                      const SizedBox(height: 2),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 1,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.orange.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text(
-                          'FILLER',
-                          style: TextStyle(
-                            color: Colors.orange.shade700,
-                            fontSize: 9,
-                            fontWeight: FontWeight.w600,
-                          ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  if (isFiller) ...[
+                    const SizedBox(height: 4),
+                    // Theme-aware "Filler" chip
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.secondaryContainer,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        'FILLER',
+                        style: TextStyle(
+                          color: theme.colorScheme.onSecondaryContainer,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                    ],
+                    ),
                   ],
-                ),
+                ],
               ),
-              // Simple play indicator
-              if (widget.isSelected)
-                Icon(
-                  Iconsax.play5,
-                  size: 16,
-                  color: theme.colorScheme.primary,
-                )
-              else if (_isHovered)
-                Icon(
-                  Iconsax.play,
-                  size: 14,
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-            ],
-          ),
+            ),
+            // Play Indicator
+            if (isSelected) ...[
+              const SizedBox(width: 8),
+              Icon(
+                Iconsax.play5,
+                size: 20,
+                color: theme.colorScheme.primary,
+              ),
+            ]
+          ],
         ),
       ),
     );

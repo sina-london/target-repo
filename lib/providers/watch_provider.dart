@@ -166,7 +166,6 @@ class WatchStateNotifier extends StateNotifier<WatchState> {
     Duration startAt = Duration.zero,
     bool withPlay = true,
   }) async {
-    AppLogger.d('Fetching episodes for animeId: $animeId');
     try {
       state = state.copyWith(
         episodesLoading: true,

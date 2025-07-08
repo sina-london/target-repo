@@ -17,7 +17,7 @@ class HiAnimeProvider extends AnimeProvider {
             apiUrl: customApiUrl != null
                 ? '$customApiUrl/anime/zoro'
                 : "${dotenv.env['API_URL']}/anime/zoro",
-            baseUrl: 'https://hianimez.to',
+            baseUrl: 'https://hianime.in',
             providerName: 'hianime');
 
   Map<String, String> _getHeaders() {
@@ -62,16 +62,34 @@ class HiAnimeProvider extends AnimeProvider {
     return parseWatch(document, baseUrl, animeId: animeId);
   }
 
+  // @override
+  // Future<BaseEpisodeModel> getEpisodes(String animeId) async {
+  //   AppLogger.d('Fetching episodes for animeId: $animeId');
+  //   final response = await http.get(
+  //       Uri.parse("$baseUrl/ajax/v2/episode/list/${animeId.split('-').last}"),
+  //       headers: _getHeaders());
+  //   AppLogger.d('Received episodes response for animeId: $animeId');
+  //   final document = parse(json.decode(response.body)['html']);
+  //   return parseEpisodes(document, "$baseUrl/ajax/v2/episode/list/",
+  //       animeId: animeId);
+  // }
   @override
   Future<BaseEpisodeModel> getEpisodes(String animeId) async {
-    AppLogger.d('Fetching episodes for animeId: $animeId');
-    final response = await http.get(
-        Uri.parse("$baseUrl/ajax/v2/episode/list/${animeId.split('-').last}"),
-        headers: _getHeaders());
-    AppLogger.d('Received episodes response for animeId: $animeId');
-    final document = parse(json.decode(response.body)['html']);
-    return parseEpisodes(document, "$baseUrl/ajax/v2/episode/list/",
-        animeId: animeId);
+    AppLogger.w('Fetching episodes for animeId: $animeId');
+    final response = await http.get(Uri.parse(
+        "https://shonenx-aniwatch-instance.vercel.app/api/v2/hianime/anime/$animeId/episodes"));
+    final data = jsonDecode(response.body)['data'];
+    AppLogger.w(data.toString());
+    return BaseEpisodeModel(
+      episodes: (data['episodes'] as List<dynamic>)
+          .map((episode) => EpisodeDataModel(
+              id: episode['episodeId'],
+              number: episode['number'],
+              title: episode['title'],
+              isFiller: episode['isFiller']))
+          .toList(),
+      totalEpisodes: data['totalEpisodes'],
+    );
   }
 
   @override
@@ -97,69 +115,33 @@ class HiAnimeProvider extends AnimeProvider {
   @override
   Future<BaseSourcesModel> getSources(String animeId, String episodeId,
       String? serverName, String? category) async {
-    AppLogger.d('Fetching sources for animeId: $animeId, episodeId: $episodeId, server: $serverName, category: $category');
-    // if (episodeId.startsWith('http')) {
-    //   AppLogger.d('episodeId is a URL, processing accordingly');
-    //   final serverUrl = episodeId;
-    //   AppLogger.d('Processing MegaCloud for serverUrl: $serverUrl');
-    //   final megaCloud = Megacloud();
-    //   final extractedData = await megaCloud.extract(videoUrl: serverUrl);
-    //   AppLogger.d('Extracted MegaCloud data for serverUrl: $serverUrl');
-    //   return BaseSourcesModel();
-    // }
-
-    // final epId = Uri.parse('$baseUrl/watch/$episodeId').toString();
-    // AppLogger.d('Constructed epId: $epId');
-
-    // final episodeIdParam =
-    //     Uri.encodeComponent(epId.split("?ep=").lastOrNull ?? '');
-    // final serverUrl =
-    //     Uri.parse('$baseUrl/ajax/v2/episode/servers?episodeId=$episodeIdParam');
-    // AppLogger.d('Fetching episode servers from: $serverUrl');
-
-    // final resp = await http.get(serverUrl);
-    // if (resp.statusCode != 200) {
-    //   AppLogger.e('Failed to fetch episode servers. Status code: ${resp.statusCode}');
-    //   throw HttpException('Failed to fetch episode servers');
-    // }
-
-    // final jsonResponse = json.decode(resp.body);
-    // final document = parse(jsonResponse['html']);
-    // AppLogger.d('Parsed HTML document for episode servers');
-
-    // String? serverId;
-    // AppLogger.d('Attempting to retrieve server ID for $serverName');
-    // serverId = retrieveServerId(document, 1, category);
-    // if (serverId == null) {
-    //   AppLogger.w('MegaCloud not found for serverName: $serverName');
-    //   throw Exception('MegaCloud not found');
-    // }
-    // AppLogger.d('Retrieved serverId: $serverId');
-
-    // final sourceUrl =
-    //     Uri.parse('$baseUrl/ajax/v2/episode/sources?id=$serverId');
-    // AppLogger.d('Fetching episode sources from: $sourceUrl');
-
-    // final sourceResp = await http.get(sourceUrl);
-    // if (sourceResp.statusCode != 200) {
-    //   AppLogger.e('Failed to fetch episode sources. Status code: ${sourceResp.statusCode}');
-    //   throw HttpException('Failed to fetch episode sources');
-    // }
-
-    // final sourceJson = json.decode(sourceResp.body);
-    // final link = sourceJson['link'];
-    // AppLogger.d('Retrieved source link: $link');
-    // if (link != null) {
-    //   return getSources(link, serverName, category);
-    // }
-    // return BaseSourcesModel();
-
+    AppLogger.d(
+        'Fetching sources for animeId: $animeId, episodeId: $episodeId, server: $serverName, category: $category');
     final response = await http.get(
       Uri.parse(
-          'https://animaze-swart.vercel.app/anime/zoro/watch/$animeId\$episode\$$episodeId\$$category'),
+          'https://shonenx-aniwatch-instance.vercel.app/api/v2/hianime/episode/sources?animeEpisodeId=$episodeId&server=$serverName&category=${category ?? 'sub'}'),
     );
-    AppLogger.d('Received sources response for episodeId: $episodeId, status code: ${response.statusCode}');
-    return BaseSourcesModel.fromJson(json.decode(response.body));
+    final data = jsonDecode(response.body)['data'];
+    AppLogger.w(data.toString());
+
+    return BaseSourcesModel(
+      sources: (data['sources'] as List<dynamic>)
+          .map((source) => Source(
+                url: source['url'],
+                isM3U8: source['isM3U8'],
+                quality: source[
+                    'quality'], // this might be null — handle it if needed
+              ))
+          .toList(),
+      tracks:
+          (data['tracks'] as List<dynamic>?) // ✅ was 'subtitles', now 'tracks'
+                  ?.map((track) => Subtitle(
+                        url: track['url'],
+                        lang: track['lang'],
+                      ))
+                  .toList() ??
+              [],
+    );
   }
 
   @override
@@ -200,7 +182,7 @@ class HiAnimeProvider extends AnimeProvider {
 
   @override
   List<String> getSupportedServers() {
-    return ["vidcloud", "streamsb", "vidstreaming", "streamtape"];
+    return ["hd-1", "hd-2"];
   }
 
   @override

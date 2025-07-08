@@ -1,8 +1,10 @@
 import 'dart:convert';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'dart:math';
+// import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/material.dart';
 import 'package:html/dom.dart';
 import 'package:http/http.dart' as http;
+import 'package:shonenx/core/models/anime/anime_model.dep.dart';
 import 'package:shonenx/core/models/anime/episode_model.dart';
 import 'package:shonenx/core/models/anime/page_model.dart';
 import 'package:shonenx/core/models/anime/server_model.dart';
@@ -10,14 +12,15 @@ import 'package:shonenx/core/models/anime/source_model.dart';
 import 'package:shonenx/core/sources/anime/aniwatch/parser.dart';
 import 'package:shonenx/core/sources/anime/anime_provider.dart';
 import 'package:html/parser.dart' show parse;
+import 'package:shonenx/core/utils/app_logger.dart';
 
 class AniwatchProvider extends AnimeProvider {
   AniwatchProvider({String? customApiUrl})
       : super(
             apiUrl: customApiUrl != null
                 ? '$customApiUrl/anime/zoro'
-                : "${dotenv.env['API_URL']}/anime/zoro",
-            baseUrl: 'https://aniwatchtv.to',
+                : "https://shonenx-aniwatch-instance.vercel.app/api/v2/hianime",
+            baseUrl: 'https://hianime.in',
             providerName: 'aniwatch');
 
   Map<String, String> _getHeaders() {
@@ -59,12 +62,21 @@ class AniwatchProvider extends AnimeProvider {
 
   @override
   Future<BaseEpisodeModel> getEpisodes(String animeId) async {
-    final response = await http.get(
-        Uri.parse("$baseUrl/ajax/v2/episode/list/${animeId.split('-').last}"),
-        headers: _getHeaders());
-    final document = parse(json.decode(response.body)['html']);
-    return parseEpisodes(document, "$baseUrl/ajax/v2/episode/list/",
-        animeId: animeId);
+    AppLogger.w('Fetching episodes for animeId: $animeId');
+    final response =
+        await http.get(Uri.parse("$apiUrl/anime/$animeId/episodes"));
+    final data = jsonDecode(response.body)['data'];
+    AppLogger.w(data.toString());
+    return BaseEpisodeModel(
+      episodes: (data['episodes'] as List<dynamic>)
+          .map((episode) => EpisodeDataModel(
+              id: episode['episodeId'],
+              number: episode['number'],
+              title: episode['title'],
+              isFiller: episode['isFiller']))
+          .toList(),
+      totalEpisodes: data['totalEpisodes'],
+    );
   }
 
   @override
@@ -90,21 +102,61 @@ class AniwatchProvider extends AnimeProvider {
       String? serverName, String? category) async {
     final response = await http.get(
       Uri.parse(
-          'https://animaze-swart.vercel.app/anime/zoro/watch/$animeId\$episode\$$episodeId\$$category'),
+          '$apiUrl/episode/sources?animeEpisodeId=$episodeId&server=$serverName&category=${category ?? 'sub'}'),
     );
-    return BaseSourcesModel.fromJson(json.decode(response.body)['data']);
+    final data = jsonDecode(response.body)['data'];
+    AppLogger.w(data.toString());
+
+    return BaseSourcesModel(
+      sources: (data['sources'] as List<dynamic>)
+          .map((source) => Source(
+                url: source['url'],
+                isM3U8: source['isM3U8'],
+                quality: source[
+                    'quality'], // this might be null — handle it if needed
+              ))
+          .toList(),
+      tracks:
+          (data['tracks'] as List<dynamic>?) // ✅ was 'subtitles', now 'tracks'
+                  ?.map((track) => Subtitle(
+                        url: track['url'],
+                        lang: track['lang'],
+                      ))
+                  .toList() ??
+              [],
+    );
   }
 
   @override
   Future<SearchPage> getSearch(String keyword, String? type, int page) async {
     final hianimeType =
-        type != null ? _mapToAniwatchType(type.toLowerCase()) : null;
+        type != null ? _mapTypeToHianimeType(type.toLowerCase()) : null;
     final url = hianimeType != null
-        ? '$baseUrl/search?keyword=$keyword&type=$hianimeType&page=$page'
-        : '$baseUrl/search?keyword=$keyword&page=$page';
+        ? '$apiUrl/search?q=$keyword&page=$page'
+        : '$apiUrl/search?q=$keyword&page=$page';
+    AppLogger.d('Searching with URL: $url');
     final response = await http.get(Uri.parse(url), headers: _getHeaders());
-    final document = parse(response.body);
-    return parseSearch(document, baseUrl, keyword: keyword, page: page);
+    final data = jsonDecode(response.body)['data'];
+    AppLogger.w(data.toString());
+    AppLogger.d('Received search response for keyword: $keyword');
+    return SearchPage(
+      totalPages: data['totalPages'],
+      currentPage: data['currentPage'],
+      results: (data['animes'] as List<dynamic>)
+          .map((anime) => BaseAnimeModel(
+                id: anime['id'],
+                name: anime['name'],
+                type: anime['type'],
+                duration: anime['duration'],
+                episodes: EpisodesModel(
+                  sub: anime['episodes']['sub'],
+                  dub: anime['episodes']['dub'],
+                  total: anime['sub'],
+                ),
+                poster: anime['poster'],
+              ))
+          .toList(),
+    );
   }
 
   @override
@@ -127,9 +179,21 @@ class AniwatchProvider extends AnimeProvider {
     };
   }
 
+  int? _mapTypeToHianimeType(String type) {
+    return switch (type) {
+      'movie' => 1,
+      'tv' => 2,
+      'ova' => 3,
+      'ona' => 4,
+      'special' => 5,
+      'music' => 6,
+      _ => null
+    };
+  }
+
   @override
   List<String> getSupportedServers() {
-    return ["vidcloud", "streamsb", "vidstreaming", "streamtape"];
+    return ["hd-1", "hd-2"];
   }
 
   @override
