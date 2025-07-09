@@ -2,21 +2,17 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:desktop_webview_window/desktop_webview_window.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:isar/isar.dart';
 import 'package:shonenx/app_initializer.dart';
 import 'package:shonenx/core/utils/app_logger.dart';
 import 'package:shonenx/data/hive/providers/theme_provider.dart';
-import 'package:shonenx/services/isar_service.dart';
 import 'package:shonenx/theme/app_theme.dart';
 import 'package:shonenx/router/router.dart';
 
-late Isar isar;
 void main(List<String> args) async {
   await dotenv.load(fileName: '.env');
   WidgetsFlutterBinding.ensureInitialized();
   try {
     AppLogger.i('Starting app initialization');
-    isar = await IsarService.instance;
     await AppInitializer.initialize();
   } catch (e) {
     AppLogger.e('Error initializing app: $e');

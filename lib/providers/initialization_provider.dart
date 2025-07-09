@@ -6,7 +6,7 @@ import 'package:shonenx/core/registery/anime_source_registery_provider.dart';
 import 'package:shonenx/core/utils/app_logger.dart';
 import 'package:shonenx/data/hive/providers/home_page_provider.dart';
 import 'package:shonenx/data/hive/providers/ui_provider.dart';
-import 'package:shonenx/providers/theme_settings_provider.dart';
+import 'package:shonenx/data/hive/providers/theme_provider.dart';
 
 // A unique object to represent "no error" for clarity in the state.
 const noError = Object();
@@ -45,7 +45,7 @@ class InitializationState {
         progress: 0.0,
         error: noError,
       );
-  
+
   // Getters for easier consumption in the UI
   bool get hasError => error != noError;
   bool get isCompleted => status == InitializationStatus.success;
@@ -100,7 +100,8 @@ class InitializationNotifier extends StateNotifier<InitializationState> {
 
       final registryState = _ref.read(animeSourceRegistryProvider);
       if (!registryState.registry.isInitialized) {
-        throw Exception('Anime source registry failed to initialize: ${registryState.error ?? 'Unknown error'}');
+        throw Exception(
+            'Anime source registry failed to initialize: ${registryState.error ?? 'Unknown error'}');
       }
       AppLogger.d('✅ Anime source registry initialized');
 
@@ -146,13 +147,13 @@ class InitializationNotifier extends StateNotifier<InitializationState> {
       );
     }
   }
-  
+
   void retry() {
     // Reset state and re-initialize
     state = InitializationState.initial();
     initialize();
   }
-  
+
   void _startTimeoutTimer() {
     _timeoutTimer?.cancel();
     _timeoutTimer = Timer(_initializationTimeout, () {
@@ -161,7 +162,8 @@ class InitializationNotifier extends StateNotifier<InitializationState> {
         _updateState(
           status: InitializationStatus.error,
           message: 'Error occurred',
-          error: 'Initialization timed out. Please check your network connection and restart the app.',
+          error:
+              'Initialization timed out. Please check your network connection and restart the app.',
         );
       }
     });
@@ -180,7 +182,7 @@ class InitializationNotifier extends StateNotifier<InitializationState> {
 
   Future<void> _applyThemeSettings() async {
     try {
-      await _ref.read(themeSettingsProvider.future);
+      await _ref.read(themeSettingsProvider);
     } catch (e) {
       AppLogger.w('Failed to apply Theme settings: $e');
     }
@@ -201,11 +203,10 @@ class InitializationNotifier extends StateNotifier<InitializationState> {
       error: error,
       stackTrace: stackTrace,
     );
-    AppLogger.d('Init State: ${state.message} (${(state.progress * 100).toInt()}%)');
+    AppLogger.d(
+        'Init State: ${state.message} (${(state.progress * 100).toInt()}%)');
   }
 
-  
-  
   @override
   void dispose() {
     _timeoutTimer?.cancel();
