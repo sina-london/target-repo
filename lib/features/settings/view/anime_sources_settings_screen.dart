@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shonenx/core/registery/anime_source_registery_provider.dart';
-import 'package:shonenx/data/hive/providers/provider_provider.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:iconsax/iconsax.dart';
@@ -23,9 +22,8 @@ class AnimeSourcesSettingsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final providerSettings = ref.watch(providerSettingsProvider);
-    final animeSources =
-        ref.read(animeSourceRegistryProvider).registry.allProviderKeys;
+    final selectedAnimeSource = ref.watch(selectedAnimeProvider);
+    final animeSources = ref.read(animeSourceRegistryProvider).keys;
     final providerStatus = ref.watch(providerStatusProvider);
 
     return Scaffold(
@@ -61,8 +59,8 @@ class AnimeSourcesSettingsScreen extends ConsumerWidget {
                     final provider = animeSources[index];
                     final statusInfo = statusData[provider];
                     final status = statusInfo?['status'] as String?;
-                    final isSelected =
-                        providerSettings.selectedProviderName == provider;
+                    final isSelected = selectedAnimeSource?.providerName ==
+                        provider.toLowerCase();
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 8.0),
                       child: SettingsItem(
@@ -76,11 +74,8 @@ class AnimeSourcesSettingsScreen extends ConsumerWidget {
                         isSelected: isSelected,
                         onTap: () {
                           ref
-                              .read(providerSettingsProvider.notifier)
-                              .updateSettings(
-                                (prev) => prev.copyWith(
-                                    selectedProviderName: provider),
-                              );
+                              .read(selectedProviderKeyProvider.notifier)
+                              .select(provider);
                         },
                       ),
                     );

@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shonenx/core/models/anilist/anilist_media_list.dart';
+import 'package:shonenx/features/anime/view/watch_screen.dart';
 import 'package:shonenx/features/browse/view/browse_screen.dart';
 import 'package:shonenx/features/details/view/details_screen.dart';
+import 'package:shonenx/features/error/view/error_screen.dart';
 import 'package:shonenx/features/settings/view/about_screen.dart';
 import 'package:shonenx/features/settings/view/account_settings_screen.dart';
 import 'package:shonenx/features/settings/view/anime_sources_settings_screen.dart';
@@ -13,13 +15,6 @@ import 'package:shonenx/features/settings/view/subtitle_customization_screen.dar
 import 'package:shonenx/features/settings/view/theme_settings_screen.dart';
 import 'package:shonenx/features/settings/view/ui_settings_screen.dart';
 import 'package:shonenx/router/router.dart';
-import 'package:shonenx/screens/continue_watching_screen.dart';
-import 'package:shonenx/screens/error_screen.dart';
-import 'package:shonenx/screens/settings/about/help_support_screen.dart';
-import 'package:shonenx/screens/settings/about/privacy_policy_screen.dart';
-import 'package:shonenx/screens/settings/about/terms_screen.dart';
-import 'package:shonenx/screens/settings/profile/sync_screen.dart';
-import 'package:shonenx/screens/watch_screen/watch_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   return _router;
@@ -56,10 +51,6 @@ final _router = GoRouter(
     // Standalone routes
     _buildSettingsRoute(),
     GoRoute(
-      path: '/continue-all',
-      builder: (context, state) => ContinueWatchingScreen(),
-    ),
-    GoRoute(
       path: '/details',
       builder: (context, state) => AnimeDetailsScreen(
         anime: state.extra as Media,
@@ -90,12 +81,7 @@ GoRoute _buildSettingsRoute() {
       GoRoute(
         path: 'account',
         builder: (context, state) => const AccountSettingsScreen(),
-        routes: [
-          GoRoute(
-            path: 'sync',
-            builder: (context, state) => const SyncSettingsScreen(),
-          ),
-        ],
+        routes: [],
       ),
       GoRoute(
         path: 'anime-sources',
@@ -112,16 +98,6 @@ GoRoute _buildSettingsRoute() {
       GoRoute(
         path: 'about',
         builder: (context, state) => const AboutScreen(),
-        routes: [
-          GoRoute(
-            path: 'terms',
-            builder: (context, state) => const TermsOfServiceScreen(),
-          ),
-          GoRoute(
-            path: 'privacy',
-            builder: (context, state) => const PrivacyPolicyScreen(),
-          ),
-        ],
       ),
       GoRoute(
           path: 'player',
@@ -131,11 +107,7 @@ GoRoute _buildSettingsRoute() {
               path: 'subtitles',
               builder: (context, state) => const SubtitleCustomizationScreen(),
             ),
-          ]),
-      GoRoute(
-        path: 'support',
-        builder: (context, state) => const HelpSupportScreen(),
-      ),
+          ])
     ],
   );
 }

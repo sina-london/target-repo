@@ -3,10 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:shonenx/core/models/anilist/anilist_media_list.dart';
 import 'package:shonenx/core/utils/app_logger.dart';
+import 'package:shonenx/features/anime/view/widgets/card/anime_card.dart';
+import 'package:shonenx/features/anime/view/widgets/card/anime_card_config.dart';
+import 'package:shonenx/features/settings/view_model/ui_notifier.dart';
+import 'package:shonenx/features/watchlist/view/widget/shonenx_gridview.dart';
 import 'package:shonenx/helpers/navigation.dart';
-import 'package:shonenx/shared/providers/anime_repository_provider.dart';
-import 'package:shonenx/widgets/anime/card/anime_card.dart';
-import 'package:shonenx/widgets/ui/shonenx_grid.dart';
+import 'package:shonenx/shared/providers/anime_repo_provider.dart';
 
 class BrowseScreen extends ConsumerStatefulWidget {
   final String? keyword;
@@ -16,7 +18,7 @@ class BrowseScreen extends ConsumerStatefulWidget {
   ConsumerState<BrowseScreen> createState() => _BrowseScreenState();
 }
 
-class _BrowseScreenState extends ConsumerState<BrowseScreen> 
+class _BrowseScreenState extends ConsumerState<BrowseScreen>
     with SingleTickerProviderStateMixin {
   // Services and controllers
   late final _repo = ref.read(animeRepositoryProvider);
@@ -64,13 +66,9 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen>
     if (_isLoading || !_hasMore || keyword.isEmpty) return;
 
     setState(() => _isLoading = true);
-    
+
     try {
-      final results = await _repo.searchAnime(
-        keyword, 
-        page: page, 
-        perPage: 20
-      );
+      final results = await _repo.searchAnime(keyword, page: page, perPage: 20);
 
       if (mounted) {
         setState(() {
@@ -90,7 +88,7 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen>
   }
 
   void _onScroll() {
-    if (_scrollController.position.pixels >= 
+    if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 200) {
       _fetchResults(_searchController.text, ++_currentPage);
     }
@@ -98,7 +96,7 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen>
 
   Future<void> _search() async {
     if (_searchController.text.isEmpty) return;
-    
+
     setState(() {
       _currentPage = 1;
       _results.clear();
@@ -110,10 +108,15 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen>
 
   int _getColumnCount() {
     final width = MediaQuery.sizeOf(context).width;
-    return width >= 1400 ? 6 : 
-           width >= 1100 ? 5 : 
-           width >= 800 ? 4 : 
-           width >= 500 ? 3 : 2;
+    return width >= 1400
+        ? 6
+        : width >= 1100
+            ? 5
+            : width >= 800
+                ? 4
+                : width >= 500
+                    ? 3
+                    : 2;
   }
 
   @override
@@ -126,7 +129,8 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen>
             controller: _searchController,
             animation: _animationController,
             onSearch: _search,
-            onFocusChange: (focused) => setState(() => _isSearchFocused = focused),
+            onFocusChange: (focused) =>
+                setState(() => _isSearchFocused = focused),
             isSearchFocused: _isSearchFocused,
           ),
           Expanded(
@@ -178,15 +182,18 @@ class _Header extends StatelessWidget {
                   Text(
                     'Discover Anime',
                     style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                          fontWeight: FontWeight.bold,
+                        ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     'Find your next favorite series',
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-                    ),
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSurface
+                              .withOpacity(0.7),
+                        ),
                   ),
                   const SizedBox(height: 24),
                   _SearchBar(
@@ -266,7 +273,7 @@ class _SearchBar extends StatelessWidget {
   }
 }
 
-class _ResultsGrid extends StatelessWidget {
+class _ResultsGrid extends ConsumerWidget {
   final List<Media> results;
   final ScrollController scrollController;
   final int columnCount;
@@ -282,7 +289,9 @@ class _ResultsGrid extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final cardStyle = ref.watch(uiSettingsProvider).cardStyle;
+    final mode = AnimeCardMode.values.firstWhere((e) => e.name == cardStyle);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -296,8 +305,8 @@ class _ResultsGrid extends StatelessWidget {
                 child: Text(
                   '${results.length} Results',
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+                        fontWeight: FontWeight.w600,
+                      ),
                 ),
               );
             },
@@ -319,15 +328,12 @@ class _ResultsGrid extends StatelessWidget {
                   crossAxisCount: columnCount,
                   items: [
                     ...results.map((anime) => AnimatedAnimeCard(
-                      onTap: () => navigateToDetail(
-                        context, 
-                        anime, 
-                        anime.id.toString()
-                      ),
-                      anime: anime,
-                      mode: 'Card',
-                      tag: anime.id.toString(),
-                    )),
+                          onTap: () => navigateToDetail(
+                              context, anime, anime.id.toString()),
+                          anime: anime,
+                          mode: mode,
+                          tag: anime.id.toString(),
+                        )),
                     if (isLoading) const _LoadingIndicator(),
                   ],
                 ),
@@ -365,15 +371,18 @@ class _EmptyState extends StatelessWidget {
             Text(
               'Start Your Search',
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+                    fontWeight: FontWeight.bold,
+                  ),
             ),
             const SizedBox(height: 8),
             Text(
               'Enter an anime title to discover amazing series',
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-              ),
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSurface
+                        .withOpacity(0.7),
+                  ),
               textAlign: TextAlign.center,
             ),
           ],
@@ -412,8 +421,9 @@ class _LoadingIndicator extends StatelessWidget {
           Text(
             'Loading more...',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-            ),
+                  color:
+                      Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                ),
           ),
         ],
       ),

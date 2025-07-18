@@ -37,12 +37,14 @@ class BaseSourcesModel {
 class Subtitle {
   String? url;
   String? lang;
+  bool? isSub;
 
-  Subtitle({this.url, this.lang});
+  Subtitle({this.url, this.lang, this.isSub = false});
 
   Subtitle.fromJson(Map<String, dynamic> json) {
     url = json['url'];
     lang = json['lang'];
+    isSub = json['isSub'] ?? false;
   }
 }
 

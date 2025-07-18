@@ -64,6 +64,7 @@ class AppInitializer {
         Hive.openBox<ThemeModel>('theme_settings'),
         Hive.openBox<SubtitleAppearanceModel>('subtitle_appearance'),
         Hive.openBox<HomePageModel>('home_page'),
+        Hive.openBox<String>('selected_provider'),
         Hive.openBox<UiModel>('ui_settings'),
         Hive.openBox<ProviderSettings>('provider_settings'),
         Hive.openBox<PlayerModel>('player_settings'),

@@ -10,11 +10,12 @@ import 'package:shonenx/core/models/anime/anime_model.dep.dart';
 import 'package:shonenx/core/registery/anime_source_registery_provider.dart';
 import 'package:shonenx/core/sources/anime/anime_provider.dart';
 import 'package:shonenx/core/utils/app_logger.dart';
-import 'package:shonenx/data/hive/providers/anime_watch_progress_provider.dart';
-import 'package:shonenx/data/hive/providers/provider_provider.dart';
 import 'package:shonenx/helpers/matcher.dart';
 
-/// Searches for an anime match using the provided anime provider and navigates to the watch screen.
+/// Searches for an anime match and navigates to the watch screen.
+///
+/// It first attempts a high-confidence automatic match. If unsuccessful,
+/// it displays a search dialog for manual selection.
 Future<void> providerAnimeMatchSearch({
   Function? beforeSearchCallback,
   Function? afterSearchCallback,
@@ -23,62 +24,44 @@ Future<void> providerAnimeMatchSearch({
   required Media animeMedia,
   int plusEpisode = 0,
 }) async {
+  beforeSearchCallback?.call();
   AppLogger.d('Starting anime match search for animeId: ${animeMedia.id}');
-  if (beforeSearchCallback != null) beforeSearchCallback();
 
   try {
-    final animeProvider = ref
-        .read(animeSourceRegistryProvider.notifier)
-        .getProvider(ref.read(providerSettingsProvider).selectedProviderName);
-    if (animeProvider == null) {
-      throw Exception('No anime provider selected');
+    final animeProvider = ref.read(selectedAnimeProvider);
+    final title = animeMedia.title?.english ?? animeMedia.title?.romaji;
+    if (animeProvider == null || title == null) {
+      throw Exception('Anime provider or title is missing.');
     }
 
-    final title = animeMedia.title?.english ??
-        animeMedia.title?.romaji ??
-        animeMedia.title?.native;
-    if (title == null) {
-      throw Exception('Anime title is missing');
-    }
-
-    // Perform initial search
-    final searchTitle = Uri.encodeComponent(title.trim());
-    final initialResponse =
-        await animeProvider.getSearch(searchTitle, animeMedia.format, 1);
-    if (!context.mounted) {
-      AppLogger.w('Context unmounted during initial search');
-      return;
-    }
+    final initialResponse = await animeProvider.getSearch(
+        Uri.encodeComponent(title.trim()), animeMedia.format, 1);
+    if (!context.mounted) return;
 
     if (initialResponse.results.isEmpty) {
-      AppLogger.w('No search results for title: $title');
       _showErrorSnackBar(context, 'Anime Not Found',
-          'We couldn\'t locate the anime with the selected provider.');
+          'We couldn\'t locate this anime with the selected provider.');
       return;
     }
 
-    // Calculate similarity for results
+    // Calculate similarity for valid results and sort them
     final matchedResults = initialResponse.results
-        .where((result) => result.name != null && result.id != null)
-        .map((result) => (
-              result,
-              calculateSimilarity(
-                  result.name!.toLowerCase(), title.toLowerCase())
+        .where((r) => r.name != null && r.id != null)
+        .map((r) => (
+              result: r,
+              similarity: calculateSimilarity(
+                  r.name!.toLowerCase(), title.toLowerCase())
             ))
-        .where((pair) => pair.$2 > 0)
+        .where((p) => p.similarity > 0.1) // Filter out very low-quality matches
         .toList()
-      ..sort((a, b) => b.$2.compareTo(a.$2));
+      ..sort((a, b) => b.similarity.compareTo(a.similarity));
 
-    if (!context.mounted) {
-      AppLogger.w('Context unmounted after similarity calculation');
-      return;
-    }
+    if (!context.mounted) return;
 
-    // Navigate directly for high-confidence matches
-    if (matchedResults.isNotEmpty && matchedResults.first.$2 >= 0.8) {
-      final bestMatch = matchedResults.first.$1;
-      AppLogger.d(
-          'High-confidence match found: ${bestMatch.name} (ID: ${bestMatch.id})');
+    // Navigate directly if a high-confidence match is found
+    if (matchedResults.isNotEmpty && matchedResults.first.similarity >= 0.8) {
+      final bestMatch = matchedResults.first.result;
+      AppLogger.d('High-confidence match found: ${bestMatch.name}');
       _navigateToWatch(
         context: context,
         ref: ref,
@@ -91,13 +74,10 @@ Future<void> providerAnimeMatchSearch({
     }
 
     // Show search dialog for manual selection
-    AppLogger.d('Showing anime search dialog');
     await showDialog(
       context: context,
-      builder: (context) => _AnimeSearchDialog(
-        initialResults: matchedResults.isEmpty
-            ? initialResponse.results
-            : matchedResults.map((r) => r.$1).toList(),
+      builder: (_) => _AnimeSearchDialog(
+        initialResults: matchedResults.map((r) => r.result).toList(),
         animeProvider: animeProvider,
         animeMedia: animeMedia,
         plusEpisode: plusEpisode,
@@ -107,32 +87,14 @@ Future<void> providerAnimeMatchSearch({
   } catch (e, stackTrace) {
     AppLogger.e('Anime match search failed', e, stackTrace);
     if (context.mounted) {
-      _showErrorSnackBar(
-          context, 'Error', 'Failed to load anime details. Please try again.');
+      _showErrorSnackBar(context, 'Error', 'Failed to load anime details.');
     }
   } finally {
-    if (afterSearchCallback != null) afterSearchCallback();
+    afterSearchCallback?.call();
   }
 }
 
-/// Shows an error snackbar with a title and message.
-void _showErrorSnackBar(BuildContext context, String title, String message) {
-  AppLogger.d('Showing error snackbar: $title');
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(
-      elevation: 0,
-      behavior: SnackBarBehavior.floating,
-      backgroundColor: Colors.transparent,
-      content: AwesomeSnackbarContent(
-        title: title,
-        message: message,
-        contentType: ContentType.failure,
-      ),
-    ),
-  );
-}
-
-/// Modern dialog for searching and selecting an anime match.
+/// A minimal dialog for searching and selecting an anime.
 class _AnimeSearchDialog extends ConsumerStatefulWidget {
   final List<BaseAnimeModel> initialResults;
   final AnimeProvider animeProvider;
@@ -152,295 +114,117 @@ class _AnimeSearchDialog extends ConsumerStatefulWidget {
   ConsumerState<_AnimeSearchDialog> createState() => _AnimeSearchDialogState();
 }
 
-class _AnimeSearchDialogState extends ConsumerState<_AnimeSearchDialog>
-    with TickerProviderStateMixin {
+class _AnimeSearchDialogState extends ConsumerState<_AnimeSearchDialog> {
   late final TextEditingController _searchController;
-  late final AnimationController _searchAnimationController;
-  late final AnimationController _resultsAnimationController;
-  late final Animation<double> _searchFadeAnimation;
-  late final Animation<double> _resultsFadeAnimation;
-
+  final FocusNode _searchFocusNode = FocusNode();
   List<BaseAnimeModel> _results = [];
   bool _isLoading = false;
   Timer? _debounceTimer;
-  final FocusNode _searchFocusNode = FocusNode();
 
   @override
   void initState() {
     super.initState();
-    AppLogger.d('Initializing Enhanced AnimeSearchDialog');
-
-    _searchController = TextEditingController(text: widget.initialQuery);
     _results = widget.initialResults;
-
-    // Initialize animations
-    _searchAnimationController = AnimationController(
-      duration: const Duration(milliseconds: 400),
-      vsync: this,
-    );
-    _resultsAnimationController = AnimationController(
-      duration: const Duration(milliseconds: 600),
-      vsync: this,
-    );
-
-    _searchFadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-          parent: _searchAnimationController, curve: Curves.easeOutQuart),
-    );
-    _resultsFadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-          parent: _resultsAnimationController, curve: Curves.easeOutCubic),
-    );
-
-    // Start animations
-    _searchAnimationController.forward();
-    _resultsAnimationController.forward();
-
-    // Auto-focus search field
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _searchFocusNode.requestFocus();
-    });
+    _searchController = TextEditingController(text: widget.initialQuery);
+    WidgetsBinding.instance
+        .addPostFrameCallback((_) => _searchFocusNode.requestFocus());
   }
 
   @override
   void dispose() {
-    AppLogger.d('Disposing Enhanced AnimeSearchDialog');
     _debounceTimer?.cancel();
     _searchController.dispose();
     _searchFocusNode.dispose();
-    _searchAnimationController.dispose();
-    _resultsAnimationController.dispose();
     super.dispose();
   }
 
-  /// Searches for anime with improved error handling and loading states.
+  void _onSearchChanged(String query) {
+    _debounceTimer?.cancel();
+    if (query.trim().length < 2) return;
+    _debounceTimer = Timer(
+      const Duration(milliseconds: 500),
+      () => _searchAnime(query),
+    );
+  }
+
   Future<void> _searchAnime(String query) async {
-    AppLogger.d('Searching anime with query: $query');
-
-    if (query.isEmpty) {
-      setState(() => _results = widget.initialResults);
-      return;
-    }
-
-    if (query.length < 2) return; // Minimum query length
-
     setState(() => _isLoading = true);
-
     try {
-      final encodedQuery = Uri.encodeComponent(query.trim());
-      final response = await widget.animeProvider
-          .getSearch(encodedQuery, widget.animeMedia.format, 1);
-
+      final response = await widget.animeProvider.getSearch(
+          Uri.encodeComponent(query.trim()), widget.animeMedia.format, 1);
       if (mounted) {
-        setState(() {
-          _results = response.results.where((r) => r.id != null).toList();
-        });
-        AppLogger.d('Search returned ${response.results.length} results');
+        setState(() =>
+            _results = response.results.where((r) => r.id != null).toList());
       }
     } catch (e, stackTrace) {
-      AppLogger.e('Anime search failed', e, stackTrace);
+      AppLogger.e('Anime search in dialog failed', e, stackTrace);
       if (mounted) {
-        _showErrorSnackBar(
-          context,
-          'Search Error',
-          'Unable to fetch results. Please try again.',
-        );
+        _showErrorSnackBar(context, 'Search Error', 'Could not fetch results.');
         setState(() => _results = []);
       }
     } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
-  /// Enhanced debounced search with minimum query validation.
-  void _onSearchChanged(String value) {
-    _debounceTimer?.cancel();
-    _debounceTimer = Timer(const Duration(milliseconds: 500), () {
-      if (value.trim().isNotEmpty) {
-        _searchAnime(value);
-      }
-    });
+  void _selectAnime(BaseAnimeModel anime) {
+    Navigator.of(context).pop();
+    _navigateToWatch(
+      context: context,
+      ref: ref,
+      animeId: anime.id!,
+      animeName: anime.name ?? 'Unknown',
+      animeMedia: widget.animeMedia,
+      plusEpisode: widget.plusEpisode,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-      backgroundColor: Colors.transparent,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       insetPadding: const EdgeInsets.all(16),
       child: Container(
-        constraints: const BoxConstraints(maxWidth: 480, maxHeight: 700),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surface,
-          borderRadius: BorderRadius.circular(24),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 20,
-              offset: const Offset(0, 8),
-            ),
-          ],
-        ),
+        constraints: const BoxConstraints(maxWidth: 480, maxHeight: 600),
+        padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          children: [
-            _buildModernHeader(theme),
-            _buildSearchStats(theme),
-            Expanded(child: _buildEnhancedResults(theme)),
-            _buildActionButtons(theme),
-          ],
-        ),
-      ),
-    );
-  }
-
-  /// Modern header with glassmorphism effect and better typography.
-  Widget _buildModernHeader(ThemeData theme) {
-    return FadeTransition(
-      opacity: _searchFadeAnimation,
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(24, 24, 16, 20),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainerLowest,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primaryContainer,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    Iconsax.search_favorite,
-                    size: 20,
-                    color: theme.colorScheme.onPrimaryContainer,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Find Your Anime',
-                        style: theme.textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: -0.5,
-                        ),
-                      ),
-                      Text(
-                        'Search and select the correct match',
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                IconButton.filledTonal(
-                  icon: const Icon(Iconsax.close_circle, size: 20),
-                  onPressed: () => Navigator.of(context).pop(),
-                  tooltip: 'Close',
-                ),
-              ],
+            Text('Find Your Anime', style: theme.textTheme.headlineSmall),
+            const SizedBox(height: 4),
+            Text(
+              'Select the correct match or try a new search.',
+              style: theme.textTheme.bodyMedium
+                  ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
             TextField(
               controller: _searchController,
               focusNode: _searchFocusNode,
+              onChanged: _onSearchChanged,
               decoration: InputDecoration(
-                hintText: 'Type anime title...',
-                prefixIcon: Container(
-                  margin: const EdgeInsets.all(8),
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primary.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(
-                    Iconsax.search_normal_1,
-                    size: 16,
-                    color: theme.colorScheme.primary,
-                  ),
-                ),
-                suffixIcon: _searchController.text.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Iconsax.close_circle, size: 18),
-                        onPressed: () {
-                          _searchController.clear();
-                          setState(() => _results = widget.initialResults);
-                        },
-                      )
-                    : null,
+                hintText: 'Search by title...',
+                prefixIcon: const Icon(Iconsax.search_normal_1, size: 20),
+                filled: true,
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide.none,
                 ),
-                filled: true,
-                fillColor: theme.colorScheme.surfaceContainer,
-                contentPadding: const EdgeInsets.symmetric(
-                  vertical: 16,
-                  horizontal: 16,
-                ),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16),
               ),
-              style: theme.textTheme.bodyLarge,
-              onChanged: _onSearchChanged,
+            ),
+            const SizedBox(height: 12),
+            Expanded(child: _buildResultsContent(theme)),
+            SizedBox(
+              width: double.infinity,
+              child: TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Cancel'),
+              ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  /// Search statistics and status indicator.
-  Widget _buildSearchStats(ThemeData theme) {
-    if (_isLoading) return const SizedBox.shrink();
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-      child: Row(
-        children: [
-          Icon(
-            Iconsax.info_circle,
-            size: 16,
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
-          const SizedBox(width: 8),
-          Text(
-            '${_results.length} result${_results.length != 1 ? 's' : ''} found',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// Enhanced results with better loading states and animations.
-  Widget _buildEnhancedResults(ThemeData theme) {
-    return FadeTransition(
-      opacity: _resultsFadeAnimation,
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 24),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: theme.colorScheme.outlineVariant.withOpacity(0.5),
-          ),
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(16),
-          child: _buildResultsContent(theme),
         ),
       ),
     );
@@ -448,24 +232,7 @@ class _AnimeSearchDialogState extends ConsumerState<_AnimeSearchDialog>
 
   Widget _buildResultsContent(ThemeData theme) {
     if (_isLoading) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            CircularProgressIndicator(
-              strokeWidth: 3,
-              color: theme.colorScheme.primary,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Searching anime...',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ],
-        ),
-      );
+      return const Center(child: CircularProgressIndicator());
     }
 
     if (_results.isEmpty) {
@@ -473,311 +240,117 @@ class _AnimeSearchDialogState extends ConsumerState<_AnimeSearchDialog>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.surfaceContainerHigh,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Iconsax.search_status,
-                size: 32,
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
+            Icon(Iconsax.search_status, size: 48, color: theme.disabledColor),
             const SizedBox(height: 16),
-            Text(
-              'No anime found',
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
-            ),
+            Text('No Anime Found', style: theme.textTheme.titleMedium),
             const SizedBox(height: 4),
-            Text(
-              'Try different search terms',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
+            Text('Try different keywords.', style: theme.textTheme.bodySmall),
           ],
         ),
       );
     }
 
-    return ListView.separated(
-      padding: const EdgeInsets.all(8),
+    return ListView.builder(
+      padding: EdgeInsets.zero,
       itemCount: _results.length,
-      separatorBuilder: (context, index) => Divider(
-        color: theme.colorScheme.outlineVariant.withOpacity(0.3),
-        height: 1,
+      itemBuilder: (context, index) => _AnimeTile(
+        anime: _results[index],
+        onTap: () => _selectAnime(_results[index]),
       ),
-      itemBuilder: (context, index) {
-        return _EnhancedAnimeTile(
-          anime: _results[index],
-          index: index,
-          onTap: () => _selectAnime(_results[index]),
-        );
-      },
-    );
-  }
-
-  /// Action buttons with improved layout.
-  Widget _buildActionButtons(ThemeData theme) {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerLowest,
-        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(24)),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: OutlinedButton.icon(
-              onPressed: () {
-                AppLogger.d('Canceling anime search dialog');
-                Navigator.of(context).pop();
-              },
-              icon: const Icon(Iconsax.close_circle, size: 18),
-              label: const Text('Cancel'),
-              style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _selectAnime(BaseAnimeModel anime) {
-    AppLogger.d('Selected anime: ${anime.name} (ID: ${anime.id})');
-    Navigator.of(context).pop();
-    _navigateToWatch(
-      context: context,
-      ref: ref,
-      animeId: anime.id!,
-      animeName: anime.name ?? '',
-      animeMedia: widget.animeMedia,
-      plusEpisode: widget.plusEpisode,
     );
   }
 }
 
-/// Enhanced anime tile with better visual design and hover effects.
-class _EnhancedAnimeTile extends StatefulWidget {
+/// A minimal, stateless widget to display an anime search result.
+class _AnimeTile extends StatelessWidget {
   final BaseAnimeModel anime;
-  final int index;
   final VoidCallback onTap;
 
-  const _EnhancedAnimeTile({
-    required this.anime,
-    required this.index,
-    required this.onTap,
-  });
-
-  @override
-  State<_EnhancedAnimeTile> createState() => _EnhancedAnimeTileState();
-}
-
-class _EnhancedAnimeTileState extends State<_EnhancedAnimeTile>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _hoverController;
-  late final Animation<double> _scaleAnimation;
-  bool _isHovered = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _hoverController = AnimationController(
-      duration: const Duration(milliseconds: 200),
-      vsync: this,
-    );
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 1.02).animate(
-      CurvedAnimation(parent: _hoverController, curve: Curves.easeOutCubic),
-    );
-  }
-
-  @override
-  void dispose() {
-    _hoverController.dispose();
-    super.dispose();
-  }
+  const _AnimeTile({required this.anime, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final metadata = [anime.releaseDate, anime.type]
+        .where((s) => s != null && s.isNotEmpty)
+        .join(' • ');
 
-    return AnimatedBuilder(
-      animation: _scaleAnimation,
-      builder: (context, child) {
-        return Transform.scale(
-          scale: _scaleAnimation.value,
-          child: MouseRegion(
-            onEnter: (_) {
-              setState(() => _isHovered = true);
-              _hoverController.forward();
-            },
-            onExit: (_) {
-              setState(() => _isHovered = false);
-              _hoverController.reverse();
-            },
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: widget.onTap,
-                borderRadius: BorderRadius.circular(16),
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: _isHovered
-                        ? theme.colorScheme.surfaceContainerHigh
-                        : Colors.transparent,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Row(
-                    children: [
-                      _buildEnhancedThumbnail(theme),
-                      const SizedBox(width: 16),
-                      Expanded(child: _buildEnhancedDetails(theme)),
-                      _buildActionIcon(theme),
-                    ],
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      hoverColor: theme.colorScheme.primary.withOpacity(0.05),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+        child: Row(
+          children: [
+            SizedBox(
+              width: 50,
+              height: 70,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: CachedNetworkImage(
+                  imageUrl: anime.poster ?? '',
+                  fit: BoxFit.cover,
+                  errorWidget: (_, __, ___) => Container(
+                    color: theme.colorScheme.surfaceContainerHigh,
+                    child: Icon(Iconsax.image, color: theme.disabledColor),
                   ),
                 ),
               ),
             ),
-          ),
-        );
-      },
-    );
-  }
-
-  /// Enhanced thumbnail with better placeholders and loading states.
-  Widget _buildEnhancedThumbnail(ThemeData theme) {
-    return Container(
-      width: 56,
-      height: 80,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
-        child: widget.anime.poster != null
-            ? CachedNetworkImage(
-                imageUrl: widget.anime.poster!,
-                fit: BoxFit.cover,
-                placeholder: (context, url) => Container(
-                  color: theme.colorScheme.surfaceContainerHigh,
-                  child: Center(
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: theme.colorScheme.primary,
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    anime.name ?? 'No Title',
+                    style: theme.textTheme.titleMedium
+                        ?.copyWith(fontWeight: FontWeight.w600),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  if (metadata.isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      metadata,
+                      style: theme.textTheme.bodySmall
+                          ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                     ),
-                  ),
-                ),
-                errorWidget: (context, url, error) => _buildPlaceholder(theme),
-              )
-            : _buildPlaceholder(theme),
-      ),
-    );
-  }
-
-  Widget _buildPlaceholder(ThemeData theme) {
-    return Container(
-      color: theme.colorScheme.surfaceContainerHigh,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Iconsax.image,
-            size: 20,
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'No\nImage',
-            textAlign: TextAlign.center,
-            style: theme.textTheme.labelSmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-              height: 1.2,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// Enhanced details with better typography and metadata display.
-  Widget _buildEnhancedDetails(ThemeData theme) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          widget.anime.name ?? 'Unknown Title',
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-            height: 1.3,
-          ),
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-        ),
-        const SizedBox(height: 6),
-        if (widget.anime.releaseDate != null || widget.anime.type != null)
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceContainerHigh,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              [widget.anime.releaseDate, widget.anime.type]
-                  .where((e) => e != null && e.toString().trim().isNotEmpty)
-                  .join(' • '),
-              style: theme.textTheme.labelMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-                fontWeight: FontWeight.w500,
+                  ],
+                ],
               ),
             ),
-          ),
-      ],
-    );
-  }
-
-  /// Action icon with animation.
-  Widget _buildActionIcon(ThemeData theme) {
-    return AnimatedRotation(
-      turns: _isHovered ? 0.1 : 0.0,
-      duration: const Duration(milliseconds: 200),
-      child: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: _isHovered
-              ? theme.colorScheme.primaryContainer
-              : theme.colorScheme.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Icon(
-          Iconsax.arrow_right_3,
-          size: 16,
-          color: _isHovered
-              ? theme.colorScheme.onPrimaryContainer
-              : theme.colorScheme.onSurfaceVariant,
+            const SizedBox(width: 8),
+            Icon(Iconsax.arrow_right_3,
+                color: theme.colorScheme.onSurfaceVariant),
+          ],
         ),
       ),
     );
   }
 }
 
-/// Navigates to the watch screen with the selected anime and episode.
+/// Helper to show a standardized error snackbar.
+void _showErrorSnackBar(BuildContext context, String title, String message) {
+  ScaffoldMessenger.of(context)
+    ..hideCurrentSnackBar()
+    ..showSnackBar(
+      SnackBar(
+        elevation: 0,
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: Colors.transparent,
+        content: AwesomeSnackbarContent(
+          title: title,
+          message: message,
+          contentType: ContentType.failure,
+        ),
+      ),
+    );
+}
+
+/// Helper to construct the route and navigate to the watch screen.
 void _navigateToWatch({
   required BuildContext context,
   required WidgetRef ref,
@@ -786,13 +359,19 @@ void _navigateToWatch({
   required Media animeMedia,
   required int plusEpisode,
 }) {
-  final continueWatchingEntry = ref
-      .read(animeWatchProgressProvider.notifier)
-      .getMostRecentEpisodeProgressByAnimeId(animeMedia.id!);
-  final encodedAnimeName = Uri.encodeComponent(animeName);
-  final route = continueWatchingEntry != null
-      ? '/watch/$animeId?animeName=$encodedAnimeName&episode=${continueWatchingEntry.episodeNumber + plusEpisode}&startAt=${continueWatchingEntry.progressInSeconds}'
-      : '/watch/$animeId?animeName=$encodedAnimeName&episode=${1 + plusEpisode}';
+  // final progress = ref
+  //     .read(animeWatchProgressProvider.notifier)
+  //     .getMostRecentEpisodeProgressByAnimeId(animeMedia.id!);
+
+  // final episode = (progress?.episodeNumber ?? 0) + plusEpisode;
+  // final startAt = progress?.progressInSeconds ?? 0;
+  // final encodedName = Uri.encodeComponent(animeName);
+
+  final route = '/watch/$animeId'
+      '?animeName=$animeName'
+      '&episode=0';
+  // '&startAt=';
+
   AppLogger.d('Navigating to watch screen: $route');
   context.push(route, extra: animeMedia);
 }

@@ -33,6 +33,9 @@ class AnimePaheProvider extends AnimeProvider {
     AppLogger.d(
         'Fetching episodes for animeId: $animeId from $apiUrl/info/$animeId');
     final response = await http.get(Uri.parse('$apiUrl/info/$animeId'));
+    if (response.statusCode != 200) {
+      throw Exception('Failed to fetch episodes: HTTP ${response.statusCode}');
+    }
     final data = jsonDecode(response.body);
 
     AppLogger.d('Received episodes data for animeId: $animeId');
@@ -72,7 +75,6 @@ class AnimePaheProvider extends AnimeProvider {
     final response = await http.get(Uri.parse('$apiUrl/$keyword'));
     final data = jsonDecode(response.body);
     AppLogger.d(data);
-    // AppLogger.d('Search results for $keyword: ${data['results'].length} items');
     return SearchPage(
       totalPages: data['totalPages'],
       currentPage: data['cucurrentPage'],
@@ -121,6 +123,10 @@ class AnimePaheProvider extends AnimeProvider {
         sources: (data['sources'] as List<dynamic>)
             .map((source) => Source.fromJson(source))
             .toList(),
+        tracks: (data['tracks'] as List<dynamic>?)
+                ?.map((track) => Subtitle.fromJson(track))
+                .toList() ??
+            [],
       );
     } catch (e, stackTrace) {
       AppLogger.e(

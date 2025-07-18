@@ -2,9 +2,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shonenx/features/home/view_model/homepage_notifier.dart';
-import 'package:shonenx/features/home/widget/header_section.dart';
-import 'package:shonenx/features/home/widget/home_section.dart';
-import 'package:shonenx/features/home/widget/spotlight_section.dart';
+import 'package:shonenx/features/home/view/widget/header_section.dart';
+import 'package:shonenx/features/home/view/widget/home_section.dart';
+import 'package:shonenx/features/home/view/widget/spotlight_section.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
