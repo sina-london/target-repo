@@ -4,28 +4,11 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:iconsax/iconsax.dart';
-import 'package:shonenx/core/models/anilist/anilist_media_list.dart';
+import 'package:shonenx/features/browse/view/browse_screen.dart';
+import 'package:shonenx/features/watchlist/view/watchlist_screen.dart';
 import 'package:shonenx/providers/initialization_provider.dart';
-import 'package:shonenx/screens/browse_screen.dart';
-import 'package:shonenx/screens/continue_watching_screen.dart';
-import 'package:shonenx/screens/details_screen.dart';
-import 'package:shonenx/screens/error_screen.dart';
-import 'package:shonenx/screens/home_screen.dart';
 import 'package:shonenx/screens/loading_screen.dart';
-import 'package:shonenx/screens/settings/about/about_screen.dart';
-import 'package:shonenx/screens/settings/about/help_support_screen.dart';
-import 'package:shonenx/screens/settings/about/privacy_policy_screen.dart';
-import 'package:shonenx/screens/settings/about/terms_screen.dart';
-import 'package:shonenx/screens/settings/appearance/theme_screen.dart';
-import 'package:shonenx/screens/settings/appearance/ui_screen.dart';
-import 'package:shonenx/screens/settings/player/player_screen.dart';
-import 'package:shonenx/screens/settings/profile/profile_screen.dart';
-import 'package:shonenx/screens/settings/profile/sync_screen.dart';
-import 'package:shonenx/screens/settings/settings_screen.dart';
-import 'package:shonenx/screens/settings/source/provider_screen.dart';
-import 'package:shonenx/screens/watch_screen/watch_screen.dart';
-import 'package:shonenx/screens/watchlist_screen.dart';
-import 'package:shonenx/widgets/ui/layouts/settings_layout.dart';
+import 'package:shonenx/features/home/view/home_screen.dart' as h_screen;
 
 // Navigation item configuration
 class NavItem {
@@ -37,176 +20,13 @@ class NavItem {
 }
 
 final List<NavItem> navItems = [
-  NavItem(path: '/', icon: Iconsax.home, screen: const HomeScreen()),
+  NavItem(path: '/', icon: Iconsax.home, screen: const h_screen.HomeScreen()),
   NavItem(path: '/browse', icon: Iconsax.discover_1, screen: BrowseScreen()),
   NavItem(
       path: '/watchlist',
       icon: Iconsax.bookmark,
       screen: const WatchlistScreen()),
 ];
-
-// Router configuration
-final GoRouter router = GoRouter(
-  errorBuilder: (context, state) => ErrorScreen(error: state.error),
-  initialLocation: '/',
-  routes: [
-    StatefulShellRoute.indexedStack(
-      builder: (context, state, navigationShell) =>
-          AppRouterScreen(navigationShell: navigationShell),
-      branches: navItems.asMap().entries.map((entry) {
-        final item = entry.value;
-        return StatefulShellBranch(
-          routes: [
-            GoRoute(
-              path: item.path,
-              builder: (context, state) {
-                if (item.path == '/browse') {
-                  return BrowseScreen(
-                    key: ValueKey(state.uri.toString()),
-                    keyword: state.uri.queryParameters['keyword'],
-                  );
-                }
-                return item.screen;
-              },
-            ),
-          ],
-        );
-      }).toList(),
-    ),
-    _buildSettingsRoute(),
-    GoRoute(
-      path: '/continue-all',
-      builder: (context, state) => ContinueWatchingScreen(),
-    ),
-    GoRoute(
-      path: '/details',
-      builder: (context, state) => AnimeDetailsScreen(
-        anime: state.extra as Media,
-        tag: state.uri.queryParameters['tag'] ?? '',
-      ),
-    ),
-    GoRoute(
-      path: '/watch/:id',
-      builder: (context, state) => WatchScreen(
-        animeId: state.pathParameters['id']!,
-        episode: int.tryParse(state.uri.queryParameters['episode'] ?? '1') ?? 1,
-        animeMedia: state.extra as Media,
-        startAt: Duration(
-          seconds:
-              int.tryParse(state.uri.queryParameters['startAt'] ?? '0') ?? 0,
-        ),
-        animeName: state.uri.queryParameters['animeName']!,
-      ),
-    ),
-  ],
-);
-
-// Settings route configuration
-GoRoute _buildSettingsRoute() {
-  return GoRoute(
-    path: '/settings',
-    builder: (context, state) => const SettingsScreen(),
-    routes: [
-      ..._buildSettingsSubRoutes([
-        _SettingsRouteConfig(
-          headerIcon: Iconsax.user,
-          path: 'profile',
-          title: 'Profile',
-          screen: const ProfileSettingsScreen(),
-          subRoutes: [
-            _SettingsRouteConfig(
-              headerIcon: Iconsax.refresh_circle,
-              path: 'sync',
-              title: 'Sync',
-              screen: const SyncSettingsScreen(),
-            ),
-          ],
-        ),
-        _SettingsRouteConfig(
-          headerIcon: Iconsax.cloud,
-          path: 'providers',
-          title: 'Providers',
-          screen: const ProviderSettingsScreen(),
-        ),
-        _SettingsRouteConfig(
-          headerIcon: Iconsax.brush_2,
-          path: 'theme',
-          title: 'Theme',
-          screen: const ThemeSettingsScreen(),
-        ),
-        _SettingsRouteConfig(
-          headerIcon: Iconsax.square,
-          path: 'ui',
-          title: 'User Interface',
-          screen: const UISettingsScreen(),
-        ),
-        _SettingsRouteConfig(
-          headerIcon: Iconsax.info_circle,
-          path: 'about',
-          title: 'About',
-          screen: const AboutScreen(),
-          subRoutes: [
-            _SettingsRouteConfig(
-              headerIcon: Iconsax.info_circle,
-              path: 'terms',
-              title: 'Terms of Service',
-              screen: const TermsOfServiceScreen(),
-            ),
-            _SettingsRouteConfig(
-              headerIcon: Iconsax.shield_tick,
-              path: 'privacy',
-              title: 'Privacy Policy',
-              screen: const PrivacyPolicyScreen(),
-            ),
-          ],
-        ),
-        _SettingsRouteConfig(
-          headerIcon: Iconsax.video_play,
-          path: 'player',
-          title: 'Player',
-          screen: const PlayerSettingsScreen(),
-        ),
-        _SettingsRouteConfig(
-          headerIcon: Iconsax.message_question,
-          path: 'support',
-          title: 'Help & Support',
-          screen: const HelpSupportScreen(),
-        ),
-      ]),
-    ],
-  );
-}
-
-class _SettingsRouteConfig {
-  final String path;
-  final String title;
-  final Widget screen;
-  final IconData? headerIcon;
-  final List<_SettingsRouteConfig> subRoutes;
-
-  _SettingsRouteConfig({
-    required this.path,
-    required this.title,
-    required this.screen,
-    // ignore: unused_element
-    this.headerIcon,
-    this.subRoutes = const [],
-  });
-}
-
-List<GoRoute> _buildSettingsSubRoutes(List<_SettingsRouteConfig> configs) {
-  return configs.map((config) {
-    return GoRoute(
-      path: config.path,
-      builder: (context, state) => SettingsLayout(
-        headerIcon: config.headerIcon,
-        title: config.title,
-        child: config.screen,
-      ),
-      routes: _buildSettingsSubRoutes(config.subRoutes),
-    );
-  }).toList();
-}
 
 class AppRouterScreen extends ConsumerWidget {
   final StatefulNavigationShell navigationShell;
@@ -230,6 +50,8 @@ class AppRouterScreen extends ConsumerWidget {
         extendBody: true,
         extendBodyBehindAppBar: true,
         body: Stack(
+          clipBehavior: Clip.none,
+          fit: StackFit.expand,
           children: [
             Padding(
               padding: EdgeInsets.only(
@@ -266,7 +88,7 @@ class AppRouterScreen extends ConsumerWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(35),
         color: theme.colorScheme.surface,
-        border: Border.all(color: theme.colorScheme.primaryContainer),
+        border: Border.all(color: theme.colorScheme.primary),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.1),
@@ -294,7 +116,7 @@ class AppRouterScreen extends ConsumerWidget {
                           )
                         : null,
                 color: isSelected
-                    ? theme.colorScheme.primaryContainer.withOpacity(0.2)
+                    ? theme.colorScheme.primary.withOpacity(0.2)
                     : null,
               ),
               padding: const EdgeInsets.symmetric(vertical: 15),
@@ -305,7 +127,7 @@ class AppRouterScreen extends ConsumerWidget {
                   child: Icon(
                     item.icon,
                     color: isSelected
-                        ? theme.colorScheme.primaryContainer
+                        ? theme.colorScheme.primary
                         : theme.colorScheme.onSurface,
                   ),
                 ),
@@ -330,8 +152,8 @@ class AppRouterScreen extends ConsumerWidget {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(100),
               color: theme.colorScheme.surface.withOpacity(0.5),
-              border: Border.all(
-                  color: theme.colorScheme.primaryContainer.withOpacity(0.8)),
+              border:
+                  Border.all(color: theme.colorScheme.primary.withOpacity(0.8)),
             ),
             padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 7),
             child: Row(
@@ -347,8 +169,7 @@ class AppRouterScreen extends ConsumerWidget {
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(100),
                         color: isSelected
-                            ? theme.colorScheme.primaryContainer
-                                .withOpacity(0.2)
+                            ? theme.colorScheme.primary.withOpacity(0.2)
                             : null,
                       ),
                       padding: const EdgeInsets.symmetric(vertical: 12),
@@ -356,7 +177,7 @@ class AppRouterScreen extends ConsumerWidget {
                         child: Icon(
                           item.icon,
                           color: isSelected
-                              ? theme.colorScheme.primaryContainer
+                              ? theme.colorScheme.primary
                               : theme.colorScheme.onSurface,
                         ),
                       ),

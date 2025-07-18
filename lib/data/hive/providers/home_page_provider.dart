@@ -2,8 +2,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive/hive.dart';
 import 'package:shonenx/core/anilist/services/anilist_service.dart';
 import 'package:shonenx/core/models/anime/page_model.dart';
+import 'package:shonenx/core/repositories/anime_repository.dart';
 import 'package:shonenx/core/utils/app_logger.dart';
 import 'package:shonenx/data/hive/models/home_page_model.dart';
+import 'package:shonenx/shared/providers/anime_repository_provider.dart';
 
 class HomepageState {
   final HomePage? homePage;
@@ -33,7 +35,7 @@ class HomepageState {
 }
 
 class HomepageNotifier extends Notifier<HomepageState> {
-  static final anilistService = AnilistService();
+  AnimeRepository get _repo => ref.read(animeRepositoryProvider);
   static const _boxName = 'home_page';
 
   @override
@@ -67,11 +69,11 @@ class HomepageNotifier extends Notifier<HomepageState> {
   Future<HomepageState> fetchHomePage() async {
     try {
       AppLogger.d('Fetching homepage data from AnilistService');
-      final trending = await anilistService.getTrendingAnime();
-      final popular = await anilistService.getPopularAnime();
+      final trending = await _repo.getTrendingAnime();
+      final popular = await _repo.getPopularAnime();
       // final recentlyUpdated = await anilistService.getRecentlyUpdatedAnime();
       // final topRated = await anilistService.getTopRatedAnime();
-      final mostFavorite = await anilistService.getMostFavoriteAnime();
+      final mostFavorite = await _repo.getTopRatedAnime();
       // final mostWatched = await anilistService.getMostWatchedAnime();
       final homePageData = HomePage(
         trendingAnime: trending,

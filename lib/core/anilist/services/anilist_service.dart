@@ -1,9 +1,12 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import 'package:shonenx/core/anilist/graphql_client.dart';
 import 'package:shonenx/core/anilist/queries.dart';
 import 'package:shonenx/core/models/anilist/anilist_media_list.dart';
-import 'package:shonenx/core/models/anilist/anilist_favorites.dart';
+import 'package:shonenx/core/repositories/anime_repository.dart';
+import 'package:shonenx/core/services/auth_provider_enum.dart';
 import 'package:shonenx/core/utils/app_logger.dart';
+import 'package:shonenx/features/auth/view_model/auth_notifier.dart';
 
 /// Custom exception for Anilist service errors
 class AnilistServiceException implements Exception {
@@ -18,7 +21,16 @@ class AnilistServiceException implements Exception {
 }
 
 /// Service class for interacting with the AniList GraphQL API
-class AnilistService {
+class AnilistService implements AnimeRepository {
+  // NEW: Store the Ref object to access other providers.
+  final Ref _ref;
+
+  // NEW: The constructor now accepts a Ref.
+  AnilistService(this._ref);
+
+  @override
+  String get name => 'Anilist';
+
   static const _validStatuses = {
     'CURRENT',
     'COMPLETED',
@@ -28,7 +40,31 @@ class AnilistService {
     'REPEATING',
   };
 
-  /// Executes a GraphQL operation (query or mutation)
+  // --- PRIVATE HELPERS ---
+  /// Helper to get the current authentication context for authenticated calls.
+  /// This consolidates all the auth-checking logic in one place.
+  ({int userId, String accessToken})? _getAuthContext() {
+    // Use the injected _ref to read the authProvider state safely.
+    final authState = _ref.read(authProvider);
+
+    if (!authState.isLoggedIn ||
+        authState.authPlatform != AuthPlatform.anilist) {
+      AppLogger.w('Anilist operation requires a logged-in Anilist user.');
+      return null;
+    }
+
+    final userId = authState.user?.id;
+    final accessToken = authState.anilistAccessToken;
+
+    if (userId == null || accessToken == null || accessToken.isEmpty) {
+      AppLogger.w(
+          'Invalid user ID or access token for authenticated operation.');
+      return null;
+    }
+    return (userId: userId, accessToken: accessToken);
+  }
+
+  // Executes a GraphQL operation (query or mutation)
   Future<T?> _executeGraphQLOperation<T>({
     required String? accessToken,
     required String query,
@@ -70,11 +106,26 @@ class AnilistService {
     }
   }
 
-  /// Converts dynamic media list to typed Media list
+  // Converts dynamic media list to typed Media list
   List<Media> _parseMediaList(List<dynamic>? media) =>
       media?.map((json) => Media.fromJson(json)).toList() ?? [];
 
-  /// Search for anime by title
+  // --- METHODS FOR AUTHENTICATION FLOW ---
+
+  // This is called by AuthViewModel and ONLY needs a token,
+  // which breaks the circular dependency.
+
+  Future<Map<String, dynamic>> getUserProfile(String accessToken) async {
+    final data = await _executeGraphQLOperation<Map<String, dynamic>>(
+      accessToken: accessToken,
+      query: AnilistQueries.userProfileQuery,
+      operationName: 'GetUserProfile',
+    );
+    return data?['Viewer'] ?? {};
+  }
+
+  // Search for anime by title
+  @override
   Future<List<Media>> searchAnime(String title,
       {int page = 1, int perPage = 10}) async {
     final data = await _executeGraphQLOperation<Map<String, dynamic>>(
@@ -86,41 +137,45 @@ class AnilistService {
     return _parseMediaList(data?['Page']?['media']);
   }
 
-  /// Fetch user profile data
-  Future<Map<String, dynamic>> getUserProfile(String accessToken) async {
-    final data = await _executeGraphQLOperation<Map<String, dynamic>>(
-      accessToken: accessToken,
-      query: AnilistQueries.userProfileQuery,
-      operationName: 'GetUserProfile',
-    );
-    return data?['Viewer'] ?? {};
-  }
-
-  /// Fetch user anime list by status
-  Future<MediaListCollection> getUserAnimeList({
-    required String accessToken,
-    required String userId,
-    required String type,
-    required String status,
-  }) async {
-    if (accessToken.isEmpty) {
-      AppLogger.w('Empty accessToken for GetUserAnimeList');
-      return MediaListCollection(lists: []);
+  // Fetch user anime list by status
+  @override
+  Future<MediaListCollection> getUserAnimeList(
+      {required String type, required String status}) async {
+    final auth = _getAuthContext();
+    if (auth == null) {
+      return MediaListCollection(lists: []); // Not logged in, return empty.
     }
 
     final data = await _executeGraphQLOperation<Map<String, dynamic>>(
-      accessToken: accessToken,
+      accessToken: auth.accessToken,
       query: AnilistQueries.userAnimeListQuery,
-      variables: {'userId': userId, 'status': status, 'type': type},
+      variables: {'userId': auth.userId, 'status': status, 'type': type},
       operationName: 'GetUserAnimeList',
     );
-
     return data != null
         ? MediaListCollection.fromJson(data)
         : MediaListCollection(lists: []);
   }
 
+  // Fetch user's favorite anime
+  @override
+  Future<List<Media>> getFavorites() async {
+    final auth = _getAuthContext();
+    if (auth == null) {
+      return []; // Not logged in, return empty.
+    }
+
+    final data = await _executeGraphQLOperation<Map<String, dynamic>>(
+      accessToken: auth.accessToken,
+      query: AnilistQueries.userFavoritesQuery,
+      variables: {'userId': auth.userId},
+      operationName: 'GetFavorites',
+    );
+    return _parseMediaList(data?['User']?['favourites']?['anime']?['nodes']);
+  }
+
   /// Fetch trending anime
+  @override
   Future<List<Media>> getTrendingAnime() async {
     final data = await _executeGraphQLOperation<Map<String, dynamic>>(
       accessToken: null,
@@ -131,6 +186,7 @@ class AnilistService {
   }
 
   /// Fetch popular anime
+  @override
   Future<List<Media>> getPopularAnime() async {
     final data = await _executeGraphQLOperation<Map<String, dynamic>>(
       accessToken: null,
@@ -141,6 +197,7 @@ class AnilistService {
   }
 
   /// Fetch recently updated anime
+  @override
   Future<List<Media>> getRecentlyUpdatedAnime() async {
     final data = await _executeGraphQLOperation<Map<String, dynamic>>(
       accessToken: null,
@@ -151,6 +208,7 @@ class AnilistService {
   }
 
   /// Fetch top-rated anime
+  @override
   Future<List<Media>> getTopRatedAnime() async {
     final data = await _executeGraphQLOperation<Map<String, dynamic>>(
       accessToken: null,
@@ -181,18 +239,18 @@ class AnilistService {
   }
 
   /// Fetch upcoming anime
-  Future<List<Map<String, dynamic>>> getUpcomingAnime() async {
+  @override
+  Future<List<Media>> getUpcomingAnime() async {
     final data = await _executeGraphQLOperation<Map<String, dynamic>>(
       accessToken: null,
       query: AnilistQueries.upcomingAnimeQuery,
       operationName: 'GetUpcomingAnime',
     );
-    return (data?['Page']?['media'] as List<dynamic>?)
-            ?.cast<Map<String, dynamic>>() ??
-        [];
+    return _parseMediaList(data?['Page']?['media']);
   }
 
   /// Fetch detailed anime information
+  @override
   Future<Media> getAnimeDetails(int animeId) async {
     final data = await _executeGraphQLOperation<Map<String, dynamic>>(
       accessToken: null,
@@ -201,32 +259,6 @@ class AnilistService {
       operationName: 'GetAnimeDetails',
     );
     return data?['Media'] != null ? Media.fromJson(data!['Media']) : Media();
-  }
-
-  /// Fetch user's favorite anime
-  Future<AnilistFavorites?> getFavorites({
-    required int? userId,
-    required String? accessToken,
-  }) async {
-    if (userId == null || accessToken == null || accessToken.isEmpty) {
-      AppLogger.w(
-          'Invalid input: userId or accessToken is null/empty for GetFavorites');
-      return null;
-    }
-
-    final data = await _executeGraphQLOperation<Map<String, dynamic>>(
-      accessToken: accessToken,
-      query: AnilistQueries.userFavoritesQuery,
-      variables: {'userId': userId},
-      operationName: 'GetFavorites',
-    );
-
-    return data != null
-        ? AnilistFavorites(
-            anime: _parseMediaList(
-                data['User']?['favourites']?['anime']?['nodes']),
-          )
-        : null;
   }
 
   /// Toggle anime as favorite
@@ -373,3 +405,11 @@ class AnilistService {
     return upperStatus;
   }
 }
+
+// =========================================================================
+// NEW: Create a provider for this service.
+// This is now the ONLY correct way to get an instance of AnilistService.
+// =========================================================================
+final anilistServiceProvider = Provider<AnilistService>((ref) {
+  return AnilistService(ref);
+});
