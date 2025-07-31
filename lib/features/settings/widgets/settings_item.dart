@@ -7,12 +7,20 @@ enum SettingsItemType {
   toggleable,
   slider,
   dropdown,
-  segmentedToggle, // New toggle mode for 3-option selections
+  segmentedToggle,
+}
+
+enum SettingsItemLayout {
+  auto, // Automatically chooses based on screen size and content
+  horizontal, // Forces horizontal layout
+  vertical, // Forces vertical layout
 }
 
 class SettingsItem extends StatelessWidget {
-  final Icon icon;
-  final Color iconColor;
+  final Widget? leading;
+  final Icon? icon;
+  final Color? iconColor;
+  final Color accent;
   final String title;
   final String description;
   final VoidCallback? onTap;
@@ -40,7 +48,7 @@ class SettingsItem extends StatelessWidget {
   final List<String>? dropdownItems;
   final ValueChanged<String?>? onDropdownChanged;
 
-  // Segmented toggle properties (for 3-option toggle like System/Light/Dark)
+  // Segmented toggle properties
   final int? segmentedSelectedIndex;
   final List<Widget>? segmentedOptions;
   final List<String>? segmentedLabels;
@@ -49,12 +57,20 @@ class SettingsItem extends StatelessWidget {
   // Responsive and compact mode properties
   final bool isCompact;
 
+  // New trailing widgets property
+  final List<Widget>? trailingWidgets;
+
+  // Layout property
+  final SettingsItemLayout layoutType;
+
   const SettingsItem({
     super.key,
-    required this.icon,
-    required this.iconColor,
+    this.icon,
+    this.iconColor,
+    required this.accent,
     required this.title,
     required this.description,
+    this.leading,
     this.onTap,
     this.roundness = 12,
     this.type = SettingsItemType.normal,
@@ -76,24 +92,19 @@ class SettingsItem extends StatelessWidget {
     this.segmentedLabels,
     this.onSegmentedChanged,
     this.isCompact = false,
+    this.trailingWidgets,
+    this.layoutType = SettingsItemLayout.auto, // New parameter
   });
 
   @override
   Widget build(BuildContext context) {
-    // Determine if this item should be greyed out
     final bool shouldGreyOut =
         type == SettingsItemType.selectable && isInSelectionMode && !isSelected;
 
-    // Get screen width for responsive behavior
     final screenWidth = MediaQuery.of(context).size.width;
     final isSmallScreen = screenWidth < 600;
-    final isMediumScreen = screenWidth >= 600 && screenWidth < 1200;
-    final isLargeScreen = screenWidth >= 1200;
-
-    // Determine effective compact mode
     final effectiveCompact = isCompact || isSmallScreen;
 
-    // Calculate responsive dimensions
     final dimensions =
         _getResponsiveDimensions(effectiveCompact, isSmallScreen);
 
@@ -115,8 +126,6 @@ class SettingsItem extends StatelessWidget {
                 context,
                 effectiveCompact,
                 isSmallScreen,
-                isMediumScreen,
-                isLargeScreen,
                 dimensions,
               ),
             ),
@@ -137,19 +146,35 @@ class SettingsItem extends StatelessWidget {
     BuildContext context,
     bool effectiveCompact,
     bool isSmallScreen,
-    bool isMediumScreen,
-    bool isLargeScreen,
     ResponsiveDimensions dimensions,
   ) {
-    // For very small screens and complex controls, use vertical layout
-    if (isSmallScreen && _shouldUseVerticalLayout()) {
+    // Determine layout based on the layoutType parameter
+    final bool useVerticalLayout = _shouldUseVerticalLayout(
+      isSmallScreen,
+      effectiveCompact,
+    );
+
+    if (useVerticalLayout) {
       return _buildVerticalLayout(context, effectiveCompact, dimensions);
     }
-
     return _buildHorizontalLayout(context, effectiveCompact, dimensions);
   }
 
-  bool _shouldUseVerticalLayout() {
+  bool _shouldUseVerticalLayout(bool isSmallScreen, bool effectiveCompact) {
+    // Respect the explicit layout choice if not auto
+    switch (layoutType) {
+      case SettingsItemLayout.horizontal:
+        return false;
+      case SettingsItemLayout.vertical:
+        return true;
+      case SettingsItemLayout.auto:
+      default:
+        // Auto behavior - use vertical layout for complex controls on small screens
+        return isSmallScreen && _needsVerticalLayoutByContent();
+    }
+  }
+
+  bool _needsVerticalLayoutByContent() {
     return type == SettingsItemType.dropdown ||
         type == SettingsItemType.slider ||
         type == SettingsItemType.segmentedToggle;
@@ -160,32 +185,131 @@ class SettingsItem extends StatelessWidget {
     bool effectiveCompact,
     ResponsiveDimensions dimensions,
   ) {
-    return Column(
+    if (type == SettingsItemType.dropdown) {
+      return _buildHorizontalDropdownLayout(
+          context, effectiveCompact, dimensions);
+    }
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            _buildIconContainer(effectiveCompact, dimensions),
-            SizedBox(width: dimensions.spacing),
-            _buildTitleAndDescription(effectiveCompact, dimensions),
-            SizedBox(width: dimensions.spacing / 2),
-            if (_shouldShowTrailing()) _buildTrailingWidget(effectiveCompact),
-          ],
-        ),
-        if (type == SettingsItemType.dropdown) ...[
-          SizedBox(height: effectiveCompact ? 8 : 12),
-          _buildDropdown(context, effectiveCompact),
-        ],
-        if (type == SettingsItemType.slider) ...[
-          SizedBox(height: effectiveCompact ? 8 : 12),
-          _buildSlider(context, effectiveCompact),
-        ],
-        if (type == SettingsItemType.segmentedToggle) ...[
-          SizedBox(height: effectiveCompact ? 8 : 12),
-          _buildSegmentedToggle(context, effectiveCompact),
-        ],
+        _buildIconContainer(effectiveCompact, dimensions),
+        SizedBox(width: dimensions.spacing),
+        _buildTitleAndDescription(effectiveCompact, dimensions),
+        if (_shouldShowDefaultTrailing())
+          _buildDefaultTrailingWidget(effectiveCompact),
+        if (trailingWidgets != null)
+          ..._buildCustomTrailingWidgets(effectiveCompact),
       ],
     );
+  }
+
+  Widget _buildHorizontalDropdownLayout(
+    BuildContext context,
+    bool effectiveCompact,
+    ResponsiveDimensions dimensions,
+  ) {
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _buildIconContainer(effectiveCompact, dimensions),
+          SizedBox(width: dimensions.spacing),
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: dimensions.titleFontSize,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                ),
+                if (description.isNotEmpty) ...[
+                  SizedBox(height: effectiveCompact ? 1 : 2),
+                  Text(
+                    description,
+                    style: TextStyle(
+                      fontSize: dimensions.descriptionFontSize,
+                      color: Colors.grey[600],
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                  ),
+                ],
+              ],
+            ),
+          ),
+          SizedBox(width: dimensions.spacing),
+          Container(
+            constraints: BoxConstraints(
+              maxWidth: MediaQuery.of(context).size.width * 0.4,
+              minWidth: 100,
+            ),
+            padding: EdgeInsets.symmetric(
+              horizontal: effectiveCompact ? 8 : 12,
+            ),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<String>(
+                value: dropdownValue,
+                isExpanded: true,
+                icon: Icon(
+                  Icons.keyboard_arrow_down_rounded,
+                  color: (iconColor ?? accent).withOpacity(0.8),
+                  size: effectiveCompact ? 20 : 24,
+                ),
+                style: TextStyle(
+                  fontSize: effectiveCompact ? 14 : 15,
+                  color: theme.textTheme.bodyMedium?.color,
+                  fontWeight: FontWeight.w500,
+                ),
+                dropdownColor: isDarkMode ? Colors.grey[900] : Colors.white,
+                borderRadius: BorderRadius.circular(effectiveCompact ? 10 : 12),
+                elevation: 2,
+                menuMaxHeight: 300,
+                itemHeight: effectiveCompact ? 48 : 52,
+                items: dropdownItems?.map((String item) {
+                  return DropdownMenuItem<String>(
+                    value: item,
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: effectiveCompact ? 8 : 12,
+                      ),
+                      child: Text(
+                        item,
+                        style: TextStyle(
+                          fontSize: effectiveCompact ? 14 : 15,
+                          color: theme.textTheme.bodyMedium?.color,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  );
+                }).toList(),
+                onChanged: onDropdownChanged,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  List<Widget> _buildCustomTrailingWidgets(bool effectiveCompact) {
+    return trailingWidgets!.map((widget) {
+      return Padding(
+        padding: EdgeInsets.only(left: effectiveCompact ? 8 : 12),
+        child: widget,
+      );
+    }).toList();
   }
 
   Widget _buildVerticalLayout(
@@ -193,6 +317,24 @@ class SettingsItem extends StatelessWidget {
     bool effectiveCompact,
     ResponsiveDimensions dimensions,
   ) {
+    if (type == SettingsItemType.dropdown) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              _buildIconContainer(effectiveCompact, dimensions),
+              SizedBox(width: dimensions.spacing),
+              _buildTitleAndDescription(effectiveCompact, dimensions,
+                  isVertical: true),
+            ],
+          ),
+          SizedBox(height: effectiveCompact ? 8 : 12),
+          _buildDropdown(context, effectiveCompact),
+        ],
+      );
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -202,18 +344,21 @@ class SettingsItem extends StatelessWidget {
             SizedBox(width: dimensions.spacing),
             _buildTitleAndDescription(effectiveCompact, dimensions,
                 isVertical: true),
+            const Spacer(),
+            if (_shouldShowDefaultTrailing())
+              _buildDefaultTrailingWidget(effectiveCompact),
+            if (trailingWidgets != null)
+              ..._buildCustomTrailingWidgets(effectiveCompact),
           ],
         ),
-        if (type == SettingsItemType.dropdown) ...[
-          SizedBox(height: effectiveCompact ? 8 : 12),
-          _buildDropdown(context, effectiveCompact),
-        ] else if (type == SettingsItemType.slider) ...[
-          SizedBox(height: effectiveCompact ? 8 : 12),
-          _buildSlider(context, effectiveCompact),
-        ] else if (type == SettingsItemType.segmentedToggle) ...[
+        if (type == SettingsItemType.segmentedToggle) ...[
           SizedBox(height: effectiveCompact ? 8 : 12),
           _buildSegmentedToggle(context, effectiveCompact),
         ],
+        if (type == SettingsItemType.slider) ...[
+          SizedBox(height: effectiveCompact ? 8 : 12),
+          _buildSlider(context, effectiveCompact),
+        ]
       ],
     );
   }
@@ -224,17 +369,21 @@ class SettingsItem extends StatelessWidget {
       width: dimensions.iconContainerSize,
       height: dimensions.iconContainerSize,
       decoration: BoxDecoration(
-        color: iconColor.withOpacity(0.1),
+        color: (iconColor ?? accent).withOpacity(0.1),
         borderRadius: BorderRadius.circular(effectiveCompact ? 6 : 8),
       ),
       child: Center(
-        child: IconTheme(
-          data: IconThemeData(
-            color: iconColor,
-            size: dimensions.iconSize,
-          ),
-          child: icon,
-        ),
+        child: (icon != null)
+            ? IconTheme(
+                data: IconThemeData(
+                  color: (iconColor ?? accent),
+                  size: dimensions.iconSize,
+                ),
+                child: icon!,
+              )
+            : (leading != null)
+                ? leading
+                : const SizedBox.shrink(),
       ),
     );
   }
@@ -245,6 +394,7 @@ class SettingsItem extends StatelessWidget {
     bool isVertical = false,
   }) {
     return Expanded(
+      flex: isVertical ? 0 : 1,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -284,7 +434,7 @@ class SettingsItem extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: iconColor.withOpacity(0.1),
+        color: accent.withOpacity(0.1),
         borderRadius: BorderRadius.circular(effectiveCompact ? 10 : 12),
       ),
       child: Row(
@@ -302,13 +452,14 @@ class SettingsItem extends StatelessWidget {
                   horizontal: effectiveCompact ? 12 : 16,
                 ),
                 decoration: BoxDecoration(
-                  color: isSelected ? iconColor : Colors.transparent,
+                  color:
+                      isSelected ? (iconColor ?? accent) : Colors.transparent,
                   borderRadius:
                       BorderRadius.circular(effectiveCompact ? 8 : 10),
                   boxShadow: isSelected
                       ? [
                           BoxShadow(
-                            color: iconColor.withOpacity(0.3),
+                            color: accent.withOpacity(0.3),
                             blurRadius: 4,
                             offset: const Offset(0, 2),
                           ),
@@ -320,7 +471,8 @@ class SettingsItem extends StatelessWidget {
                   children: [
                     IconTheme(
                       data: IconThemeData(
-                        color: isSelected ? Colors.white : iconColor,
+                        color:
+                            isSelected ? Colors.white : (iconColor ?? accent),
                         size: effectiveCompact ? 16 : 18,
                       ),
                       child: segmentedOptions![index],
@@ -332,7 +484,8 @@ class SettingsItem extends StatelessWidget {
                         style: TextStyle(
                           fontSize: effectiveCompact ? 11 : 12,
                           fontWeight: FontWeight.w600,
-                          color: isSelected ? Colors.white : iconColor,
+                          color:
+                              isSelected ? Colors.white : (iconColor ?? accent),
                         ),
                       ),
                     ],
@@ -347,37 +500,78 @@ class SettingsItem extends StatelessWidget {
   }
 
   Widget _buildDropdown(BuildContext context, bool effectiveCompact) {
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+
     return Container(
-      padding: EdgeInsets.all(effectiveCompact ? 0.5 : 1),
       width: double.infinity,
       decoration: BoxDecoration(
+        color: isDarkMode
+            ? Colors.grey[850]?.withOpacity(0.5)
+            : Colors.grey[100]?.withOpacity(0.7),
+        borderRadius: BorderRadius.circular(effectiveCompact ? 10 : 12),
         border: Border.all(
-          color: iconColor.withOpacity(0.3),
+          color: isDarkMode ? Colors.grey[700]! : accent.withOpacity(0.2),
           width: 1,
         ),
-        borderRadius: BorderRadius.circular(effectiveCompact ? 8 : 10),
+      ),
+      padding: EdgeInsets.symmetric(
+        horizontal: effectiveCompact ? 12 : 16,
+        vertical: effectiveCompact ? 2 : 4,
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
-          padding: EdgeInsets.symmetric(horizontal: effectiveCompact ? 6 : 8),
           value: dropdownValue,
-          focusColor: Colors.transparent,
-          elevation: 0,
           isExpanded: true,
           icon: Icon(
-            Icons.keyboard_arrow_down,
-            color: iconColor,
-            size: effectiveCompact ? 18 : 20,
+            Icons.keyboard_arrow_down_rounded,
+            color: (iconColor ?? accent).withOpacity(0.8),
+            size: effectiveCompact ? 20 : 24,
           ),
           style: TextStyle(
-            fontSize: effectiveCompact ? 13 : 14,
-            color: Theme.of(context).textTheme.bodyMedium?.color,
+            fontSize: effectiveCompact ? 14 : 15,
+            color: theme.textTheme.bodyMedium?.color,
+            fontWeight: FontWeight.w500,
           ),
-          borderRadius: BorderRadius.circular(effectiveCompact ? 6 : 8),
+          dropdownColor: isDarkMode ? Colors.grey[900] : Colors.white,
+          borderRadius: BorderRadius.circular(effectiveCompact ? 10 : 12),
+          elevation: 2,
+          menuMaxHeight: 300,
+          itemHeight: effectiveCompact ? 48 : 52,
+          selectedItemBuilder: (BuildContext context) {
+            return dropdownItems?.map<Widget>((String item) {
+                  return Container(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      item,
+                      style: TextStyle(
+                        fontSize: effectiveCompact ? 14 : 15,
+                        color: (iconColor ?? accent),
+                        fontWeight: FontWeight.w600,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  );
+                }).toList() ??
+                [];
+          },
           items: dropdownItems?.map((String item) {
             return DropdownMenuItem<String>(
               value: item,
-              child: Text(item),
+              child: Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: effectiveCompact ? 8 : 12,
+                ),
+                child: Text(
+                  item,
+                  style: TextStyle(
+                    fontSize: effectiveCompact ? 14 : 15,
+                    color: theme.textTheme.bodyMedium?.color,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
             );
           }).toList(),
           onChanged: onDropdownChanged,
@@ -392,10 +586,10 @@ class SettingsItem extends StatelessWidget {
         Expanded(
           child: SliderTheme(
             data: SliderTheme.of(context).copyWith(
-              activeTrackColor: iconColor,
-              inactiveTrackColor: iconColor.withOpacity(0.3),
-              thumbColor: iconColor,
-              overlayColor: iconColor.withOpacity(0.2),
+              activeTrackColor: accent,
+              inactiveTrackColor: accent.withOpacity(0.3),
+              thumbColor: accent,
+              overlayColor: accent.withOpacity(0.2),
               trackHeight: effectiveCompact ? 2 : 3,
               thumbShape: RoundSliderThumbShape(
                 enabledThumbRadius: effectiveCompact ? 6 : 8,
@@ -419,20 +613,21 @@ class SettingsItem extends StatelessWidget {
           style: TextStyle(
             fontSize: effectiveCompact ? 13 : 14,
             fontWeight: FontWeight.w500,
-            color: iconColor,
+            color: accent,
           ),
         ),
       ],
     );
   }
 
-  bool _shouldShowTrailing() {
-    return type != SettingsItemType.slider &&
+  bool _shouldShowDefaultTrailing() {
+    return trailingWidgets == null &&
+        type != SettingsItemType.slider &&
         type != SettingsItemType.dropdown &&
         type != SettingsItemType.segmentedToggle;
   }
 
-  Widget _buildTrailingWidget(bool effectiveCompact) {
+  Widget _buildDefaultTrailingWidget(bool effectiveCompact) {
     switch (type) {
       case SettingsItemType.selectable:
         if (isSelected) {
