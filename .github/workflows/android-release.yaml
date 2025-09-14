@@ -5,6 +5,9 @@ on:
     tags:
       - "v*"
 
+permissions:
+  contents: write
+
 jobs:
   build-android:
     runs-on: ubuntu-latest
@@ -20,18 +23,22 @@ jobs:
         with:
           flutter-version: "3.24.5"
 
-      # 3. Install Android SDK, NDK, and CMake
+      # 3. Install Android SDK + CMake
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
         with:
-          cmake-version: 3.18.1
-          ndk-version: 29.0.14033849
+          ndk-version: 25.2.9519653
+
+      - name: Install CMake 3.18.1
+        run: |
+          yes | sdkmanager "cmake;3.18.1"
+          echo "cmake.dir=$ANDROID_HOME/cmake/3.18.1" >> $GITHUB_WORKSPACE/android/local.properties
 
       # 4. Install Flutter dependencies
       - name: Install dependencies
         run: flutter pub get
 
-      # 5. Create .env file from secrets
+      # 5. Create .env file
       - name: Create .env file
         run: |
           echo "ANILIST_CLIENT_ID=${{ secrets.ANILIST_CLIENT_ID }}" >> .env
@@ -39,7 +46,7 @@ jobs:
           echo "API_URL=${{ secrets.API_URL }}" >> .env
         shell: bash
 
-      # 6. Build APKs (per ABI split)
+      # 6. Build APKs (split per ABI)
       - name: Build APK (split per ABI)
         run: flutter build apk --release --split-per-abi
 
