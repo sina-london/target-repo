@@ -44,19 +44,4 @@ class MediaListEntry {
           : null,
     );
   }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'media': media.toJson(),
-      'status': status,
-      'score': score,
-      'progress': progress,
-      'repeat': repeat,
-      'private': isPrivate,
-      'notes': notes,
-      'startedAt': startedAt?.toJson(),
-      'completedAt': completedAt?.toJson(),
-    };
-  }
 }
