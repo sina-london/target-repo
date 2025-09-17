@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
 import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -74,67 +73,37 @@ class MyApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = ref.watch(themeSettingsProvider);
     final router = ref.watch(routerProvider);
-
-    final lightTheme = FlexThemeData.light(
-      swapColors: theme.swapColors,
-      blendLevel: theme.blendLevel,
-      scheme: theme.flexSchemeEnum,
-      textTheme: GoogleFonts.montserratTextTheme(),
-    );
-
-    final darkTheme = FlexThemeData.dark(
-      swapColors: theme.swapColors,
-      blendLevel: theme.blendLevel,
-      scheme: theme.flexSchemeEnum,
-      darkIsTrueBlack: theme.amoled,
-      textTheme: GoogleFonts.montserratTextTheme(),
-    );
-
-    final themeMode = theme.themeMode == 'light'
-        ? ThemeMode.light
-        : theme.themeMode == 'dark'
-            ? ThemeMode.dark
-            : ThemeMode.system;
-
-    final brightness = themeMode == ThemeMode.light
-        ? Brightness.light
-        : themeMode == ThemeMode.dark
-            ? Brightness.dark
-            : MediaQuery.platformBrightnessOf(context);
-
-    return AnimatedTheme(
-      duration: const Duration(milliseconds: 400),
-      curve: Curves.easeInOut,
-      data: brightness == Brightness.dark ? darkTheme : lightTheme,
-      child: MaterialApp.router(
-        debugShowCheckedModeBanner: false,
-        scaffoldMessengerKey: scaffoldMessengerKey,
-        routerConfig: router,
-        theme: lightTheme,
-        darkTheme: darkTheme,
-        themeMode: themeMode,
+    return MaterialApp.router(
+      debugShowCheckedModeBanner: false,
+      scaffoldMessengerKey: scaffoldMessengerKey,
+      theme: FlexThemeData.light(
+        swapColors: theme.swapColors,
+        blendLevel: theme.blendLevel,
+        scheme: theme.flexSchemeEnum,
+        textTheme: GoogleFonts.montserratTextTheme(),
       ),
+      darkTheme: FlexThemeData.dark(
+        swapColors: theme.swapColors,
+        blendLevel: theme.blendLevel,
+        scheme: theme.flexSchemeEnum,
+        darkIsTrueBlack: theme.amoled,
+        textTheme: GoogleFonts.montserratTextTheme(),
+      ),
+      themeMode: theme.themeMode == 'light'
+          ? ThemeMode.light
+          : theme.themeMode == 'dark'
+              ? ThemeMode.dark
+              : ThemeMode.system,
+      routerConfig: router,
     );
   }
 }
 
-void showAppSnackBar(String title, String message,
-    {ContentType type = ContentType.success}) {
+void showAppSnackBar(String message) {
   final messenger = scaffoldMessengerKey.currentState;
   if (messenger != null) {
-    messenger
-      ..removeCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          behavior: SnackBarBehavior.fixed,
-          elevation: 0,
-          backgroundColor: Colors.transparent,
-          content: AwesomeSnackbarContent(
-            title: title,
-            message: message,
-            contentType: type,
-          ),
-        ),
-      );
+    messenger.showSnackBar(
+      SnackBar(content: Text(message)),
+    );
   }
 }

@@ -87,16 +87,4 @@ class MalRepository implements AnimeRepository {
     // TODO: implement getUserAnimeList
     throw UnimplementedError();
   }
-  
-  @override
-  Future<MediaListEntry?> getAnimeEntry(int animeId) {
-    // TODO: implement getAnimeEntry
-    throw UnimplementedError();
-  }
-  
-  @override
-  Future<List<Media>> toggleFavorite(int animeId) {
-    // TODO: implement toggleFavorite
-    throw UnimplementedError();
-  }
 }

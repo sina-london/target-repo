@@ -2,23 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:go_router/go_router.dart';
-import 'package:shonenx/features/settings/model/subtitle_appearance_model.dart';
 import 'package:shonenx/features/settings/view_model/subtitle_notifier.dart';
-import 'package:shonenx/features/settings/view/widgets/settings_item.dart';
-import 'package:shonenx/features/settings/view/widgets/settings_section.dart';
+import 'package:shonenx/features/settings/widgets/settings_item.dart';
+import 'package:shonenx/features/settings/widgets/settings_section.dart';
 
 class SubtitleCustomizationScreen extends ConsumerWidget {
   const SubtitleCustomizationScreen({super.key});
 
-  T watchTheme<T>(
-    WidgetRef ref,
-    T Function(SubtitleAppearanceModel s) selector,
-  ) {
-    return ref.watch(subtitleAppearanceProvider.select(selector));
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final subtitleSettings = ref.watch(subtitleAppearanceProvider);
     final subtitleNotifier = ref.read(subtitleAppearanceProvider.notifier);
 
     return Scaffold(
@@ -36,16 +29,15 @@ class SubtitleCustomizationScreen extends ConsumerWidget {
             SettingsSection(
                 title: 'Text',
                 titleColor: Theme.of(context).colorScheme.primary,
-                children: [
+                items: [
                   SettingsItem(
                     icon: Icon(Iconsax.text,
                         color: Theme.of(context).colorScheme.primary),
                     accent: Theme.of(context).colorScheme.primary,
                     title: 'Font Size',
-                    description:
-                        '${ref.watch(subtitleAppearanceProvider.select((s) => s.fontSize)).round()}px',
+                    description: '${subtitleSettings.fontSize.round()}px',
                     type: SettingsItemType.slider,
-                    sliderValue: watchTheme(ref, (s) => s.fontSize),
+                    sliderValue: subtitleSettings.fontSize,
                     sliderMin: 12,
                     sliderMax: 50,
                     sliderDivisions: 38,
@@ -59,12 +51,10 @@ class SubtitleCustomizationScreen extends ConsumerWidget {
                         color: Theme.of(context).colorScheme.primary),
                     accent: Theme.of(context).colorScheme.primary,
                     title: 'Font Family',
-                    description:
-                        watchTheme(ref, (s) => s.fontFamily) ?? 'Default',
+                    description: subtitleSettings.fontFamily ?? 'Default',
                     layoutType: SettingsItemLayout.horizontal,
                     type: SettingsItemType.dropdown,
-                    dropdownValue:
-                        watchTheme(ref, (s) => s.fontFamily) ?? 'Default',
+                    dropdownValue: subtitleSettings.fontFamily ?? 'Default',
                     dropdownItems: const [
                       'Default',
                       'Roboto',
@@ -81,16 +71,15 @@ class SubtitleCustomizationScreen extends ConsumerWidget {
             SettingsSection(
                 title: 'Style',
                 titleColor: Theme.of(context).colorScheme.primary,
-                children: [
+                items: [
                   SettingsItem(
                     icon: Icon(Iconsax.text_bold,
                         color: Theme.of(context).colorScheme.primary),
                     accent: Theme.of(context).colorScheme.primary,
                     title: 'Bold Text',
-                    description:
-                        watchTheme(ref, (s) => s.boldText) ? 'On' : 'Off',
+                    description: subtitleSettings.boldText ? 'On' : 'Off',
                     type: SettingsItemType.toggleable,
-                    toggleValue: watchTheme(ref, (s) => s.boldText),
+                    toggleValue: subtitleSettings.boldText,
                     onToggleChanged: (value) => subtitleNotifier.updateSettings(
                       (prev) => prev.copyWith(boldText: value),
                     ),
@@ -100,10 +89,9 @@ class SubtitleCustomizationScreen extends ConsumerWidget {
                         color: Theme.of(context).colorScheme.primary),
                     accent: Theme.of(context).colorScheme.primary,
                     title: 'Force Uppercase',
-                    description:
-                        watchTheme(ref, (s) => s.forceUppercase) ? 'On' : 'Off',
+                    description: subtitleSettings.forceUppercase ? 'On' : 'Off',
                     type: SettingsItemType.toggleable,
-                    toggleValue: watchTheme(ref, (s) => s.forceUppercase),
+                    toggleValue: subtitleSettings.forceUppercase,
                     onToggleChanged: (value) => subtitleNotifier.updateSettings(
                       (prev) => prev.copyWith(forceUppercase: value),
                     ),
@@ -113,16 +101,16 @@ class SubtitleCustomizationScreen extends ConsumerWidget {
             SettingsSection(
                 title: 'Background',
                 titleColor: Theme.of(context).colorScheme.primary,
-                children: [
+                items: [
                   SettingsItem(
                     icon: Icon(Iconsax.square,
                         color: Theme.of(context).colorScheme.primary),
                     accent: Theme.of(context).colorScheme.primary,
                     title: 'Opacity',
                     description:
-                        '${(watchTheme(ref, (s) => s.backgroundOpacity) * 100).round()}%',
+                        '${(subtitleSettings.backgroundOpacity * 100).round()}%',
                     type: SettingsItemType.slider,
-                    sliderValue: watchTheme(ref, (s) => s.backgroundOpacity),
+                    sliderValue: subtitleSettings.backgroundOpacity,
                     sliderMin: 0,
                     sliderMax: 1,
                     sliderDivisions: 10,
@@ -136,36 +124,35 @@ class SubtitleCustomizationScreen extends ConsumerWidget {
             SettingsSection(
                 title: 'Shadow',
                 titleColor: Theme.of(context).colorScheme.primary,
-                children: [
+                items: [
                   SettingsItem(
                     icon: Icon(Iconsax.ghost,
                         color: Theme.of(context).colorScheme.primary),
                     accent: Theme.of(context).colorScheme.primary,
                     title: 'Enable Shadow',
-                    description:
-                        watchTheme(ref, (s) => s.hasShadow) ? 'On' : 'Off',
+                    description: subtitleSettings.hasShadow ? 'On' : 'Off',
                     type: SettingsItemType.toggleable,
-                    toggleValue: watchTheme(ref, (s) => s.hasShadow),
+                    toggleValue: subtitleSettings.hasShadow,
                     onToggleChanged: (value) => subtitleNotifier.updateSettings(
                       (prev) => prev.copyWith(hasShadow: value),
                     ),
                   ),
                 ]),
-            if (watchTheme(ref, (s) => s.hasShadow)) ...[
+            if (subtitleSettings.hasShadow) ...[
               const SizedBox(height: 20),
               SettingsSection(
                   title: 'Shadow Settings',
                   titleColor: Theme.of(context).colorScheme.primary,
-                  children: [
+                  items: [
                     SettingsItem(
                       icon: Icon(Iconsax.ghost,
                           color: Theme.of(context).colorScheme.primary),
                       accent: Theme.of(context).colorScheme.primary,
                       title: 'Opacity',
                       description:
-                          '${(watchTheme(ref, (s) => s.shadowOpacity) * 100).round()}%',
+                          '${(subtitleSettings.shadowOpacity * 100).round()}%',
                       type: SettingsItemType.slider,
-                      sliderValue: watchTheme(ref, (s) => s.shadowOpacity),
+                      sliderValue: subtitleSettings.shadowOpacity,
                       sliderMin: 0,
                       sliderMax: 1,
                       sliderDivisions: 10,
@@ -181,9 +168,9 @@ class SubtitleCustomizationScreen extends ConsumerWidget {
                       accent: Theme.of(context).colorScheme.primary,
                       title: 'Blur',
                       description:
-                          '${watchTheme(ref, (s) => s.shadowBlur).toStringAsFixed(1)}px',
+                          '${subtitleSettings.shadowBlur.toStringAsFixed(1)}px',
                       type: SettingsItemType.slider,
-                      sliderValue: watchTheme(ref, (s) => s.shadowBlur),
+                      sliderValue: subtitleSettings.shadowBlur,
                       sliderMin: 1,
                       sliderMax: 10,
                       sliderDivisions: 9,
@@ -198,22 +185,22 @@ class SubtitleCustomizationScreen extends ConsumerWidget {
               SettingsSection(
                   title: 'Position',
                   titleColor: Theme.of(context).colorScheme.primary,
-                  children: [
+                  items: [
                     SettingsItem(
                       icon: Icon(Iconsax.arrow_up_1,
                           color: Theme.of(context).colorScheme.primary),
                       accent: Theme.of(context).colorScheme.primary,
                       title: 'Position',
-                      description: watchTheme(ref, (s) => s.position) == 3
+                      description: subtitleSettings.position == 3
                           ? 'Top'
-                          : watchTheme(ref, (s) => s.position) == 2
+                          : subtitleSettings.position == 2
                               ? 'Center'
                               : 'Bottom',
                       layoutType: SettingsItemLayout.horizontal,
                       type: SettingsItemType.dropdown,
-                      dropdownValue: watchTheme(ref, (s) => s.position) == 3
+                      dropdownValue: subtitleSettings.position == 3
                           ? 'Top'
-                          : watchTheme(ref, (s) => s.position) == 2
+                          : subtitleSettings.position == 2
                               ? 'Center'
                               : 'Bottom',
                       dropdownItems: const ['Top', 'Center', 'Bottom'],

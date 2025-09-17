@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:shonenx/features/settings/view/widgets/settings_item.dart';
+import 'package:shonenx/features/settings/widgets/settings_item.dart';
 
 enum SettingsSectionLayout {
   list,
@@ -10,7 +10,7 @@ class SettingsSection extends StatelessWidget {
   final String title;
   final Color titleColor;
   final VoidCallback? onTap;
-  final List<Widget> children;
+  final List<SettingsItem> items;
   final double roundness;
 
   // Grid layout properties
@@ -25,7 +25,7 @@ class SettingsSection extends StatelessWidget {
     required this.title,
     required this.titleColor,
     this.onTap,
-    required this.children, // <-- updated
+    required this.items,
     this.roundness = 12,
     this.layout = SettingsSectionLayout.list,
     this.gridColumns = 2,
@@ -52,7 +52,7 @@ class SettingsSection extends StatelessWidget {
           ),
         ),
 
-        // Children
+        // Settings items
         _buildItemsLayout(),
       ],
     );
@@ -69,21 +69,20 @@ class SettingsSection extends StatelessWidget {
   }
 
   Widget _buildListLayout() {
-    return AnimatedSize(
-      duration: const Duration(milliseconds: 500),
-      child: Column(
-        children: children.asMap().entries.map((entry) {
+    return Column(
+      children: [
+        ...items.asMap().entries.map((entry) {
           final index = entry.key;
-          final child = entry.value;
-      
+          final item = entry.value;
+
           return Padding(
             padding: EdgeInsets.only(
-              bottom: index < children.length - 1 ? 5.0 : 0.0,
+              bottom: index < items.length - 1 ? 5.0 : 0.0,
             ),
-            child: _wrapChild(child, false),
+            child: _buildSettingsItem(item, false),
           );
-        }).toList(),
-      ),
+        }),
+      ],
     );
   }
 
@@ -97,51 +96,44 @@ class SettingsSection extends StatelessWidget {
         mainAxisSpacing: gridMainAxisSpacing,
         childAspectRatio: gridChildAspectRatio,
       ),
-      itemCount: children.length,
+      itemCount: items.length,
       itemBuilder: (context, index) {
-        return _wrapChild(children[index], true);
+        return _buildSettingsItem(items[index], true);
       },
     );
   }
 
-  Widget _wrapChild(Widget child, bool isInGrid) {
-    if (child is SettingsItem) {
-      // clone with adjustments
-      return SettingsItem(
-        icon: child.icon,
-        leading: child.leading,
-        iconColor: child.iconColor,
-        accent: child.accent,
-        title: child.title,
-        description: child.description,
-        onTap: child.onTap,
-        roundness: roundness,
-        type: child.type,
-        isSelected: child.isSelected,
-        isInSelectionMode: child.isInSelectionMode,
-        toggleValue: child.toggleValue,
-        onToggleChanged: child.onToggleChanged,
-        sliderValue: child.sliderValue,
-        sliderMin: child.sliderMin,
-        sliderMax: child.sliderMax,
-        sliderDivisions: child.sliderDivisions,
-        sliderSuffix: child.sliderSuffix,
-        onSliderChanged: child.onSliderChanged,
-        dropdownValue: child.dropdownValue,
-        dropdownItems: child.dropdownItems,
-        onDropdownChanged: child.onDropdownChanged,
-        isCompact: isInGrid,
-        segmentedSelectedIndex: child.segmentedSelectedIndex,
-        segmentedOptions: child.segmentedOptions,
-        segmentedLabels: child.segmentedLabels,
-        onSegmentedChanged: child.onSegmentedChanged,
-        trailingWidgets: child.trailingWidgets,
-        layoutType: child.layoutType,
-      );
-    }
-
-    // Not a SettingsItem → just render directly
-    return child;
+  Widget _buildSettingsItem(SettingsItem item, bool isInGrid) {
+    return SettingsItem(
+      icon: item.icon,
+      leading: item.leading,
+      iconColor: item.iconColor,
+      accent: item.accent,
+      title: item.title,
+      description: item.description,
+      onTap: item.onTap,
+      roundness: roundness,
+      type: item.type,
+      isSelected: item.isSelected,
+      isInSelectionMode: item.isInSelectionMode,
+      toggleValue: item.toggleValue,
+      onToggleChanged: item.onToggleChanged,
+      sliderValue: item.sliderValue,
+      sliderMin: item.sliderMin,
+      sliderMax: item.sliderMax,
+      sliderDivisions: item.sliderDivisions,
+      sliderSuffix: item.sliderSuffix,
+      onSliderChanged: item.onSliderChanged,
+      dropdownValue: item.dropdownValue,
+      dropdownItems: item.dropdownItems,
+      onDropdownChanged: item.onDropdownChanged,
+      isCompact: isInGrid,
+      segmentedSelectedIndex: item.segmentedSelectedIndex,
+      segmentedOptions: item.segmentedOptions,
+      segmentedLabels: item.segmentedLabels,
+      onSegmentedChanged: item.onSegmentedChanged,
+      trailingWidgets: item.trailingWidgets,
+      layoutType: item.layoutType,
+    );
   }
 }
-
