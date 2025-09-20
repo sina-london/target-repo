@@ -5,8 +5,8 @@ import 'package:go_router/go_router.dart';
 import 'package:shonenx/features/anime/view/widgets/card/anime_card.dart';
 import 'package:shonenx/features/anime/view/widgets/card/anime_card_config.dart';
 import 'package:shonenx/features/settings/view_model/ui_notifier.dart';
-import 'package:shonenx/features/settings/widgets/settings_item.dart';
-import 'package:shonenx/features/settings/widgets/settings_section.dart';
+import 'package:shonenx/features/settings/view/widgets/settings_item.dart';
+import 'package:shonenx/features/settings/view/widgets/settings_section.dart';
 import 'package:shonenx/core/models/anilist/media.dart'
     as anime_media;
 import 'package:uuid/uuid.dart';
@@ -34,7 +34,7 @@ class UiSettingsScreen extends ConsumerWidget {
               SettingsSection(
                   title: 'Content Display',
                   titleColor: colorScheme.primary,
-                  items: [
+                  children: [
                     SettingsItem(
                       icon: Icon(Iconsax.card, color: colorScheme.primary),
                       accent: colorScheme.primary,

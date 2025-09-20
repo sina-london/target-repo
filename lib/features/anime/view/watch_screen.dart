@@ -1,6 +1,8 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:media_kit_video/media_kit_video.dart';
+import 'package:shonenx/core/models/anime/episode_model.dart';
 import 'package:shonenx/features/anime/view/widgets/episodes_panel.dart';
 import 'package:shonenx/features/anime/view/widgets/player/controls_overlay.dart';
 import 'package:shonenx/helpers/ui.dart';
@@ -12,14 +14,17 @@ class WatchScreen extends ConsumerStatefulWidget {
   final String animeName;
   final int? episode;
   final Duration startAt;
+  final List<EpisodeDataModel>? episodes;
+  final String? mMangaUrl;
 
-  const WatchScreen({
-    super.key,
-    required this.animeId,
-    required this.animeName,
-    this.startAt = Duration.zero,
-    this.episode = 1,
-  });
+  const WatchScreen(
+      {super.key,
+      required this.animeId,
+      required this.animeName,
+      this.startAt = Duration.zero,
+      this.episode = 1,
+      this.episodes = const [],
+      this.mMangaUrl});
 
   @override
   ConsumerState<WatchScreen> createState() => _WatchScreenState();
@@ -42,11 +47,13 @@ class _WatchScreenState extends ConsumerState<WatchScreen>
     // Trigger the initial data fetch
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await ref.read(episodeDataProvider.notifier).fetchEpisodes(
-            animeTitle: widget.animeName,
-            animeId: widget.animeId,
-            initialEpisodeIdx: (widget.episode ?? 1) - 1,
-            startAt: widget.startAt,
-          );
+          animeTitle: widget.animeName,
+          animeId: widget.animeId,
+          initialEpisodeIdx: (widget.episode ?? 1) - 1,
+          startAt: widget.startAt,
+          force: false,
+          mMangaUrl: widget.mMangaUrl,
+          episodes: widget.episodes ?? []);
     });
 
     // ref.read(playerStateProvider.notifier).open(
@@ -81,7 +88,7 @@ class _WatchScreenState extends ConsumerState<WatchScreen>
 
   @override
   Widget build(BuildContext context) {
-    final playerState = ref.watch(playerStateProvider);
+    final fit = ref.watch(playerStateProvider.select((p) => p.fit));
     final playerNotifier = ref.read(playerStateProvider.notifier);
 
     return Scaffold(
@@ -89,8 +96,10 @@ class _WatchScreenState extends ConsumerState<WatchScreen>
       body: Center(child: OrientationBuilder(
         builder: (context, orientation) {
           final videoPlayerWidget = Video(
+            wakelock: true,
             controller: playerNotifier.videoController,
-            fit: playerState.fit,
+            fit: fit,
+            filterQuality: kDebugMode ? FilterQuality.low : FilterQuality.none,
             controls: (state) => CloudstreamControls(
               onEpisodesPressed: _toggleEpisodesPanel,
             ),

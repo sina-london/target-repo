@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:iconsax/iconsax.dart';
-import 'package:shonenx/features/settings/widgets/settings_item.dart';
-import 'package:shonenx/features/settings/widgets/settings_section.dart';
+import 'package:shonenx/features/settings/view_model/experimental_notifier.dart';
+import 'package:shonenx/features/settings/view/widgets/settings_item.dart';
+import 'package:shonenx/features/settings/view/widgets/settings_section.dart';
 import 'package:go_router/go_router.dart';
 
-class SettingsScreen extends StatelessWidget {
+class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colorScheme = Theme.of(context).colorScheme;
+    final experimental = ref.watch(experimentalProvider);
     return Scaffold(
         appBar: AppBar(
           leading: IconButton.filledTonal(
@@ -25,7 +28,7 @@ class SettingsScreen extends StatelessWidget {
                   title: 'Account',
                   titleColor: colorScheme.primary,
                   onTap: () {},
-                  items: [
+                  children: [
                     SettingsItem(
                       icon: Icon(Iconsax.user, color: colorScheme.primary),
                       accent: colorScheme.primary,
@@ -39,7 +42,7 @@ class SettingsScreen extends StatelessWidget {
                   title: 'Content & Playback',
                   titleColor: colorScheme.primary,
                   onTap: () {},
-                  items: [
+                  children: [
                     SettingsItem(
                       icon: Icon(Icons.source_outlined,
                           color: colorScheme.primary),
@@ -48,14 +51,15 @@ class SettingsScreen extends StatelessWidget {
                       description: 'Manage anime content providers',
                       onTap: () => context.push('/settings/anime-sources'),
                     ),
-                    SettingsItem(
-                      icon: Icon(Icons.extension_outlined,
-                          color: colorScheme.primary),
-                      accent: colorScheme.primary,
-                      title: 'Extensions (WIP)',
-                      description: 'Manage your extensions',
-                      onTap: () => context.push('/settings/extensions'),
-                    ),
+                    if (experimental.useMangayomiExtensions)
+                      SettingsItem(
+                        icon: Icon(Icons.extension_outlined,
+                            color: colorScheme.primary),
+                        accent: colorScheme.primary,
+                        title: 'Extensions (💀)',
+                        description: 'Manage your extensions',
+                        onTap: () => context.push('/settings/extensions'),
+                      ),
                     SettingsItem(
                       icon:
                           Icon(Iconsax.video_play, color: colorScheme.primary),
@@ -70,7 +74,7 @@ class SettingsScreen extends StatelessWidget {
                   title: 'Appearance',
                   titleColor: colorScheme.primary,
                   onTap: () {},
-                  items: [
+                  children: [
                     SettingsItem(
                       icon:
                           Icon(Iconsax.paintbucket, color: colorScheme.primary),
@@ -92,7 +96,7 @@ class SettingsScreen extends StatelessWidget {
                   title: 'Support',
                   titleColor: colorScheme.primary,
                   onTap: () {},
-                  items: [
+                  children: [
                     SettingsItem(
                       icon:
                           Icon(Iconsax.info_circle, color: colorScheme.primary),
@@ -103,11 +107,11 @@ class SettingsScreen extends StatelessWidget {
                     ),
                   ]),
               const SizedBox(height: 20),
-               SettingsSection(
+              SettingsSection(
                   title: 'Misc',
                   titleColor: colorScheme.primary,
                   onTap: () {},
-                  items: [
+                  children: [
                     SettingsItem(
                       icon:
                           Icon(Iconsax.info_circle, color: colorScheme.primary),
