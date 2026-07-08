@@ -33,45 +33,95 @@ class SpotlightCard extends StatelessWidget {
       },
       child: Container(
         width: double.infinity,
-        height: 200,
+        height: 240, // Adjusted height for better layout
+        margin: const EdgeInsets.only(
+            right: 1, bottom: 24, left: 1), // Adjust spacing between cards
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(15),
-          image: DecorationImage(
-            image: NetworkImage(anime.poster),
-            fit: BoxFit.cover,
-          ),
-        ),
-        child: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                theme.colorScheme.surface,
-                theme.colorScheme.surface.withOpacity(0.1),
-              ],
-              begin: Alignment.bottomCenter,
-              end: Alignment.topCenter,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: theme.shadowColor.withOpacity(0.1),
+              blurRadius: 10,
+              offset: Offset(0, 4), // Soft shadow for depth
             ),
-          ),
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.end,
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: Stack(
             children: [
-              Text(
-                anime.name,
-                style: const TextStyle(
-                  fontSize: 24.0,
-                  fontWeight: FontWeight.bold,
+              // Use CachedNetworkImage for better performance and caching
+              CachedNetworkImage(
+                imageUrl: anime.poster,
+                fit: BoxFit.cover,
+                width: double.infinity,
+                height: double.infinity,
+                placeholder: (context, url) => const Center(
+                  child: CircularProgressIndicator(),
+                ),
+                errorWidget: (context, url, error) => Icon(Icons.error),
+              ),
+              // Gradient overlay for text readability
+              Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      theme.colorScheme.surface.withOpacity(0.7),
+                      theme.colorScheme.surface.withOpacity(0.2),
+                    ],
+                    begin: Alignment.bottomCenter,
+                    end: Alignment.topCenter,
+                  ),
                 ),
               ),
-              const SizedBox(height: 8.0),
-              Text(
-                anime.description,
-                style: const TextStyle(
-                  fontSize: 16.0,
+              // Card content
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    // Display Rank
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 2, horizontal: 8),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.primary.withOpacity(0.8),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        'Rank : #${anime.rank}',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8.0), // Spacer between rank and name
+
+                    // Anime name
+                    Text(
+                      anime.name,
+                      style: theme.textTheme.headlineLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: theme.colorScheme.onSurface,
+                        fontSize: 22,
+                      ),
+                    ),
+                    const SizedBox(height: 8.0),
+                    // Anime description
+                    Text(
+                      anime.description,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurface.withOpacity(0.8),
+                        fontSize: 14,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
                 ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
               ),
             ],
           ),

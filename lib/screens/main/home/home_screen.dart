@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:nekoflow/data/models/watchlist/watchlist_model.dart';
-import 'package:nekoflow/screens/main/details/details_screen.dart';
 import 'package:nekoflow/widgets/spotlight_card.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:nekoflow/data/models/anime_model.dart';
@@ -143,6 +142,7 @@ class _HomeScreenState extends State<HomeScreen> {
       _isLoading
           ? _buildShimmerLoading(theme, 0.9)
           : SnappingScroller(
+              autoScroll: true,
               widthFactor: 1,
               children: animeList
                   .map((anime) => SpotlightCard(
@@ -175,6 +175,7 @@ class _HomeScreenState extends State<HomeScreen> {
         _isLoading
             ? _buildShimmerLoading(theme, 0.4)
             : SnappingScroller(
+              showIndicators: false,
                 widthFactor: 0.48,
                 children: animeList
                     .map((anime) => AnimeCard(anime: anime, tag: tag))
