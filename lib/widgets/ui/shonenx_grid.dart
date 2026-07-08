@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 class ShonenXGridView extends StatelessWidget {
   final List<Widget> items;
-  final double crossAxisExtent;
+  final int crossAxisCount;
   final double mainAxisSpacing;
   final double crossAxisSpacing;
   final double childAspectRatio;
@@ -11,7 +11,7 @@ class ShonenXGridView extends StatelessWidget {
   const ShonenXGridView({
     super.key,
     required this.items,
-    this.crossAxisExtent = 200,
+    this.crossAxisCount = 2,
     this.mainAxisSpacing = 8.0,
     this.crossAxisSpacing = 8.0,
     this.childAspectRatio = 1.0,
@@ -26,8 +26,8 @@ class ShonenXGridView extends StatelessWidget {
           shrinkWrap: true, // Ensure grid fits within accordion content
           physics: const NeverScrollableScrollPhysics(), // Disable scrolling
           padding: padding,
-          gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-            maxCrossAxisExtent: crossAxisExtent,
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: crossAxisCount,
             mainAxisSpacing: mainAxisSpacing,
             crossAxisSpacing: crossAxisSpacing,
             childAspectRatio: childAspectRatio,

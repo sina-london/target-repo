@@ -9,6 +9,9 @@ import 'package:shonenx/widgets/anime/continue_watching/anime_continue_card.dart
 import 'package:shonenx/widgets/ui/shonenx_accordion.dart';
 import 'package:shonenx/widgets/ui/shonenx_grid.dart';
 
+// Provider for search query
+final searchQueryProvider = StateProvider<String>((ref) => '');
+
 class ContinueWatchingScreen extends StatelessWidget {
   const ContinueWatchingScreen({super.key});
 
@@ -19,13 +22,41 @@ class ContinueWatchingScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         titleSpacing: 0,
-        title: Text(
-          "Continue Watching",
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 20,
-          ),
-          overflow: TextOverflow.ellipsis,
+        title: Consumer(
+          builder: (context, ref, child) {
+            final isSearching = ref.watch(searchQueryProvider) != '';
+            return isSearching
+                ? TextField(
+                    autofocus: true,
+                    decoration: InputDecoration(
+                      hintText: 'Search anime...',
+                      border: InputBorder.none,
+                      hintStyle: TextStyle(color: colorScheme.onSurfaceVariant),
+                      suffixIcon: ref.watch(searchQueryProvider).isNotEmpty
+                          ? IconButton(
+                              icon: Icon(Iconsax.close_circle,
+                                  color: colorScheme.onSurfaceVariant),
+                              onPressed: () {
+                                ref.read(searchQueryProvider.notifier).state =
+                                    '';
+                              },
+                            )
+                          : null,
+                    ),
+                    style: TextStyle(color: colorScheme.onSurface),
+                    onChanged: (value) {
+                      ref.read(searchQueryProvider.notifier).state = value;
+                    },
+                  )
+                : Text(
+                    "Continue Watching",
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 20,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  );
+          },
         ),
         centerTitle: false,
         elevation: 0,
@@ -35,15 +66,68 @@ class ContinueWatchingScreen extends StatelessWidget {
           onPressed: () => context.pop(),
         ),
         actions: [
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(Iconsax.setting_4),
-            tooltip: 'Filter',
+          Consumer(
+            builder: (context, ref, child) {
+              final isSearching = ref.watch(searchQueryProvider) != '';
+              return IconButton(
+                onPressed: () {
+                  ref.read(searchQueryProvider.notifier).state =
+                      isSearching ? '' : ' ';
+                },
+                icon: Icon(
+                    isSearching ? Iconsax.close_circle : Iconsax.search_normal),
+                tooltip: isSearching ? 'Cancel' : 'Search',
+              );
+            },
           ),
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(Iconsax.sort),
-            tooltip: 'Sort',
+          Consumer(
+            builder: (context, ref, child) {
+              return PopupMenuButton<AnimeFilter>(
+                icon: const Icon(Iconsax.filter),
+                tooltip: 'Filter',
+                onSelected: (AnimeFilter filter) {
+                  ref.read(animeFilterProvider.notifier).state = filter;
+                },
+                itemBuilder: (BuildContext context) =>
+                    <PopupMenuEntry<AnimeFilter>>[
+                  const PopupMenuItem<AnimeFilter>(
+                    value: AnimeFilter.all,
+                    child: Text('All Anime'),
+                  ),
+                  const PopupMenuItem<AnimeFilter>(
+                    value: AnimeFilter.completed,
+                    child: Text('Completed'),
+                  ),
+                  const PopupMenuItem<AnimeFilter>(
+                    value: AnimeFilter.inProgress,
+                    child: Text('In Progress'),
+                  ),
+                  const PopupMenuItem<AnimeFilter>(
+                    value: AnimeFilter.recentlyUpdated,
+                    child: Text('Recently Updated'),
+                  ),
+                ],
+              );
+            },
+          ),
+          Consumer(
+            builder: (context, ref, child) {
+              final viewMode = ref.watch(viewModeProvider);
+              return IconButton(
+                onPressed: () {
+                  ref.read(viewModeProvider.notifier).state =
+                      viewMode == ViewMode.grouped
+                          ? ViewMode.ungrouped
+                          : ViewMode.grouped;
+                },
+                icon: Icon(
+                  viewMode == ViewMode.grouped
+                      ? Iconsax.element_3
+                      : Iconsax.element_4,
+                ),
+                tooltip: viewMode == ViewMode.grouped ? 'Ungroup' : 'Group',
+              );
+            },
           ),
         ],
       ),
@@ -57,10 +141,38 @@ class _ContinueWatchingContent extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final entries =
-        ref.watch(animeWatchProgressProvider.notifier).getAllEntries();
+    final filter = ref.watch(animeFilterProvider);
+    final viewMode = ref.watch(viewModeProvider);
+    final searchQuery = ref.watch(searchQueryProvider).toLowerCase();
 
-    if (entries.isEmpty) {
+    // Get data based on view mode
+    final entries = ref
+        .watch(animeWatchProgressProvider.notifier)
+        .getFilteredEntries(filter);
+    final episodes = ref
+        .watch(animeWatchProgressProvider.notifier)
+        .getFilteredEpisodes(filter);
+
+    // Apply search filter
+    final filteredEntries = searchQuery.isEmpty
+        ? entries
+        : entries
+            .where(
+                (entry) => entry.animeTitle.toLowerCase().contains(searchQuery))
+            .toList();
+    final filteredEpisodes = searchQuery.isEmpty
+        ? episodes
+        : episodes
+            .where((e) =>
+                e.anime.animeTitle.toLowerCase().contains(searchQuery) ||
+                e.episode.episodeNumber
+                    .toString()
+                    .toLowerCase()
+                    .contains(searchQuery))
+            .toList();
+
+    if (filteredEntries.isEmpty && viewMode == ViewMode.grouped ||
+        filteredEpisodes.isEmpty && viewMode == ViewMode.ungrouped) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -79,7 +191,9 @@ class _ContinueWatchingContent extends ConsumerWidget {
             ),
             const SizedBox(height: 24),
             Text(
-              'No Watch History',
+              searchQuery.isEmpty && filter == AnimeFilter.all
+                  ? 'No Watch History'
+                  : 'No Matching Anime',
               style: theme.textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: colorScheme.onSurface,
@@ -89,7 +203,9 @@ class _ContinueWatchingContent extends ConsumerWidget {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 32),
               child: Text(
-                'Start watching anime episodes and they\'ll appear here for easy access',
+                searchQuery.isEmpty && filter == AnimeFilter.all
+                    ? 'Start watching anime episodes and they\'ll appear here for easy access'
+                    : 'No anime or episodes match your search or filter',
                 textAlign: TextAlign.center,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: colorScheme.onSurfaceVariant,
@@ -115,18 +231,20 @@ class _ContinueWatchingContent extends ConsumerWidget {
 
     return RefreshIndicator(
       onRefresh: () async {
-        // Implement refresh logic here
         await Future.delayed(const Duration(seconds: 1));
       },
       color: colorScheme.primary,
       child: CustomScrollView(
-        physics: AlwaysScrollableScrollPhysics(),
+        physics: const AlwaysScrollableScrollPhysics(),
         slivers: [
           // Stats section
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.all(10.0),
-              child: _WatchStats(entries: entries),
+              child: _WatchStats(
+                  entries: viewMode == ViewMode.grouped
+                      ? filteredEntries
+                      : filteredEpisodes.map((e) => e.anime).toSet().toList()),
             ),
           ),
 
@@ -137,7 +255,9 @@ class _ContinueWatchingContent extends ConsumerWidget {
             child: Padding(
               padding: const EdgeInsets.fromLTRB(10, 8, 4, 12),
               child: Text(
-                'Your Anime Progress',
+                viewMode == ViewMode.grouped
+                    ? 'Your Anime Progress'
+                    : 'Recent Episodes',
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: colorScheme.onSurface,
@@ -147,19 +267,36 @@ class _ContinueWatchingContent extends ConsumerWidget {
           ),
 
           // Main content
-          SliverList(
-            delegate: SliverChildBuilderDelegate(
-              (context, index) {
-                final entry = entries[index];
-
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                  child: _AnimeSeriesCard(entry: entry),
-                );
-              },
-              childCount: entries.length,
+          if (viewMode == ViewMode.grouped)
+            SliverList(
+              delegate: SliverChildBuilderDelegate(
+                (context, index) {
+                  final entry = filteredEntries[index];
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                    child: _AnimeSeriesCard(entry: entry),
+                  );
+                },
+                childCount: filteredEntries.length,
+              ),
+            )
+          else
+            SliverList(
+              delegate: SliverChildBuilderDelegate(
+                (context, index) {
+                  final episodeData = filteredEpisodes[index];
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10.0, vertical: 4.0),
+                    child: _EpisodeCard(
+                      anime: episodeData.anime,
+                      episode: episodeData.episode,
+                    ),
+                  );
+                },
+                childCount: filteredEpisodes.length,
+              ),
             ),
-          ),
 
           SliverToBoxAdapter(
             child: SizedBox(height: MediaQuery.of(context).padding.bottom),
@@ -427,15 +564,25 @@ class _AnimeSeriesCard extends StatelessWidget {
             ),
           );
         }).toList(),
-        crossAxisExtent: 330,
+        crossAxisCount: MediaQuery.sizeOf(context).width >= 1400
+            ? 5
+            : MediaQuery.sizeOf(context).width >= 1100
+                ? 4
+                : MediaQuery.sizeOf(context).width >= 800
+                    ? 3
+                    : MediaQuery.sizeOf(context).width >= 500
+                        ? 2
+                        : MediaQuery.sizeOf(context).width >= 300
+                            ? 1
+                            : 1,
         mainAxisSpacing: 8.0,
         crossAxisSpacing: 8.0,
-        childAspectRatio: 16 / 12,
+        childAspectRatio: 1.6,
         padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 8.0),
       ),
       isExpanded: false,
       headerColor: colorScheme.surface,
-      contentColor: colorScheme.surfaceVariant.withOpacity(0.3),
+      contentColor: colorScheme.surfaceContainerHighest.withOpacity(0.3),
       border: Border.all(
         color: colorScheme.outlineVariant,
         width: 1,
@@ -444,11 +591,118 @@ class _AnimeSeriesCard extends StatelessWidget {
       expandIcon: Iconsax.arrow_down_1,
       headerPadding:
           const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-      contentPadding: const EdgeInsets.all(8.0),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 4.0),
       onExpansionChanged: (isExpanded) {
         // Handle expansion change if needed
       },
     );
+  }
+}
+
+class _EpisodeCard extends StatelessWidget {
+  final AnimeWatchProgressEntry anime;
+  final EpisodeProgress episode;
+
+  const _EpisodeCard({required this.anime, required this.episode});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: colorScheme.outlineVariant, width: 1),
+      ),
+      child: InkWell(
+        onTap: () {
+          context.push('/watch/${anime.animeId}/${episode.episodeNumber}');
+        },
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Row(
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: CachedNetworkImage(
+                  imageUrl: anime.animeCover,
+                  height: 60,
+                  width: 40,
+                  fit: BoxFit.cover,
+                  placeholder: (context, url) => Container(
+                    color: colorScheme.surfaceContainerHighest,
+                    child: const Center(
+                      child: SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    ),
+                  ),
+                  errorWidget: (context, url, error) => Container(
+                    color: colorScheme.errorContainer,
+                    child: Icon(
+                      Iconsax.image,
+                      color: colorScheme.error,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      anime.animeTitle,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Episode ${episode.episodeNumber}',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    if (episode.watchedAt != null)
+                      Text(
+                        'Watched: ${_formatDate(episode.watchedAt!)}',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: colorScheme.onSurfaceVariant.withOpacity(0.7),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              if (episode.isCompleted)
+                Icon(
+                  Iconsax.tick_circle,
+                  color: colorScheme.primary,
+                  size: 20,
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _formatDate(DateTime date) {
+    final now = DateTime.now();
+    final difference = now.difference(date);
+    if (difference.inDays < 1) {
+      return '${difference.inHours}h ago';
+    } else if (difference.inDays < 7) {
+      return '${difference.inDays}d ago';
+    } else {
+      return '${date.day}/${date.month}/${date.year}';
+    }
   }
 }
 
@@ -475,7 +729,7 @@ class _ProgressIndicator extends StatelessWidget {
         borderRadius: BorderRadius.circular(2),
         child: LinearProgressIndicator(
           value: progress,
-          backgroundColor: colorScheme.surfaceVariant,
+          backgroundColor: colorScheme.surfaceContainerHighest,
           valueColor: AlwaysStoppedAnimation<Color>(colorScheme.primary),
         ),
       ),
