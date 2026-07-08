@@ -1,17 +1,18 @@
 import 'dart:developer';
+
 import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
-import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:iconsax/iconsax.dart';
+
 import 'package:shonenx/core/anilist/services/anilist_service.dart';
 import 'package:shonenx/core/models/anilist/anilist_media_list.dart';
 import 'package:shonenx/helpers/anime_match_popup.dart';
 import 'package:shonenx/providers/anilist/anilist_medialist_provider.dart';
 import 'package:shonenx/providers/anilist/anilist_user_provider.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:shonenx/utils/html_parser.dart';
 
 class AnimeDetailsScreen extends ConsumerStatefulWidget {
@@ -122,6 +123,7 @@ class _AnimeDetailsScreenState extends ConsumerState<AnimeDetailsScreen> {
 
   void _showSnackBar(
       BuildContext context, String title, String message, ContentType type) {
+    final theme = Theme.of(context);
     final snackBar = SnackBar(
       elevation: 0,
       behavior: SnackBarBehavior.floating,
@@ -131,9 +133,13 @@ class _AnimeDetailsScreenState extends ConsumerState<AnimeDetailsScreen> {
         title: title,
         message: message,
         contentType: type,
-        titleTextStyle:
-            GoogleFonts.montserrat(fontSize: 18, fontWeight: FontWeight.w700),
-        messageTextStyle: GoogleFonts.montserrat(fontSize: 14),
+        titleTextStyle: theme.textTheme.titleLarge?.copyWith(
+          fontWeight: FontWeight.bold,
+          color: theme.colorScheme.onSurface,
+        ),
+        messageTextStyle: theme.textTheme.bodyMedium?.copyWith(
+          color: theme.colorScheme.onSurfaceVariant,
+        ),
       ),
     );
     ScaffoldMessenger.of(context).showSnackBar(snackBar);
@@ -267,10 +273,9 @@ class _Header extends StatelessWidget {
                           children: [
                             Text(
                               anime.title?.english ?? anime.title?.romaji ?? '',
-                              style: GoogleFonts.montserrat(
-                                fontSize: 24,
-                                fontWeight: FontWeight.w700,
-                                color: Colors.white,
+                              style: theme.textTheme.titleLarge?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: theme.colorScheme.onSurface,
                               ),
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
@@ -278,13 +283,12 @@ class _Header extends StatelessWidget {
                             if (anime.title?.native != null)
                               Padding(
                                 padding: const EdgeInsets.only(top: 4),
-                                child: Text(
-                                  anime.title!.native!,
-                                  style: GoogleFonts.montserrat(
-                                    fontSize: 16,
-                                    color: Colors.white70,
-                                  ),
-                                ),
+                                child: Text(anime.title!.native!,
+                                    style:
+                                        theme.textTheme.titleMedium?.copyWith(
+                                      fontWeight: FontWeight.w500,
+                                      color: theme.colorScheme.onSurfaceVariant,
+                                    )),
                               ),
                             const SizedBox(height: 12),
                             _GenreTags(
@@ -349,7 +353,10 @@ class _GenreTags extends StatelessWidget {
       scrollDirection: Axis.horizontal,
       child: Row(
         children: [
-          _Tag(text: status, color: theme.colorScheme.primary, isStatus: true),
+          _Tag(
+              text: status,
+              color: theme.colorScheme.primaryContainer,
+              isStatus: true),
           const SizedBox(width: 8),
           ...genres.map((genre) => Padding(
                 padding: const EdgeInsets.only(right: 8),
@@ -385,11 +392,11 @@ class _Tag extends StatelessWidget {
       ),
       child: Text(
         text,
-        style: GoogleFonts.montserrat(
-          color: color ?? Colors.white.withOpacity(0.9),
-          fontWeight: isStatus ? FontWeight.w600 : FontWeight.w500,
-          fontSize: 12,
-        ),
+        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: color ?? Colors.white.withOpacity(0.9),
+              fontWeight: isStatus ? FontWeight.w600 : FontWeight.w500,
+              fontSize: 12,
+            ),
       ),
     );
   }
@@ -521,24 +528,22 @@ class _InfoItem extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: colorScheme.primary.withOpacity(0.1),
+            color: colorScheme.primaryContainer.withOpacity(0.1),
             shape: BoxShape.circle,
           ),
-          child: Icon(icon, color: colorScheme.primary, size: 24),
+          child: Icon(icon, color: colorScheme.primaryContainer, size: 24),
         ),
         const SizedBox(height: 8),
         Text(
           value,
-          style: GoogleFonts.montserrat(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
+          style: theme.textTheme.bodyLarge?.copyWith(
+            fontWeight: FontWeight.w600,
             color: colorScheme.onSurface,
           ),
         ),
         Text(
           label,
-          style: GoogleFonts.montserrat(
-            fontSize: 12,
+          style: theme.textTheme.bodySmall?.copyWith(
             color: colorScheme.onSurfaceVariant,
           ),
         ),
@@ -569,13 +574,13 @@ class _ActionButton extends StatelessWidget {
       duration: const Duration(milliseconds: 200),
       decoration: BoxDecoration(
         color: isPrimary
-            ? colorScheme.primary
+            ? colorScheme.primaryContainer
             : colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
             color: isPrimary
-                ? colorScheme.primary.withOpacity(0.3)
+                ? colorScheme.primaryContainer.withOpacity(0.3)
                 : Colors.black12,
             blurRadius: 6,
             offset: const Offset(0, 2),
@@ -594,18 +599,19 @@ class _ActionButton extends StatelessWidget {
               children: [
                 Icon(
                   icon,
-                  color:
-                      isPrimary ? colorScheme.onPrimary : colorScheme.primary,
+                  color: isPrimary
+                      ? colorScheme.onPrimaryContainer
+                      : colorScheme.primaryContainer,
                   size: 20,
                 ),
                 const SizedBox(width: 8),
                 Text(
                   label,
-                  style: GoogleFonts.montserrat(
-                    color:
-                        isPrimary ? colorScheme.onPrimary : colorScheme.primary,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: isPrimary
+                        ? colorScheme.onPrimaryContainer
+                        : colorScheme.primaryContainer,
                     fontWeight: FontWeight.w600,
-                    fontSize: 14,
                   ),
                 ),
               ],
@@ -630,19 +636,15 @@ class _Synopsis extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Synopsis',
-          style: GoogleFonts.montserrat(
-            fontSize: 22,
-            fontWeight: FontWeight.w700,
-            color: colorScheme.onSurface,
-          ),
-        ),
+        Text('Synopsis',
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: colorScheme.onSurface,
+            )),
         const SizedBox(height: 12),
         Text(
           parseHtmlToString(description),
-          style: GoogleFonts.montserrat(
-            fontSize: 16,
+          style: theme.textTheme.bodyMedium?.copyWith(
             color: colorScheme.onSurfaceVariant,
             height: 1.5,
           ),
@@ -663,14 +665,11 @@ class _Rankings extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Rankings',
-          style: GoogleFonts.montserrat(
-            fontSize: 22,
-            fontWeight: FontWeight.w700,
-            color: theme.colorScheme.onSurface,
-          ),
-        ),
+        Text('Rankings',
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: theme.colorScheme.onSurface,
+            )),
         const SizedBox(height: 12),
         ...rankings.map((ranking) => _RankingCard(ranking: ranking)),
       ],
@@ -700,21 +699,20 @@ class _RankingCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
-                color: colorScheme.primary,
+                color: colorScheme.primaryContainer,
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
-                    color: colorScheme.primary.withOpacity(0.2),
+                    color: colorScheme.primaryContainer.withOpacity(0.2),
                     blurRadius: 4,
                   ),
                 ],
               ),
               child: Text(
                 '#${ranking.rank}',
-                style: GoogleFonts.montserrat(
-                  color: colorScheme.onPrimary,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: colorScheme.onPrimaryContainer,
                   fontWeight: FontWeight.bold,
-                  fontSize: 14,
                 ),
               ),
             ),
@@ -726,8 +724,7 @@ class _RankingCard extends StatelessWidget {
                   Text(
                     ranking.context.replaceFirst(
                         ranking.context[0], ranking.context[0].toUpperCase()),
-                    style: GoogleFonts.montserrat(
-                      fontSize: 16,
+                    style: theme.textTheme.bodyLarge?.copyWith(
                       fontWeight: FontWeight.w600,
                       color: colorScheme.onSurface,
                     ),
@@ -735,8 +732,7 @@ class _RankingCard extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     'Based on user ratings and popularity',
-                    style: GoogleFonts.montserrat(
-                      fontSize: 12,
+                    style: theme.textTheme.bodySmall?.copyWith(
                       color: colorScheme.onSurfaceVariant,
                     ),
                   ),
@@ -773,7 +769,7 @@ class _WatchButton extends ConsumerWidget {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: colorScheme.primary.withOpacity(0.4),
+              color: colorScheme.primaryContainer.withOpacity(0.4),
               blurRadius: 8,
               offset: const Offset(0, 4),
             ),
@@ -796,16 +792,13 @@ class _WatchButton extends ConsumerWidget {
             child: Row(
               children: [
                 Icon(Iconsax.play_circle,
-                    color: colorScheme.onPrimary, size: 24),
+                    color: colorScheme.onPrimaryContainer, size: 24),
                 const SizedBox(width: 8),
-                Text(
-                  'Watch Now',
-                  style: GoogleFonts.montserrat(
-                    color: colorScheme.onPrimary,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 16,
-                  ),
-                ),
+                Text('Watch Now',
+                    style: theme.textTheme.labelLarge?.copyWith(
+                      color: colorScheme.onPrimaryContainer,
+                      fontWeight: FontWeight.w600,
+                    )),
               ],
             ),
           ),
@@ -886,20 +879,27 @@ class _StatusMenuItem extends ConsumerWidget {
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16)),
                 title: Text('Remove from ${status.title}?',
-                    style: GoogleFonts.montserrat(fontWeight: FontWeight.bold)),
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: colorScheme.onSurface,
+                    )),
                 content: Text(
                   'Do you want to remove "${animeMedia.title?.english ?? animeMedia.title?.romaji}" from your ${status.title} list?',
-                  style: GoogleFonts.montserrat(),
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
                 ),
                 actions: [
                   TextButton(
                     onPressed: () => Navigator.pop(context, false),
-                    child: Text('Cancel', style: GoogleFonts.montserrat()),
+                    child: Text('Cancel', style: theme.textTheme.labelLarge),
                   ),
                   TextButton(
                     onPressed: () => Navigator.pop(context, true),
                     child: Text('Remove',
-                        style: GoogleFonts.montserrat(color: Colors.red)),
+                        style: theme.textTheme.labelLarge?.copyWith(
+                          color: Colors.red,
+                        )),
                   ),
                 ],
               ),
@@ -953,10 +953,9 @@ class _StatusMenuItem extends ConsumerWidget {
             const SizedBox(width: 12),
             Text(
               status.title,
-              style: GoogleFonts.montserrat(
+              style: theme.textTheme.bodyLarge?.copyWith(
                 fontWeight: isCurrent ? FontWeight.bold : FontWeight.w500,
                 color: isCurrent ? status.color : colorScheme.onSurface,
-                fontSize: 16,
               ),
             ),
             if (isCurrent) ...[
@@ -971,6 +970,7 @@ class _StatusMenuItem extends ConsumerWidget {
 
   void _showSnackBar(
       BuildContext context, String title, String message, ContentType type) {
+    final theme = Theme.of(context);
     final snackBar = SnackBar(
       elevation: 0,
       behavior: SnackBarBehavior.floating,
@@ -980,9 +980,13 @@ class _StatusMenuItem extends ConsumerWidget {
         title: title,
         message: message,
         contentType: type,
-        titleTextStyle:
-            GoogleFonts.montserrat(fontSize: 18, fontWeight: FontWeight.w700),
-        messageTextStyle: GoogleFonts.montserrat(fontSize: 14),
+        titleTextStyle: theme.textTheme.titleLarge?.copyWith(
+          fontWeight: FontWeight.bold,
+          color: theme.colorScheme.onSurface,
+        ),
+        messageTextStyle: theme.textTheme.bodyMedium?.copyWith(
+          color: theme.colorScheme.onSurfaceVariant,
+        ),
       ),
     );
     ScaffoldMessenger.of(context).showSnackBar(snackBar);

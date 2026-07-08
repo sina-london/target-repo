@@ -200,7 +200,8 @@ class ContinueWatchingCard extends ConsumerWidget {
                     height: 4,
                     width: double.infinity,
                     decoration: BoxDecoration(
-                      color: colorScheme.surfaceVariant.withOpacity(0.5),
+                      color:
+                          colorScheme.surfaceContainerHighest.withOpacity(0.5),
                       borderRadius: BorderRadius.circular(4),
                     ),
                   ),
@@ -212,11 +213,12 @@ class ContinueWatchingCard extends ConsumerWidget {
                     height: 4,
                     width: progress * (280 - 24), // Full width minus padding
                     decoration: BoxDecoration(
-                      color: colorScheme.primary,
+                      color: colorScheme.secondaryContainer,
                       borderRadius: BorderRadius.circular(4),
                       boxShadow: [
                         BoxShadow(
-                          color: colorScheme.primary.withOpacity(0.4),
+                          color:
+                              colorScheme.secondaryContainer.withOpacity(0.4),
                           blurRadius: 3,
                           offset: const Offset(0, 0),
                         ),
@@ -283,7 +285,7 @@ class ContinueWatchingCard extends ConsumerWidget {
       duration: const Duration(milliseconds: 200),
       decoration: BoxDecoration(
         color: isSelected
-            ? colorScheme.primary.withOpacity(0.4)
+            ? colorScheme.primaryContainer.withOpacity(0.4)
             : Colors.black.withOpacity(0.2),
         borderRadius: BorderRadius.circular(16),
       ),
@@ -296,12 +298,12 @@ class ContinueWatchingCard extends ConsumerWidget {
                   child: Container(
                     padding: const EdgeInsets.all(4),
                     decoration: BoxDecoration(
-                      color: colorScheme.primary,
+                      color: colorScheme.primaryContainer,
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
                       Icons.check,
-                      color: colorScheme.onPrimary,
+                      color: colorScheme.onPrimaryContainer,
                       size: 16,
                     ),
                   ),
@@ -349,11 +351,11 @@ class _EpisodeTag extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
       decoration: BoxDecoration(
-        color: colorScheme.primary,
+        color: colorScheme.primaryContainer,
         borderRadius: BorderRadius.circular(6),
         boxShadow: [
           BoxShadow(
-            color: colorScheme.primary.withOpacity(0.4),
+            color: colorScheme.primaryContainer.withOpacity(0.4),
             blurRadius: 4,
             offset: const Offset(0, 1),
           ),
@@ -362,7 +364,7 @@ class _EpisodeTag extends StatelessWidget {
       child: Text(
         'EP $episode',
         style: textTheme.labelSmall?.copyWith(
-          color: colorScheme.onPrimary,
+          color: colorScheme.onPrimaryContainer,
           fontWeight: FontWeight.w800,
           fontSize: 10,
         ),
@@ -418,10 +420,10 @@ class _ActionButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: colorScheme.primary,
+      color: colorScheme.primaryContainer,
       borderRadius: BorderRadius.circular(24),
       elevation: 2,
-      shadowColor: colorScheme.primary.withOpacity(0.5),
+      shadowColor: colorScheme.primaryContainer.withOpacity(0.5),
       child: InkWell(
         onTap: onPressed,
         borderRadius: BorderRadius.circular(24),
@@ -433,7 +435,7 @@ class _ActionButton extends StatelessWidget {
                   height: 14,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    color: colorScheme.onPrimary,
+                    color: colorScheme.onPrimaryContainer,
                   ),
                 )
               : Row(
@@ -442,13 +444,13 @@ class _ActionButton extends StatelessWidget {
                     Icon(
                       isCompleted ? Iconsax.repeat : Iconsax.play,
                       size: 14,
-                      color: colorScheme.onPrimary,
+                      color: colorScheme.onPrimaryContainer,
                     ),
                     const SizedBox(width: 4),
                     Text(
                       isCompleted ? 'Rewatch' : 'Play',
                       style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                            color: colorScheme.onPrimary,
+                            color: colorScheme.onPrimaryContainer,
                             fontWeight: FontWeight.w700,
                             fontSize: 10,
                           ),
@@ -473,7 +475,7 @@ class _ImagePlaceholder extends StatelessWidget {
       child: Center(
         child: CircularProgressIndicator(
           strokeWidth: 2,
-          color: colorScheme.primary,
+          color: colorScheme.primaryContainer,
         ),
       ),
     );

@@ -24,7 +24,7 @@ class HomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isDesktop = MediaQuery.of(context).size.width > 900;
     final homepageState = ref.watch(homepageProvider);
-    
+
     return Scaffold(
       extendBodyBehindAppBar: true,
       floatingActionButton: isDesktop ? _buildFAB(context) : null,
@@ -408,8 +408,8 @@ class DiscoverCard extends StatelessWidget {
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              theme.colorScheme.primary.withOpacity(0.15),
-              theme.colorScheme.primary.withOpacity(0.05),
+              theme.colorScheme.primaryContainer.withOpacity(0.15),
+              theme.colorScheme.primaryContainer.withOpacity(0.05),
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
@@ -423,12 +423,12 @@ class DiscoverCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: theme.colorScheme.primary.withOpacity(0.1),
+                color: theme.colorScheme.primaryContainer.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(15),
               ),
               child: Icon(
                 Icons.explore,
-                color: theme.colorScheme.primary,
+                color: theme.colorScheme.primaryContainer,
                 size: 20,
               ),
             ),
@@ -441,7 +441,7 @@ class DiscoverCard extends StatelessWidget {
                     'Discover Anime',
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
-                      color: theme.colorScheme.primary,
+                      color: theme.colorScheme.primaryContainer,
                     ),
                   ),
                   const SizedBox(height: 4),

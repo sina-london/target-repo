@@ -115,7 +115,7 @@ class WatchProgressService {
         episode: EpisodeProgress(
           episodeNumber: episode.number!,
           episodeTitle: episode.title ?? 'Untitled',
-          episodeThumbnail: episode.thumbnail,
+          episodeThumbnail: thumbnailBase64,
           progressInSeconds: progress.inSeconds,
           durationInSeconds: duration.inSeconds,
           watchedAt: DateTime.now(),
