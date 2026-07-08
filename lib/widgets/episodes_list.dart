@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:nekoflow/data/models/episodes_model.dart';
@@ -45,7 +46,8 @@ class _EpisodesListState extends State<EpisodesList> {
     _fetchData();
   }
 
-  Future<void> _addToRecentlyWatched(String episodeId, int episodeNumber) async {
+  Future<void> _addToRecentlyWatched(
+      String episodeId, int episodeNumber) async {
     final watchlist = _watchlistBox.get('recentlyWatched') ??
         WatchlistModel(
           recentlyWatched: [],
@@ -53,13 +55,17 @@ class _EpisodesListState extends State<EpisodesList> {
           favorites: [],
         );
 
-    final newItem = RecentlyWatchedItem(name: widget.name, poster: widget.poster, type: widget.type, id: widget.id);
+    final newItem = RecentlyWatchedItem(
+        name: widget.name,
+        poster: widget.poster,
+        type: widget.type,
+        id: widget.id);
 
     var recentlyWatched = watchlist.recentlyWatched ?? [];
     recentlyWatched = [
       newItem,
-      ...recentlyWatched.where((item) =>
-          item.name != newItem.name || item.id != newItem.id)
+      ...recentlyWatched
+          .where((item) => item.name != newItem.name || item.id != newItem.id)
     ].take(10).toList();
 
     watchlist.recentlyWatched = recentlyWatched;
@@ -104,7 +110,7 @@ class _EpisodesListState extends State<EpisodesList> {
     _addToRecentlyWatched(episode.episodeId, episode.number);
     Navigator.push(
       context,
-      MaterialPageRoute(
+      CupertinoPageRoute(
         builder: (context) => StreamScreen(
           id: widget.id,
           name: widget.name,
@@ -151,7 +157,10 @@ class _EpisodesListState extends State<EpisodesList> {
               builder: (context, selectedIndex, _) {
                 return DropdownButton<int>(
                   value: selectedIndex,
-                  icon: Icon(Icons.view_list, color: Theme.of(context).iconTheme.color,),
+                  icon: Icon(
+                    Icons.view_list,
+                    color: Theme.of(context).iconTheme.color,
+                  ),
                   onChanged: (newIndex) {
                     if (newIndex != null) {
                       _selectedRangeIndex.value = newIndex;
@@ -160,7 +169,10 @@ class _EpisodesListState extends State<EpisodesList> {
                   items: groupedEpisodes.asMap().entries.map((entry) {
                     return DropdownMenuItem<int>(
                       value: entry.key,
-                      child: Text(entry.value.keys.first, style: Theme.of(context).textTheme.labelMedium,),
+                      child: Text(
+                        entry.value.keys.first,
+                        style: Theme.of(context).textTheme.labelMedium,
+                      ),
                     );
                   }).toList(),
                 );
@@ -246,10 +258,7 @@ class _EpisodesListState extends State<EpisodesList> {
         ),
         subtitle: Text(
           episode.title,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500
-          ),
+          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
         ),
         trailing: IconButton(
           icon: Icon(
