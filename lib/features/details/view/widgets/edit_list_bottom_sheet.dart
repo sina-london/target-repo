@@ -12,6 +12,7 @@ import 'package:shonenx/core/utils/app_logger.dart';
 import 'package:shonenx/features/auth/view_model/auth_notifier.dart';
 import 'package:shonenx/features/watchlist/view_model/watchlist_notifier.dart';
 import 'package:collection/collection.dart';
+import 'package:shonenx/shared/providers/anime_repo_provider.dart';
 
 /// Bottom sheet for editing anime list entry
 class EditListBottomSheet extends ConsumerStatefulWidget {
@@ -45,8 +46,9 @@ class _EditListBottomSheetState extends ConsumerState<EditListBottomSheet> {
   DateTime? _startDate;
   DateTime? _completedDate;
   late bool _isPrivate;
-  bool _isSaving = false;
-  bool _isFetching = true;
+
+  final ValueNotifier<bool> _isSaving = ValueNotifier(false);
+  final ValueNotifier<bool> _isFetching = ValueNotifier(true);
 
   @override
   void initState() {
@@ -56,8 +58,8 @@ class _EditListBottomSheetState extends ConsumerState<EditListBottomSheet> {
     _scoreController = TextEditingController(text: '0');
     _repeatsController = TextEditingController(text: '0');
     _notesController = TextEditingController();
-    _fetchEntry(ref);
     _isPrivate = false;
+    _loadEntry();
   }
 
   @override
@@ -66,139 +68,129 @@ class _EditListBottomSheetState extends ConsumerState<EditListBottomSheet> {
     _scoreController.dispose();
     _repeatsController.dispose();
     _notesController.dispose();
+    _isSaving.dispose();
+    _isFetching.dispose();
     super.dispose();
   }
 
-  Future<void> _fetchEntry(WidgetRef ref) async {
-    setState(() {
-      _isFetching = true;
-    });
-    final auth = ref.read(authProvider);
-    if (auth.authPlatform == null) {
-      _showSnackBar('Login Required', 'Sar plz login!', ContentType.failure);
-      return;
-    }
-    final watchlist = ref.read(watchlistProvider);
-    final watchlistNotifier = ref.read(watchlistProvider.notifier);
+  void _updateEntryFields(dynamic entry) {
+    _selectedStatus = entry.status;
+    _progressController.text = entry.progress.toString();
+    _scoreController.text = entry.score.toString();
+    _repeatsController.text = entry.repeat.toString();
+    _notesController.text = entry.notes;
+    _startDate = entry.startedAt?.toDateTime;
+    _completedDate = entry.completedAt?.toDateTime;
+    _isPrivate = entry.isPrivate;
+  }
 
-    switch (auth.authPlatform!) {
-      case AuthPlatform.anilist:
-        {
-          final entries = watchlist.lists.entries;
-          final entry = entries.map((entry) => entry.value.firstWhereOrNull((media) => media.id == widget.anime.id!));
-          // Todo: Entry sync load
-          if (entry.isNotEmpty ) {
-            AppLogger.d('Entry is already in list');
-            return;
-          }
-          AppLogger.d('Entry is being fetched');
-          break;
-        }
-      case AuthPlatform.mal:
-        {
-          _showSnackBar(
-            'Info',
-            'MAL support not implemented yet.',
-            ContentType.warning,
-          );
-          break;
-        }
+  Future<void> _loadEntry() async {
+    _isFetching.value = true;
+    try {
+      final auth = ref.read(authProvider);
+      if (auth.authPlatform == null) {
+        _showSnackBar(
+            'Login Required', 'Please login first!', ContentType.failure);
+        return;
+      }
+
+      final watchlistNotifier = ref.read(watchlistProvider.notifier);
+      final animeRepo = ref.read(animeRepositoryProvider);
+      final watchlist = ref.read(watchlistProvider);
+
+      dynamic entry = watchlist.lists.values
+          .expand((e) => e)
+          .firstWhereOrNull((media) => media.id == widget.anime.id);
+
+      if (entry == null && auth.authPlatform == AuthPlatform.anilist) {
+        entry = await animeRepo.getAnimeEntry(widget.anime.id!);
+        if (entry != null) watchlistNotifier.addEntry(entry);
+      }
+
+      if (entry != null) _updateEntryFields(entry);
+    } catch (e) {
+      AppLogger.e('Failed to load entry: $e');
+    } finally {
+      _isFetching.value = false;
     }
   }
 
-  Future<void> _saveChanges(WidgetRef ref) async {
+  Future<void> _saveChanges() async {
     final auth = ref.read(authProvider);
     if (auth.authPlatform == null) {
-      _showSnackBar('Login Required', 'Sar plz login!', ContentType.failure);
+      _showSnackBar(
+          'Login Required', 'Please login first!', ContentType.failure);
       return;
     }
 
-    setState(() => _isSaving = true);
-
+    _isSaving.value = true;
     try {
       final score = double.tryParse(_scoreController.text) ?? 0.0;
       final progress = int.tryParse(_progressController.text) ?? 0;
       final repeats = int.tryParse(_repeatsController.text) ?? 0;
 
-      switch (auth.authPlatform!) {
-        case AuthPlatform.anilist:
-          await ref.read(anilistServiceProvider).updateUserAnimeList(
-                mediaId: widget.anime.id!,
-                status: _selectedStatus,
-                score: score,
-                private: _isPrivate,
-                startedAt: FuzzyDateInput(
-                  year: _startDate?.year,
-                  month: _startDate?.month,
-                  day: _startDate?.day,
-                ),
-                completedAt: FuzzyDateInput(
-                  year: _completedDate?.year,
-                  month: _completedDate?.month,
-                  day: _completedDate?.day,
-                ),
-                repeat: repeats,
-                notes: _notesController.text,
-                progress: progress,
-              );
-          _showSnackBar(
-            'Success',
-            'Animelist updated successfully',
-            ContentType.success,
-          );
-          break;
-
-        case AuthPlatform.mal:
-          _showSnackBar(
-            'Info',
-            'MAL support not implemented yet.',
-            ContentType.warning,
-          );
-          break;
+      if (auth.authPlatform == AuthPlatform.anilist) {
+        await ref.read(anilistServiceProvider).updateUserAnimeList(
+              mediaId: widget.anime.id!,
+              status: _selectedStatus,
+              score: score,
+              private: _isPrivate,
+              startedAt: FuzzyDateInput(
+                year: _startDate?.year,
+                month: _startDate?.month,
+                day: _startDate?.day,
+              ),
+              completedAt: FuzzyDateInput(
+                year: _completedDate?.year,
+                month: _completedDate?.month,
+                day: _completedDate?.day,
+              ),
+              repeat: repeats,
+              notes: _notesController.text,
+              progress: progress,
+            );
+        _showSnackBar('Success', 'Anime list updated', ContentType.success);
+      } else {
+        _showSnackBar(
+            'Info', 'MAL support not implemented yet', ContentType.warning);
       }
 
-      if (mounted) {
-        Navigator.pop(context);
-      }
+      if (mounted) Navigator.pop(context);
     } catch (e, st) {
       AppLogger.e('Error while saving anime list: $e\n$st');
       _showSnackBar(
-        'Error',
-        'Failed to update anime list. Please try again.',
-        ContentType.failure,
-      );
+          'Error', 'Failed to update anime list', ContentType.failure);
     } finally {
-      if (mounted) setState(() => _isSaving = false);
+      _isSaving.value = false;
     }
   }
 
   void _showSnackBar(String title, String message, ContentType type) {
     if (!mounted) return;
-    final snackBar = SnackBar(
-      elevation: 0,
-      behavior: SnackBarBehavior.floating,
-      backgroundColor: Colors.transparent,
-      content: AwesomeSnackbarContent(
-        title: title,
-        message: message,
-        contentType: type,
-      ),
-    );
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(snackBar);
+      ..showSnackBar(SnackBar(
+        elevation: 0,
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: Colors.transparent,
+        content: AwesomeSnackbarContent(
+          title: title,
+          message: message,
+          contentType: type,
+        ),
+      ));
   }
 
   Future<void> _pickDate(bool isStartDate) async {
-    final initialDate =
-        (isStartDate ? _startDate : _completedDate) ?? DateTime.now();
-    final firstDate =
-        isStartDate ? DateTime(1980) : (_startDate ?? DateTime(1980));
+    final initial = isStartDate
+        ? _startDate ?? DateTime.now()
+        : _completedDate ?? DateTime.now();
+    final first = isStartDate ? DateTime(1980) : (_startDate ?? DateTime(1980));
 
     final newDate = await showDatePicker(
       context: context,
-      initialDate: initialDate,
-      firstDate: firstDate,
+      initialDate: initial,
+      firstDate: first,
       lastDate: DateTime.now(),
     );
 
@@ -229,9 +221,27 @@ class _EditListBottomSheetState extends ConsumerState<EditListBottomSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('Edit Entry',
-                style: theme.textTheme.titleLarge
-                    ?.copyWith(fontWeight: FontWeight.bold)),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                ValueListenableBuilder(
+                  valueListenable: _isFetching,
+                  builder: (context, value, child) => value
+                      ? Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 5),
+                          child: Text('Syncing Entry...',
+                              style: theme.textTheme.titleLarge
+                                  ?.copyWith(fontWeight: FontWeight.bold)),
+                        )
+                      : Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 5),
+                          child: Text('Edit Entry',
+                              style: theme.textTheme.titleLarge
+                                  ?.copyWith(fontWeight: FontWeight.bold)),
+                        ),
+                )
+              ],
+            ),
             const SizedBox(height: 24),
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -287,14 +297,14 @@ class _EditListBottomSheetState extends ConsumerState<EditListBottomSheet> {
             ),
             const SizedBox(height: 24),
             FilledButton.icon(
-              onPressed: _isSaving ? null : () => _saveChanges(ref),
-              icon: _isSaving
+              onPressed: _isSaving.value ? null : () => _saveChanges(),
+              icon: _isSaving.value
                   ? const SizedBox(
                       width: 20,
                       height: 20,
                       child: CircularProgressIndicator(strokeWidth: 2))
                   : const Icon(Iconsax.save_2),
-              label: Text(_isSaving ? 'Saving...' : 'Save Changes'),
+              label: Text(_isSaving.value ? 'Saving...' : 'Save Changes'),
               style: FilledButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 textStyle: theme.textTheme.titleMedium
@@ -330,7 +340,7 @@ class _EditListBottomSheetState extends ConsumerState<EditListBottomSheet> {
   }
 
   Widget _buildTextField(String label, TextEditingController controller,
-      {String? suffixText = '', int? maxLines = 1, Widget? suffixIcon}) {
+      {String? suffixText, int maxLines = 1, Widget? suffixIcon}) {
     return TextFormField(
       controller: controller,
       maxLines: maxLines,
@@ -339,16 +349,17 @@ class _EditListBottomSheetState extends ConsumerState<EditListBottomSheet> {
       inputFormatters:
           maxLines == 1 ? [FilteringTextInputFormatter.digitsOnly] : [],
       decoration: InputDecoration(
-          labelText: label,
-          border: const OutlineInputBorder(
-              borderRadius: BorderRadius.all(Radius.circular(12))),
-          suffixText: suffixText,
-          suffixIcon: suffixIcon),
+        labelText: label,
+        border: const OutlineInputBorder(
+            borderRadius: BorderRadius.all(Radius.circular(12))),
+        suffixText: suffixText,
+        suffixIcon: suffixIcon,
+      ),
     );
   }
 
   Widget _buildDateField(String label, DateTime? date, VoidCallback onTap) {
-    final formattedDate =
+    final formatted =
         date != null ? DateFormat.yMMMd().format(date) : 'Select Date';
     return InkWell(
       onTap: onTap,
@@ -361,7 +372,7 @@ class _EditListBottomSheetState extends ConsumerState<EditListBottomSheet> {
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
         ),
-        child: Text(formattedDate),
+        child: Text(formatted),
       ),
     );
   }

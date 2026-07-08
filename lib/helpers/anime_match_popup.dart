@@ -11,6 +11,7 @@ import 'package:shonenx/core/sources/anime/anime_provider.dart';
 import 'package:shonenx/core/utils/app_logger.dart';
 import 'package:shonenx/helpers/matcher.dart';
 import 'package:shonenx/helpers/navigation.dart';
+import 'package:shonenx/main.dart';
 
 /// Searches for an anime match and navigates to the watch screen.
 ///
@@ -29,59 +30,102 @@ Future<void> providerAnimeMatchSearch({
 
   try {
     final animeProvider = ref.read(selectedAnimeProvider);
-    final title = animeMedia.title?.english ?? animeMedia.title?.romaji;
-    if (animeProvider == null || title == null) {
-      throw Exception('Anime provider or title is missing.');
+    if (animeProvider == null) {
+      throw Exception('Anime provider is missing.');
     }
 
-    final initialResponse = await animeProvider.getSearch(
-        Uri.encodeComponent(title.trim()), animeMedia.format, 1);
-    if (!context.mounted) return;
+    // Collect titles in priority order
+    final titles = [
+      animeMedia.title?.english,
+      animeMedia.title?.romaji,
+      animeMedia.title?.native,
+    ].where((t) => t != null && t.trim().isNotEmpty).cast<String>().toList();
 
-    if (initialResponse.results.isEmpty) {
-      _showErrorSnackBar(context, 'Anime Not Found',
-          'We couldn\'t locate this anime with the selected provider.');
-      return;
+    if (titles.isEmpty) {
+      throw Exception('No valid titles available for search.');
     }
 
-    // Calculate similarity for valid results and sort them
-    final matchedResults = getBestMatches(
-      results: initialResponse.results,
-      title: title,
-      nameSelector: (r) => r.name,
-      idSelector: (r) => r.id,
-    );
+    List<BaseAnimeModel>? fallbackResults;
+    String? usedTitle;
 
-    if (!context.mounted) return;
+    // Try each title until one gives confident match or usable results
+    for (final title in titles) {
+      AppLogger.d('🔎 Trying search with title: $title');
 
-    // Navigate directly if a high-confidence match is found
-    if (matchedResults.isNotEmpty && matchedResults.first.similarity >= 0.8) {
-      final bestMatch = matchedResults.first.result;
-      AppLogger.d('High-confidence match found: ${bestMatch.name}');
-      navigateToWatch(
-        context: context,
-        ref: ref,
-        animeId: bestMatch.id!,
-        animeName: bestMatch.name!,
+      final initialResponse = await animeProvider.getSearch(
+        Uri.encodeComponent(title.trim()),
+        animeMedia.format,
+        1,
+      );
+
+      if (!context.mounted) return;
+
+      if (initialResponse.results.isEmpty) {
+        AppLogger.d('No results for "$title". Trying next title...');
+        continue;
+      }
+
+      // Step 2: calculate similarity
+      final matches = getBestMatches<BaseAnimeModel>(
+        results: initialResponse.results,
+        title: title,
+        nameSelector: (r) => r.name,
+        idSelector: (r) => r.id,
+      );
+
+      if (!context.mounted) return;
+
+      if (matches.isNotEmpty && matches.first.similarity >= 0.8) {
+        final bestMatch = matches.first.result;
+        usedTitle = title;
+        AppLogger.d(
+            '✅ High-confidence match found: ${bestMatch.name} (via "$title")');
+
+        navigateToWatch(
+          context: context,
+          ref: ref,
+          animeId: bestMatch.id!,
+          animeName: bestMatch.name!,
+          episodes: const [],
+        );
+        return;
+      }
+
+      // No confident match → store results for manual selection
+      fallbackResults = initialResponse.results;
+      usedTitle = title;
+      break;
+    }
+
+    // If no results from any title
+    if (fallbackResults == null || fallbackResults.isEmpty) {
+      showAppSnackBar(
+        'Anime Not Found',
+        'We couldn\'t locate this anime with any available title.',
+        type: ContentType.failure,
       );
       return;
     }
 
-    // Show search dialog for manual selection
+    // Show manual selection dialog
     await showDialog(
       context: context,
       builder: (_) => _AnimeSearchDialog(
-        initialResults: matchedResults.map((r) => r.result).toList(),
+        initialResults: fallbackResults ?? [],
         animeProvider: animeProvider,
         animeMedia: animeMedia,
         plusEpisode: plusEpisode,
-        initialQuery: title,
+        initialQuery: usedTitle ?? titles.first,
       ),
     );
   } catch (e, stackTrace) {
     AppLogger.e('Anime match search failed', e, stackTrace);
     if (context.mounted) {
-      _showErrorSnackBar(context, 'Error', 'Failed to load anime details.');
+      showAppSnackBar(
+        'Error',
+        'Failed to load anime details.',
+        type: ContentType.failure,
+      );
     }
   } finally {
     afterSearchCallback?.call();
@@ -153,7 +197,8 @@ class _AnimeSearchDialogState extends ConsumerState<_AnimeSearchDialog> {
     } catch (e, stackTrace) {
       AppLogger.e('Anime search in dialog failed', e, stackTrace);
       if (mounted) {
-        _showErrorSnackBar(context, 'Search Error', 'Could not fetch results.');
+        showAppSnackBar('Search Error', 'Could not fetch results.',
+            type: ContentType.failure);
         setState(() => _results = []);
       }
     } finally {
@@ -164,11 +209,11 @@ class _AnimeSearchDialogState extends ConsumerState<_AnimeSearchDialog> {
   void _selectAnime(BaseAnimeModel anime) {
     Navigator.of(context).pop();
     navigateToWatch(
-      context: context,
-      ref: ref,
-      animeId: anime.id!,
-      animeName: anime.name ?? 'Unknown',
-    );
+        context: context,
+        ref: ref,
+        animeId: anime.id!,
+        animeName: anime.name ?? 'Unknown',
+        episodes: const []);
   }
 
   @override
@@ -322,22 +367,4 @@ class _AnimeTile extends StatelessWidget {
       ),
     );
   }
-}
-
-/// Helper to show a standardized error snackbar.
-void _showErrorSnackBar(BuildContext context, String title, String message) {
-  ScaffoldMessenger.of(context)
-    ..hideCurrentSnackBar()
-    ..showSnackBar(
-      SnackBar(
-        elevation: 0,
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: Colors.transparent,
-        content: AwesomeSnackbarContent(
-          title: title,
-          message: message,
-          contentType: ContentType.failure,
-        ),
-      ),
-    );
 }

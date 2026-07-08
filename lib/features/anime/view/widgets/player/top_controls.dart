@@ -4,6 +4,8 @@ import 'package:iconsax/iconsax.dart';
 import 'package:shonenx/core/registery/anime_source_registery_provider.dart';
 import 'package:shonenx/features/anime/view_model/episodeDataProvider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shonenx/features/settings/view_model/experimental_notifier.dart';
+import 'package:shonenx/features/settings/view_model/source_notifier.dart';
 
 class TopControls extends ConsumerWidget {
   final VoidCallback onInteraction;
@@ -27,9 +29,15 @@ class TopControls extends ConsumerWidget {
     };
   }
 
+  T watchEpisode<T>(
+    WidgetRef ref,
+    T Function(EpisodeDataState s) selector,
+  ) {
+    return ref.watch(episodeDataProvider.select(selector));
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final episodeData = ref.watch(episodeDataProvider);
     final source = ref.watch(selectedAnimeProvider);
     return Material(
       color: Colors.black.withOpacity(0.5),
@@ -48,11 +56,21 @@ class TopControls extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(source?.providerName.toUpperCase() ?? "SOURCE",
+                    Text(
+                        !ref.watch(experimentalProvider).useMangayomiExtensions
+                            ? (source?.providerName.toUpperCase() ?? "Legacy")
+                            : ref
+                                    .read(sourceProvider)
+                                    .activeAnimeSource
+                                    ?.name ??
+                                'Mangayomi',
                         style: Theme.of(context).textTheme.bodySmall),
-                    if (episodeData.selectedEpisodeIdx != null)
+                    if (watchEpisode(ref, (e) => e.selectedEpisodeIdx) !=
+                            null &&
+                        watchEpisode(ref, (e) => e.sources).isNotEmpty)
                       Text(
-                        episodeData.episodes[episodeData.selectedEpisodeIdx!]
+                        watchEpisode(ref, (e) => e.episodes)[watchEpisode(
+                                    ref, (e) => e.selectedEpisodeIdx)!]
                                 .title ??
                             'Unavailable',
                         style: const TextStyle(fontWeight: FontWeight.w600),
@@ -62,10 +80,10 @@ class TopControls extends ConsumerWidget {
                   ],
                 ),
               ),
-              if (episodeData.qualityOptions.length > 1)
+              if (watchEpisode(ref, (e) => e.qualityOptions).length > 1)
                 IconButton(
                     onPressed: _wrap(onQualityPressed),
-                    icon: const Icon(Iconsax.video_horizontal),
+                    icon: const Icon(Icons.high_quality_outlined),
                     tooltip: "Quality"),
               if (onEpisodesPressed != null)
                 IconButton(
