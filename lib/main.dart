@@ -44,6 +44,7 @@ class _MainAppState extends State<MainApp> {
 
   Future<void> _loadTheme() async {
     final userTheme = _settingsBox.getTheme();
+    debugPrint("MAIN: $userTheme");
     setState(() {
       _theme = ThemeManager.getThemeType(userTheme!) ?? ThemeType.dark;
     });
@@ -67,7 +68,7 @@ class _MainAppState extends State<MainApp> {
     return ValueListenableBuilder(
       valueListenable: _settingsBox.listenable(),
       builder: (context, Box<SettingsModel> box, child) {
-        _theme = ThemeManager.getThemeType(_settingsBox.getTheme() ?? 'crimsonAnime') ??
+        _theme = ThemeManager.getThemeType(_settingsBox.getTheme() ?? 'dark') ??
             _theme;
         return MaterialApp(
           debugShowCheckedModeBanner: false,

@@ -18,6 +18,7 @@ class SettingsBox {
 
   // Get the theme from SettingsBox
   String? getTheme() {
+    debugPrint(_settingsModel?.theme);
     return _settingsModel?.theme ?? 'dark';
   }
 

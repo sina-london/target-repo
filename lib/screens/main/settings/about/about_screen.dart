@@ -9,8 +9,8 @@ class AboutScreen extends StatelessWidget {
   final String email = 'darkx.dev.23@gmail.com';
   final String instagramUrl = 'https://www.instagram.com/darkx.dev.23/';
   final String telegramUrl = 'https://t.me/dark_dev_23';
-  final String title;
-  const AboutScreen({super.key, required this.title});
+
+  const AboutScreen({super.key});
 
   void _launchUrl(String url) async {
     await launchUrl(Uri.parse(url));
@@ -21,15 +21,13 @@ class AboutScreen extends StatelessWidget {
     return Scaffold(
       extendBody: true,
       appBar: AppBar(
-        title: Hero(
-          tag: ValueKey(title),
-          child: Text(
-            'About',
-            style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                  fontSize: 35,
-                  fontWeight: FontWeight.bold,
-                ),
-          ),
+        leading: IconButton(
+          onPressed: () => Navigator.pop(context),
+          icon: Icon(Icons.arrow_back, size: 30),
+        ),
+        title: Text(
+          'About ShonenX',
+          style: Theme.of(context).textTheme.headlineLarge,
         ),
       ),
       body: Padding(
