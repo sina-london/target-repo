@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:hive/hive.dart';
-import 'package:nekoflow/data/models/settings/settings_model.dart';
+import 'package:nekoflow/data/boxes/settings_box.dart';
 import 'package:nekoflow/data/theme/theme_manager.dart';
 
 class ThemeScreen extends StatefulWidget {
@@ -12,19 +11,23 @@ class ThemeScreen extends StatefulWidget {
 
 class _ThemeScreenState extends State<ThemeScreen> {
   ThemeType _selectedTheme = ThemeType.dark;
-  late Box<SettingsModel> _settingsBox;
+  late SettingsBox _settingsBox;
 
   @override
   void initState() {
     super.initState();
-    _settingsBox = Hive.box<SettingsModel>('user_settings');
+    _initializeBox();
     _loadInitialTheme();
   }
 
+  Future<void> _initializeBox() async {
+    _settingsBox = SettingsBox();
+    await _settingsBox.init();
+  }
   void _loadInitialTheme() {
-    final themeName = _settingsBox.get('theme')?.theme ?? ThemeType.dark.name;
+    final themeName = _settingsBox.getTheme(); // Fetch theme from box key '0'
     setState(() {
-      _selectedTheme = ThemeManager.getThemeType(themeName) ?? ThemeType.dark;
+      _selectedTheme = ThemeManager.getThemeType(themeName!) ?? ThemeType.dark;
     });
   }
 
@@ -32,10 +35,7 @@ class _ThemeScreenState extends State<ThemeScreen> {
     setState(() {
       _selectedTheme = theme;
     });
-    await _settingsBox.put(
-      'theme',
-      SettingsModel(theme: theme.name),
-    );
+    await _settingsBox.updateTheme(_selectedTheme.name);
   }
 
   Widget _buildThemeCard(ThemeType themeType) {
@@ -65,7 +65,6 @@ class _ThemeScreenState extends State<ThemeScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Theme Preview Elements
             _buildColorStrip(theme.colorScheme.primary),
             const SizedBox(height: 8),
             _buildColorStrip(theme.colorScheme.secondary),
@@ -103,9 +102,9 @@ class _ThemeScreenState extends State<ThemeScreen> {
   }
 
   String _formatThemeName(String name) {
-    return name.replaceAllMapped(RegExp(r'([A-Z])'), (match) {
-      return ' ${match.group(1)}';
-    }).capitalize();
+    return name
+        .replaceAllMapped(RegExp(r'([A-Z])'), (match) => ' ${match.group(1)}')
+        .capitalize();
   }
 
   Color _getTextColor(Color backgroundColor) {
@@ -129,7 +128,7 @@ class _ThemeScreenState extends State<ThemeScreen> {
             icon: Icon(
               Icons.navigate_before,
               size: 35,
-              color: themeData.appBarTheme.foregroundColor,
+              color: themeData.colorScheme.onBackground,
             ),
           ),
           title: Text(
