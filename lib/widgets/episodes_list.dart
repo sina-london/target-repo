@@ -1,3 +1,4 @@
+// episodes_list.dart
 import 'package:flutter/material.dart';
 import 'package:nekoflow/data/models/episodes_model.dart';
 import 'package:nekoflow/data/services/anime_service.dart';
@@ -25,6 +26,7 @@ class _EpisodesListState extends State<EpisodesList> {
   List<Map<String, List<Episode>>> _groupedEpisodes = [];
   late final AnimeService _animeService;
   int _selectedRangeIndex = 0;
+  bool _isLoading = true;
 
   @override
   void initState() {
@@ -33,7 +35,6 @@ class _EpisodesListState extends State<EpisodesList> {
     _fetchData();
   }
 
-  // Fetch episode data and group by range
   Future<void> _fetchData() async {
     try {
       final result = await _animeService.fetchEpisodes(id: widget.id);
@@ -41,14 +42,18 @@ class _EpisodesListState extends State<EpisodesList> {
         setState(() {
           _episodes = result;
           _groupedEpisodes = _groupEpisodesByRange(_episodes, widget.rangeSize);
+          _isLoading = false;
         });
       }
     } catch (e) {
-      if (mounted) setState(() {}); // For any error handling you plan to add later
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
-  // Group Episodes by range
   List<Map<String, List<Episode>>> _groupEpisodesByRange(
       List<Episode> episodes, int rangeSize) {
     final result = <Map<String, List<Episode>>>[];
@@ -65,10 +70,8 @@ class _EpisodesListState extends State<EpisodesList> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildHeader(context),
-        if (_groupedEpisodes.isEmpty)
-          _buildShimmerList()
-        else
-          _buildEpisodeList(),
+        const SizedBox(height: 16),
+        _isLoading ? _buildShimmerList() : _buildEpisodeList(),
       ],
     );
   }
@@ -84,47 +87,44 @@ class _EpisodesListState extends State<EpisodesList> {
             fontWeight: FontWeight.bold,
           ),
         ),
-        DropdownButton<int>(
-          value: _selectedRangeIndex,
-          icon: const Icon(Icons.view_list),
-          onChanged: (newIndex) {
-            setState(() {
-              _selectedRangeIndex = newIndex!;
-            });
-          },
-          items: _groupedEpisodes.asMap().entries.map((entry) {
-            final index = entry.key;
-            final range = entry.value.keys.first;
-            return DropdownMenuItem<int>(
-              value: index,
-              child: Text(range),
-            );
-          }).toList(),
-        ),
+        if (!_isLoading && _groupedEpisodes.isNotEmpty)
+          DropdownButton<int>(
+            value: _selectedRangeIndex,
+            icon: const Icon(Icons.view_list),
+            onChanged: (newIndex) {
+              if (newIndex != null) {
+                setState(() {
+                  _selectedRangeIndex = newIndex;
+                });
+              }
+            },
+            items: _groupedEpisodes.asMap().entries.map((entry) {
+              return DropdownMenuItem<int>(
+                value: entry.key,
+                child: Text(entry.value.keys.first),
+              );
+            }).toList(),
+          ),
       ],
     );
   }
 
   Widget _buildShimmerList() {
-    return ListView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: 4,
-      itemBuilder: (_, __) => _buildShimmerPlaceholder(),
-    );
-  }
-
-  Widget _buildShimmerPlaceholder() {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 15.0),
-      child: Shimmer.fromColors(
-        baseColor: Colors.grey[800]!,
-        highlightColor: Colors.white,
-        child: Container(
-          height: 70.0,
-          decoration: BoxDecoration(
-            color: Colors.grey[800]!,
-            borderRadius: BorderRadius.circular(12.0),
+    return Shimmer.fromColors(
+      baseColor: Colors.grey[800]!,
+      highlightColor: Colors.grey[600]!,
+      child: ListView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: 4,
+        itemBuilder: (_, __) => Padding(
+          padding: const EdgeInsets.only(bottom: 15.0),
+          child: Container(
+            height: 70.0,
+            decoration: BoxDecoration(
+              color: Colors.grey[800]!,
+              borderRadius: BorderRadius.circular(12.0),
+            ),
           ),
         ),
       ),
@@ -132,6 +132,12 @@ class _EpisodesListState extends State<EpisodesList> {
   }
 
   Widget _buildEpisodeList() {
+    if (_groupedEpisodes.isEmpty) {
+      return const Center(
+        child: Text('No episodes available'),
+      );
+    }
+
     final episodes = _groupedEpisodes[_selectedRangeIndex].values.first;
     return ListView.builder(
       shrinkWrap: true,
@@ -145,10 +151,12 @@ class _EpisodesListState extends State<EpisodesList> {
   }
 
   Widget _buildEpisodeTile(BuildContext context, Episode episode) {
+    final bool isFiller = episode.isFiller;
+    
     return Container(
       margin: const EdgeInsets.only(bottom: 15.0),
       decoration: BoxDecoration(
-        color: episode.isFiller
+        color: isFiller
             ? Theme.of(context).splashColor
             : Theme.of(context).primaryColor,
         borderRadius: BorderRadius.circular(12.0),
@@ -164,7 +172,7 @@ class _EpisodesListState extends State<EpisodesList> {
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16),
         title: Text(
-          "EP : ${episode.number}${episode.isFiller ? " : FILLER" : ""}",
+          "EP : ${episode.number}${isFiller ? " : FILLER" : ""}",
           style: const TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.bold,
@@ -179,7 +187,10 @@ class _EpisodesListState extends State<EpisodesList> {
           ),
         ),
         trailing: IconButton(
-          icon: const Icon(Icons.play_circle_fill),
+          icon: const Icon(
+            Icons.play_circle_fill,
+            color: Colors.white,
+          ),
           onPressed: () => Navigator.push(
             context,
             MaterialPageRoute(
@@ -193,5 +204,11 @@ class _EpisodesListState extends State<EpisodesList> {
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _animeService.dispose();
+    super.dispose();
   }
 }
