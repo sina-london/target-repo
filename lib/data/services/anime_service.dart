@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:nekoflow/data/models/episodes_model.dart';
+import 'package:nekoflow/data/models/genre_model.dart';
 import 'package:nekoflow/data/models/home_model.dart';
 import 'package:nekoflow/data/models/info_model.dart';
 import 'package:nekoflow/data/models/search_model.dart';
@@ -53,10 +54,10 @@ class AnimeService {
         url, (json) => EpisodeStreamingLinksModel.fromJson(json));
   }
 
-  // Future<List<String>> fetchGenres() async {
-    // final url =  '$baseUrl/episode/sources?animeEpisodeId=$animeEpisodeId&server=$server&category=$category';
-    // _get(url, fromJson);
-  // }
+  Future<GenreDetailModel> fetchGenreAnime(String genreName) async {
+    final url = '$baseUrl/genre/$genreName';
+    return _get(url, (json) => GenreDetailModel.fromJson(json));
+  }
 
   /// Generic HTTP GET method that handles the response parsing and error handling.
   Future<T> _get<T>(String url, T Function(dynamic json) fromJson) async {

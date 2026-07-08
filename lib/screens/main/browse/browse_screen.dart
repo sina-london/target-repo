@@ -99,12 +99,71 @@ class _BrowseScreenState extends State<BrowseScreen> {
         _error = 'An error occurred. Please check your connection or try again.';
       });
     } finally {
-      if (!mounted) return;
       setState(() {
         _isLoading = false;
       });
     }
   }
+
+Future<void> _fetchGenreAnimes(String genreName) async {
+  setState(() {
+    _isLoading = true;
+    _error = null;
+  });
+
+  try {
+    final genreDetail = await _animeService.fetchGenreAnime(genreName);
+    if (!mounted) return;
+    
+    if (genreDetail.success) {
+      // Map GenreDetailModel's AnimeResult to SearchModel's AnimeResult
+      final mappedAnimes = genreDetail.data.animes.map((genreAnime) => 
+        AnimeResult(
+          id: genreAnime.id,
+          name: genreAnime.name,
+          poster: genreAnime.poster,
+          duration: genreAnime.duration,
+          type: genreAnime.type,
+          rating: genreAnime.rating,
+          episodes: genreAnime.episodes,
+        )
+      ).toList();
+
+      // Create a SearchModel from the genre results
+      final searchResult = SearchModel(
+        currentPage: genreDetail.data.currentPage,
+        hasNextPage: genreDetail.data.hasNextPage,
+        totalPages: genreDetail.data.totalPages,
+        searchQuery: genreName, // Use genre name as search query
+        searchFilters: {}, // You can add genre as a filter if needed
+        animes: mappedAnimes, 
+        mostPopularAnimes: [], // You can populate this if needed
+      );
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => SearchResultScreen(
+            searchModel: searchResult,
+          ),
+        ),
+      );
+    } else {
+      setState(() {
+        _error = 'Failed to fetch genre anime. Please try again later.';
+      });
+    }
+  } catch (e) {
+    if (!mounted) return;
+    setState(() {
+      _error = 'Error fetching genre anime. Please try again later.';
+    });
+  } finally {
+    setState(() {
+      _isLoading = false;
+    });
+  }
+}
 
   @override
   void initState() {
@@ -174,6 +233,7 @@ class _BrowseScreenState extends State<BrowseScreen> {
                   selected: false,
                   onSelected: (bool selected) {
                     debugPrint('Selected genre: $genre');
+                    _fetchGenreAnimes(genre); // Fetch animes for the selected genre
                   },
                   selectedColor: themeData.colorScheme.secondary.withOpacity(0.5),
                 );
