@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:nekoflow/data/models/info_model.dart';
-import 'package:nekoflow/data/models/search_model.dart';
 import 'package:nekoflow/data/services/anime_service.dart';
 import 'package:nekoflow/widgets/episodes_list.dart';
 
@@ -8,47 +7,34 @@ class DetailsScreen extends StatefulWidget {
   final String title;
   final String id;
   final String image;
-  final String duration;
-  const DetailsScreen(
-      {super.key,
-      required this.title,
-      required this.id,
-      required this.image,
-      required this.duration});
+  final dynamic tag;
+  const DetailsScreen({
+    super.key,
+    required this.title,
+    required this.id,
+    required this.image,
+    required this.tag,
+  });
 
   @override
   State<DetailsScreen> createState() => _DetailsScreenState();
 }
 
 class _DetailsScreenState extends State<DetailsScreen> {
-  late ScrollController _scrollController;
-  late AnimeService _animeService;
-  ValueNotifier<bool> _isDescriptionExpanded = ValueNotifier(false);
+  final ValueNotifier<bool> _isDescriptionExpanded = ValueNotifier(false);
+  late final AnimeService _animeService = AnimeService();
+  final ScrollController _scrollController = ScrollController();
   AnimeData? info;
-  bool _isLoading = true;
   String? error;
 
-  static const int _collapsedLines = 3;
-
-  Future<void> fetchData() async {
-    setState(() {
-      _isLoading = true;
-      error = null;
-    });
-
+  Future<AnimeInfo?> fetchData() async {
     try {
-      AnimeInfo? result = await _animeService.fetchAnimeInfoById(id: widget.id);
-      print(result);
-      setState(() {
-        info = result?.data;
-        _isLoading = false;
-      });
-    } catch (e) {
-      if (!mounted) return;
+      return await _animeService.fetchAnimeInfoById(id: widget.id);
+    } catch (_) {
       setState(() {
         error = 'Network error occurred';
-        _isLoading = false;
       });
+      return null;
     }
   }
 
@@ -58,28 +44,30 @@ class _DetailsScreenState extends State<DetailsScreen> {
       child: Stack(
         children: [
           ShaderMask(
-            shaderCallback: (rect) {
-              return LinearGradient(
-                begin: Alignment.bottomCenter,
-                end: Alignment.topCenter,
-                colors: [
-                  const Color.fromARGB(255, 44, 41, 41),
-                  Colors.black.withOpacity(0.2),
-                  const Color.fromARGB(0, 178, 30, 30)
-                ],
-              ).createShader(rect);
-            },
+            shaderCallback: (rect) => LinearGradient(
+              begin: Alignment.bottomCenter,
+              end: Alignment.topCenter,
+              colors: [
+                const Color.fromARGB(255, 44, 41, 41),
+                Colors.black.withOpacity(0.2),
+                const Color.fromARGB(0, 178, 30, 30),
+              ],
+            ).createShader(rect),
             blendMode: BlendMode.srcATop,
-            child: Center(
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(20),
-                child: Image.network(
-                  widget.image,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => Container(
-                    height: 400,
-                    color: Colors.grey[300],
-                    child: Icon(Icons.error, size: 50, color: Colors.grey[600]),
+            child: Hero(
+              tag: 'poster-${widget.id}-${widget.tag}',
+              child: Center(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: Image.network(
+                    widget.image,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      height: 400,
+                      color: Colors.grey[300],
+                      child:
+                          Icon(Icons.error, size: 50, color: Colors.grey[600]),
+                    ),
                   ),
                 ),
               ),
@@ -95,10 +83,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.transparent,
-                    Colors.black.withOpacity(0.8),
-                  ],
+                  colors: [Colors.transparent, Colors.black.withOpacity(0.8)],
                 ),
               ),
               child: Column(
@@ -112,41 +97,11 @@ class _DetailsScreenState extends State<DetailsScreen> {
                       color: Colors.white,
                     ),
                   ),
-                  if (info != null) ...[
-                    const SizedBox(height: 8),
-                    Wrap(
-                      runSpacing: 6,
-                      spacing: 6,
-                      children: [
-                        _buildInfoChip(
-                          (info?.anime?.info?.stats?.episodesSub?.toString() ??
-                                  'N/A')
-                              .toUpperCase(),
-                        ),
-                      ],
-                    ),
-                  ],
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      if (info?.anime?.moreInfo?.duration != null)
-                        _buildQuickInfoItem(
-                          Icons.timelapse,
-                          'Duration',
-                          info!.anime!.moreInfo!.duration!,
-                        ),
-                      if (info?.anime?.moreInfo?.japanese != null)
-                        _buildQuickInfoItem(
-                          Icons.translate,
-                          'Other Name',
-                          info!.anime!.moreInfo!.japanese!,
-                        ),
-                    ],
-                  ),
+                  // Additional content here
                 ],
               ),
             ),
-          )
+          ),
         ],
       ),
     );
@@ -176,20 +131,28 @@ class _DetailsScreenState extends State<DetailsScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        Row(
+          children: [
+            _buildQuickInfoItem(Icons.timelapse, "Duration",
+                info!.anime!.moreInfo!.duration ?? 'N/A'),
+            _buildQuickInfoItem(Icons.translate, "Translate",
+                info!.anime!.moreInfo!.japanese ?? 'N/A')
+          ],
+        ),
         _buildSectionTitle('Details'),
         const SizedBox(height: 8),
         ValueListenableBuilder(
           valueListenable: _isDescriptionExpanded,
           builder: (context, isExpanded, child) {
             return AnimatedCrossFade(
-              crossFadeState: _isDescriptionExpanded.value
+              crossFadeState: isExpanded
                   ? CrossFadeState.showSecond
                   : CrossFadeState.showFirst,
               duration: const Duration(milliseconds: 300),
               firstChild: Text(
                 info?.anime?.info?.description ?? 'Description not available',
                 style: const TextStyle(fontSize: 16, height: 1.4),
-                maxLines: _collapsedLines,
+                maxLines: 3,
                 overflow: TextOverflow.ellipsis,
               ),
               secondChild: Text(
@@ -200,9 +163,8 @@ class _DetailsScreenState extends State<DetailsScreen> {
           },
         ),
         TextButton(
-          onPressed: () {
-            _isDescriptionExpanded.value = !_isDescriptionExpanded.value;
-          },
+          onPressed: () =>
+              _isDescriptionExpanded.value = !_isDescriptionExpanded.value,
           child: ValueListenableBuilder<bool>(
             valueListenable: _isDescriptionExpanded,
             builder: (context, isExpanded, child) {
@@ -211,7 +173,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
           ),
         ),
         const SizedBox(height: 10),
-        EpisodesList(id: widget.id, title: widget.title)
+        EpisodesList(id: widget.id, title: widget.title),
       ],
     );
   }
@@ -253,68 +215,51 @@ class _DetailsScreenState extends State<DetailsScreen> {
   }
 
   @override
-  void initState() {
-    super.initState();
-    _scrollController = ScrollController();
-    _animeService = AnimeService();
-    fetchData();
-  }
-
-  @override
   void dispose() {
     _scrollController.dispose();
+    _isDescriptionExpanded.dispose();
     _animeService.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final screenSize = MediaQuery.of(context).size;
-    final screenHeight = screenSize.height;
+    final screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
-      body: RefreshIndicator.adaptive(
-        onRefresh: fetchData,
-        child: _isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : error != null
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(error!),
-                        const SizedBox(height: 16),
-                        ElevatedButton(
-                          onPressed: fetchData,
-                          child: const Text('Retry'),
-                        ),
-                      ],
-                    ),
-                  )
-                : CustomScrollView(
-                    controller: _scrollController,
-                    slivers: [
-                      SliverAppBar(
-                        expandedHeight: screenHeight * 0.6,
-                        stretch: true,
-                        floating: false,
-                        pinned: false,
-                        flexibleSpace: FlexibleSpaceBar(
-                          background: _buildHeaderSection(),
-                        ),
-                      ),
-                      SliverToBoxAdapter(
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 15, vertical: 10),
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).primaryColorDark,
-                          ),
-                          child: _buildDetailsSection(),
-                        ),
-                      ),
-                    ],
-                  ),
+      body: FutureBuilder<AnimeInfo?>(
+        future: fetchData(),
+        builder: (context, snapshot) {
+          info = snapshot.data?.data;
+          return CustomScrollView(
+            controller: _scrollController,
+            slivers: [
+              SliverAppBar(
+                expandedHeight: screenHeight * 0.6,
+                stretch: true,
+                floating: false,
+                pinned: false,
+                flexibleSpace: FlexibleSpaceBar(
+                  background: _buildHeaderSection(),
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+                  color: Theme.of(context).primaryColorDark,
+                  child: snapshot.connectionState == ConnectionState.waiting
+                      ? Center(
+                          child: CircularProgressIndicator(),
+                        )
+                      : _buildDetailsSection(),
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
 }
+
+

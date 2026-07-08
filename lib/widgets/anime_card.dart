@@ -1,95 +1,164 @@
 import 'package:flutter/material.dart';
+import 'package:shimmer/shimmer.dart';
 import 'package:nekoflow/data/models/anime_interface.dart';
 import 'package:nekoflow/screens/details_screen.dart';
 
 class AnimeCard extends StatelessWidget {
   final Anime anime;
-  const AnimeCard({super.key, required this.anime});
+  final dynamic tag;
+
+  const AnimeCard({super.key, required this.anime, required this.tag});
+
+  Widget _buildShimmerPlaceholder(
+      {required double width, required double height}) {
+    return Shimmer.fromColors(
+      baseColor: Colors.grey[800]!,
+      highlightColor: Colors.white!,
+      child: Container(
+        width: width,
+        height: height,
+        color: Colors.grey[800],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
+    final screenSize = MediaQuery.of(context).size;
+
     return GestureDetector(
       onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute(
-              builder: (context) => DetailsScreen(
-                    id: anime.id,
-                    image: anime.poster,
-                    title: anime.name,
-                    duration: "24min",
-                  ))),
+        context,
+        MaterialPageRoute(
+          builder: (context) => DetailsScreen(
+            id: anime.id,
+            image: anime.poster,
+            title: anime.name,
+            tag: tag,
+          ),
+        ),
+      ),
       child: Container(
-        margin: EdgeInsets.only(right: 10),
-        child: Stack(
-          alignment: Alignment.bottomCenter,
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(20),
-              child: Image.network(
-                anime.poster,
-                height: double.infinity,
-                width: double.infinity,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => Center(child: Text('Image Not Available')),
-              ),
+        width: screenSize.width * 0.4,
+        margin: const EdgeInsets.only(right: 12),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.2),
+              blurRadius: 10,
+              offset: Offset(0, 5),
             ),
-            Container(
-              padding: EdgeInsets.only(bottom: 5),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.bottomCenter,
-                  end: Alignment.topCenter,
-                  colors: [
-                    Colors.black.withOpacity(0.8), // Slightly transparent black
-                    Colors.black.withOpacity(0.0), // Fully transparent
-                  ],
-                  stops: [0.2, 1], // Adjust gradient distribution
-                ),
-              ),
-              child: Text(
-                anime!.name,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-            Positioned(
-              top: 8,
-              right: 8,
-              child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-                decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(5), color: Colors.pink),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: EdgeInsets.all(1),
-                      decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(15)),
-                      child: Icon(
-                        Icons.play_arrow_rounded,
-                        color: Colors.pink,
-                        size: 12,
-                      ),
-                    ),
-                    SizedBox(
-                      width: 4,
-                    ),
-                    Text(
-                      anime.type,
-                      style: TextStyle(
-                          letterSpacing: -0.1, fontWeight: FontWeight.bold),
-                    )
-                  ],
-                ),
-              ),
-            )
           ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: Stack(
+            children: [
+              Hero(
+                transitionOnUserGestures: true,
+                createRectTween: (begin, end) {
+                  return CustomRectTween(begin: begin!, end: end!);
+                },
+                tag: 'poster-${anime.id}-$tag', // Ensure unique tag
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(20), // Same border radius
+                  child: Image.network(
+                    anime.poster,
+                    height: double.infinity,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return _buildShimmerPlaceholder(
+                        width: screenSize.width * 0.4,
+                        height: screenSize.width * 0.6,
+                      );
+                    },
+                    errorBuilder: (context, error, stackTrace) =>
+                        Center(child: Text('Image Not Available')),
+                  ),
+                ),
+              ),
+              // Gradient overlay for text readability
+              Positioned(
+                bottom: 0,
+                child: Container(
+                  width: screenSize.width * 0.4,
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.bottomCenter,
+                      end: Alignment.topCenter,
+                      colors: [
+                        Colors.black.withOpacity(0.8),
+                        Colors.transparent,
+                      ],
+                    ),
+                  ),
+                  child: Text(
+                    anime.name,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+              // Anime type and play icon
+              Positioned(
+                top: 8,
+                right: 8,
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: Colors.pink,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.play_arrow_rounded,
+                        color: Colors.white,
+                        size: 16,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        anime.type,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 }
+
+class CustomRectTween extends RectTween {
+  CustomRectTween({required Rect begin, required Rect end}) : super(begin: begin, end: end);
+  @override
+  Rect lerp(double t) {
+    final lerped = super.lerp(t);
+    // You can apply additional transformations to the lerped Rect here
+    // E.g., you could scale or offset the rect
+    return Rect.fromLTRB(
+      lerped!.left,
+      lerped.top,
+      lerped.right * 1, // Example: scale width by 10%
+      lerped.bottom * 1, // Example: scale height by 10%
+    );
+  }
+}
+
