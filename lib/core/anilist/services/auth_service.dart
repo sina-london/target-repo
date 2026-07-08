@@ -1,11 +1,12 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_web_auth_2/flutter_web_auth_2.dart';
 
 class AniListAuthService {
-  static const String clientId = 'REDACTED_CLIENT_ID';
-  static const String clientSecret = 'REDACTED_CLIENT_SECRET';
+  static String get clientId => dotenv.env['ANILIST_CLIENT_ID'] ?? '';
+  static String get clientSecret => dotenv.env['ANILIST_CLIENT_SECRET'] ?? '';
   static const String redirectUri = 'shonenx://callback';
   static const String authUrl = 'https://anilist.co/api/v2/oauth/authorize';
   static const String tokenUrl = 'https://anilist.co/api/v2/oauth/token';
@@ -14,10 +15,9 @@ class AniListAuthService {
       final result = await FlutterWebAuth2.authenticate(
         url:
             '$authUrl?client_id=$clientId&redirect_uri=$redirectUri&response_type=code',
-        callbackUrlScheme: 'shonenx', // Must match the Redirect URL scheme
-        options: FlutterWebAuth2Options(
-          silentAuth: true,
-        ),
+        callbackUrlScheme:
+            'shonenx://callback', // Must match the Redirect URL scheme
+        options: FlutterWebAuth2Options(),
       );
 
       // Extract the authorization code from the redirect URL
