@@ -163,60 +163,100 @@ class _BrowseScreenState extends State<BrowseScreen> {
       appBar: AppBar(
         toolbarHeight: 0,
       ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+      body: CustomScrollView(
+        slivers: [
           // Search Bar
-          Padding(
-            padding: const EdgeInsets.all(15.0),
-            child: Searchbar(
-              controller: _searchController,
-              onSearch: () => _performSearch(),
-              isLoading: _isLoading,
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(15.0),
+              child: Searchbar(
+                controller: _searchController,
+                onSearch: () => _performSearch(),
+                isLoading: _isLoading,
+              ),
             ),
           ),
 
           // Error Message Display
           if (_error != null)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 15.0),
-              child: Text(
-                _error!,
-                style: themeData.textTheme.bodyMedium?.copyWith(
-                  color: themeData.colorScheme.error,
-                  fontWeight: FontWeight.bold,
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 15.0),
+                child: Text(
+                  _error!,
+                  style: themeData.textTheme.bodyMedium?.copyWith(
+                    color: themeData.colorScheme.error,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ),
 
-          // Genre Selection Title
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 15.0),
-            child: Text(
-              'Select Genre',
-              style: themeData.textTheme.titleMedium,
+          // Genre Section Header
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(15.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Browse by Genre',
+                    style: themeData.textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Explore anime across different genres',
+                    style: themeData.textTheme.bodyMedium?.copyWith(
+                      color: themeData.colorScheme.onSurface.withOpacity(0.6),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
 
-          // Genres Wrap
-          Padding(
-            padding: const EdgeInsets.all(15.0),
-            child: Wrap(
-              spacing: 10.0,
-              runSpacing: 5.0,
-              children: _genres.map((genre) {
-                return ChoiceChip(
-                  label: Text(genre),
-                  selected: false,
-                  onSelected: (bool selected) {
-                    _fetchGenreAnimes(
-                      genreName: genre,
-                    );
-                  },
-                  selectedColor:
-                      themeData.colorScheme.secondary.withOpacity(0.5),
-                );
-              }).toList(),
+          // Genres List
+          SliverPadding(
+            padding: const EdgeInsets.symmetric(horizontal: 15.0),
+            sliver: SliverList(
+              delegate: SliverChildBuilderDelegate(
+                (context, index) {
+                  final genre = _genres[index];
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 8.0),
+                    child: Material(
+                      color: themeData.colorScheme.surface,
+                      borderRadius: BorderRadius.circular(12),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(12),
+                        onTap: () => _fetchGenreAnimes(genreName: genre),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16.0,
+                            vertical: 12.0,
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                genre,
+                                style: themeData.textTheme.titleMedium,
+                              ),
+                              Icon(
+                                Icons.chevron_right,
+                                color: themeData.colorScheme.onSurface.withOpacity(0.5),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+                childCount: _genres.length,
+              ),
             ),
           ),
         ],
