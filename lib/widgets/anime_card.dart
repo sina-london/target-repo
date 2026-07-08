@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:nekoflow/data/models/watchlist/watchlist_model.dart';
 import 'package:nekoflow/screens/main/details/details_screen.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class AnimeCard extends StatelessWidget {
   final BaseAnimeCard anime;
@@ -37,12 +38,14 @@ class AnimeCard extends StatelessWidget {
     final cardWidth = screenWidth * 0.4;
     final cardHeight = cardWidth * 1.5;
 
-    return GestureDetector(
+    return InkWell(
       onTap: () => _navigateToDetails(context),
+      splashColor: Colors.pink.withOpacity(0.2),
+      borderRadius: BorderRadius.circular(16),
       child: Container(
         width: cardWidth,
         height: cardHeight,
-        margin: EdgeInsets.only(right: 10),
+        margin: const EdgeInsets.only(right: 10),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
@@ -53,7 +56,7 @@ class AnimeCard extends StatelessWidget {
             ),
           ],
           image: DecorationImage(
-            image: NetworkImage(_getHighResImage(anime.poster)),
+            image: CachedNetworkImageProvider(_getHighResImage(anime.poster)),
             fit: BoxFit.cover,
           ),
         ),

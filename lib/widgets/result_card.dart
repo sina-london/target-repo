@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:nekoflow/data/models/search_model.dart';
 import 'package:nekoflow/screens/main/details/details_screen.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class ResultCard extends StatelessWidget {
   final AnimeResult anime;
 
   const ResultCard({super.key, required this.anime});
 
+  // Reusable badge widget
   Widget _buildBadge({
     required String label,
     required Color color,
@@ -15,6 +17,7 @@ class ResultCard extends StatelessWidget {
   }) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      margin: EdgeInsets.only(right: 5),
       decoration: BoxDecoration(
         color: color.withOpacity(0.2),
         borderRadius: BorderRadius.circular(4),
@@ -33,8 +36,8 @@ class ResultCard extends StatelessWidget {
     );
   }
 
-  Widget _buildShimmerPlaceholder(
-      {required double width, required double height}) {
+  // Optimized shimmer placeholder widget
+  Widget _buildShimmerPlaceholder({required double width, required double height}) {
     return Shimmer.fromColors(
       baseColor: Colors.grey[300]!,
       highlightColor: Colors.grey[100]!,
@@ -44,6 +47,28 @@ class ResultCard extends StatelessWidget {
         color: Colors.grey[300],
       ),
     );
+  }
+
+  // Build badges for types (subtitles, dub, nsfw, etc.)
+  List<Widget> _buildBadges() {
+    final badges = <Widget>[
+      _buildBadge(label: anime.type, color: Colors.grey),
+      if (anime.nsfw == true)
+        _buildBadge(label: 'NSFW', color: Colors.red),
+      if (anime.episodes.sub != null)
+        _buildBadge(
+          label: anime.episodes.sub.toString(),
+          color: Colors.lightGreen,
+          icon: Icons.subtitles,
+        ),
+      if (anime.episodes.dub != null)
+        _buildBadge(
+          label: anime.episodes.dub.toString(),
+          color: Colors.lightBlue,
+          icon: Icons.mic,
+        ),
+    ];
+    return badges;
   }
 
   @override
@@ -82,20 +107,16 @@ class ResultCard extends StatelessWidget {
                     tag: "poster-${anime.id}-result",
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(15),
-                      child: Image.network(
-                        anime.poster.replaceAll(RegExp(r'(\d+)x(\d+)'), '600x800'),
+                      child: CachedNetworkImage(
+                        imageUrl: anime.poster.replaceAll(RegExp(r'(\d+)x(\d+)'), '600x800'),
                         height: screenSize.width * 0.35,
                         width: screenSize.width * 0.25,
                         fit: BoxFit.cover,
-                        loadingBuilder: (context, child, loadingProgress) {
-                          if (loadingProgress == null) return child;
-                          return _buildShimmerPlaceholder(
-                            width: screenSize.width * 0.35,
-                            height: screenSize.width * 0.3,
-                          );
-                        },
-                        errorBuilder: (context, error, stackTrace) =>
-                            _buildShimmerPlaceholder(
+                        placeholder: (context, url) => _buildShimmerPlaceholder(
+                          width: screenSize.width * 0.35,
+                          height: screenSize.width * 0.3,
+                        ),
+                        errorWidget: (context, url, error) => _buildShimmerPlaceholder(
                           width: screenSize.width * 0.35,
                           height: screenSize.width * 0.3,
                         ),
@@ -124,36 +145,7 @@ class ResultCard extends StatelessWidget {
                           ),
                         const SizedBox(height: 4),
                         Row(
-                          children: [
-                            _buildBadge(
-                              label: anime.type,
-                              color: Colors.grey,
-                            ),
-                            const SizedBox(width: 8),
-                            if (anime.nsfw == true)
-                              _buildBadge(
-                                label: 'NSFW',
-                                color: Colors.red,
-                              ),
-                          ],
-                        ),
-                        const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            if (anime.episodes.sub != null)
-                              _buildBadge(
-                                label: anime.episodes.sub.toString(),
-                                color: Colors.lightGreen,
-                                icon: Icons.subtitles,
-                              ),
-                            const SizedBox(width: 8),
-                            if (anime.episodes.dub != null)
-                              _buildBadge(
-                                label: anime.episodes.dub.toString(),
-                                color: Colors.lightBlue,
-                                icon: Icons.mic,
-                              ),
-                          ],
+                          children: _buildBadges(),
                         ),
                       ],
                     ),
