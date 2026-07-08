@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:shonenx/data/hive/models/subtitle_style_offline_model.dart';
+import 'package:shonenx/data/hive/models/subtitle_style_model.dart';
 
 class SubtitleOverlay extends StatelessWidget {
   final String subtitle;

@@ -2,7 +2,7 @@ import 'package:hive/hive.dart';
 
 part 'anime_watch_progress_model.g.dart';
 
-@HiveType(typeId: 7)
+@HiveType(typeId: 5)
 class AnimeWatchProgressEntry extends HiveObject {
   @HiveField(0)
   final int animeId;
@@ -51,7 +51,7 @@ class AnimeWatchProgressEntry extends HiveObject {
   }
 }
 
-@HiveType(typeId: 8)
+@HiveType(typeId: 6)
 class EpisodeProgress {
   @HiveField(0)
   final int episodeNumber;
