@@ -6,14 +6,14 @@ class FavoriteButton extends StatefulWidget {
   final String animeId;
   final String title;
   final String image;
-  final String type;
+  String? type;
 
-  const FavoriteButton({
+  FavoriteButton({
     super.key,
     required this.animeId,
     required this.title,
     required this.image,
-    required this.type,
+    this.type,
   });
 
   @override

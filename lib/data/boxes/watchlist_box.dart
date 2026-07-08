@@ -217,19 +217,19 @@ class WatchlistBox {
   int get totalContinueWatching => _watchlistModel?.continueWatching?.length ?? 0;
   int get totalFavorites => _watchlistModel?.favorites?.length ?? 0;
 
-  Map<String, int> getAnimeTypeDistribution() {
-    Map<String, int> distribution = {};
+  // Map<String, int> getAnimeTypeDistribution() {
+  //   Map<String, int> distribution = {};
     
-    void countType(String type) {
-      distribution[type] = (distribution[type] ?? 0) + 1;
-    }
+  //   void countType(String type) {
+  //     distribution[type] = (distribution[type] ?? 0) + 1;
+  //   }
 
-    _watchlistModel?.recentlyWatched?.forEach((item) => countType(item.type));
-    _watchlistModel?.continueWatching?.forEach((item) => countType(item.type));
-    _watchlistModel?.favorites?.forEach((item) => countType(item.type));
+  //   _watchlistModel?.recentlyWatched?.forEach((item) => countType(item.type));
+  //   _watchlistModel?.continueWatching?.forEach((item) => countType(item.type));
+  //   _watchlistModel?.favorites?.forEach((item) => countType(item.type));
 
-    return distribution;
-  }
+  //   return distribution;
+  // }
 
   // General Methods
   Future<void> clearAll() async {

@@ -237,7 +237,18 @@ class _EpisodesListState extends State<EpisodesList> {
       margin: const EdgeInsets.only(bottom: 15.0),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12.0),
-        color: themeData.colorScheme.primary,
+        gradient: LinearGradient(
+          colors: [
+            !episode.isFiller
+                ? themeData.colorScheme.primary.withOpacity(0.4)
+                : themeData.colorScheme.tertiary, // Start color
+           !episode.isFiller
+                ? themeData.colorScheme.secondary.withOpacity(0.7)
+                : themeData.colorScheme.tertiary, // End color
+          ],
+          begin: Alignment.bottomLeft,
+          end: Alignment.topRight,
+        ),
         boxShadow: [
           BoxShadow(
             color: Theme.of(context).shadowColor,
