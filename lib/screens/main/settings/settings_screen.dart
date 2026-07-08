@@ -12,7 +12,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBody: true,
       appBar: AppBar(
+        
+        backgroundColor: Colors.transparent,
         toolbarHeight: 200,
         title: Text(
           "Settings",
@@ -22,6 +25,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       body: ListView(
         children: [
           ListTile(
+            tileColor: Colors.transparent,
             leading: Icon(Icons.color_lens, size: 35, color: Theme.of(context).iconTheme.color,),
             title: Text("Theme", style: TextStyle(fontSize: 20)),
             subtitle: Text("Change the app theme"),

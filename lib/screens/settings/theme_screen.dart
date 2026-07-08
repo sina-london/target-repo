@@ -43,7 +43,9 @@ class _ThemeScreenState extends State<ThemeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBody: true,
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
         leading: IconButton(
           onPressed: () => Navigator.pop(context),
           icon: Icon(
@@ -71,7 +73,7 @@ class _ThemeScreenState extends State<ThemeScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: _themeOptions.map((option) {
-                bool isSelected = _selectedTheme == option['label'];
+                bool isSelected = option['label'] == 'Auto';
                 return GestureDetector(
                   onTap: () => _updateTheme(option['label']),
                   child: Container(
@@ -79,11 +81,11 @@ class _ThemeScreenState extends State<ThemeScreen> {
                         horizontal: 12, vertical: 10),
                     decoration: BoxDecoration(
                       color: isSelected
-                          ? Colors.blueAccent.withOpacity(0.2)
+                          ? Theme.of(context).primaryColor.withOpacity(0.2)
                           : Colors.transparent,
                       borderRadius: BorderRadius.circular(15),
                       border: Border.all(
-                        color: isSelected ? Colors.blueAccent : Colors.grey,
+                        color: isSelected ? Theme.of(context).primaryColor : Colors.grey,
                         width: isSelected ? 2 : 1,
                       ),
                     ),
@@ -91,7 +93,7 @@ class _ThemeScreenState extends State<ThemeScreen> {
                       children: [
                         Icon(option['icon'] as IconData,
                             color:
-                                isSelected ? Colors.blueAccent : Theme.of(context).iconTheme.color),
+                                isSelected ? Theme.of(context).primaryColor : Theme.of(context).iconTheme.color),
                         const SizedBox(width: 8),
                         Text(
                           option['label'],

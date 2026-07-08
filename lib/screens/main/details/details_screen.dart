@@ -150,7 +150,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
                 children: [
                   Text(
                     widget.title,
-                    style: Theme.of(context).textTheme.headlineLarge,
+                    style: Theme.of(context).textTheme.headlineLarge?.copyWith(color: Colors.white),
                   ),
                 ],
               ),
