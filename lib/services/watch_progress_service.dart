@@ -123,7 +123,7 @@ class WatchProgressService {
           animeCover: animeMedia.coverImage?.medium ??
               animeMedia.coverImage?.large ??
               '',
-          totalEpisodes: animeMedia.episodes ?? 0,
+          totalEpisodes: watchState.episodes.length,
         ),
       );
 

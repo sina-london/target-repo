@@ -63,66 +63,46 @@ class ContinueWatchingCard extends ConsumerWidget {
 
     return GestureDetector(
       onTap: multiSelectMode ? onTap : () => _handleTap(context, ref),
-      child: Container(
-        width: 280,
-        height: 150,
-        margin: const EdgeInsets.symmetric(horizontal: 4),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: colorScheme.shadow.withOpacity(0.15),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
-              spreadRadius: 1,
-            ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            // Thumbnail
+            _buildThumbnail(memoryImage, colorScheme),
+
+            // Gradient overlay
+            _buildGradientOverlay(colorScheme),
+
+            // Card content
+            _buildCardContent(context, ref, theme, colorScheme, textTheme,
+                remainingTime, progress, isLoading),
+
+            // Multi-select overlay
+            if (multiSelectMode) _buildMultiSelectOverlay(colorScheme),
           ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(16),
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              // Thumbnail
-              _buildThumbnail(memoryImage, colorScheme),
-
-              // Gradient overlay
-              _buildGradientOverlay(colorScheme),
-
-              // Card content
-              _buildCardContent(context, ref, theme, colorScheme, textTheme,
-                  remainingTime, progress, isLoading),
-
-              // Multi-select overlay
-              if (multiSelectMode) _buildMultiSelectOverlay(colorScheme),
-            ],
-          ),
         ),
       ),
     );
   }
 
   Widget _buildThumbnail(Uint8List? memoryImage, ColorScheme colorScheme) {
-    return Hero(
-      tag: 'anime_${anime.animeId}_ep_${episode.episodeNumber}',
-      child: memoryImage != null
-          ? Image.memory(
-              memoryImage,
-              fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) =>
-                  _ImageFallback(colorScheme: colorScheme),
-            )
-          : CachedNetworkImage(
-              imageUrl: anime.animeCover,
-              fit: BoxFit.cover,
-              memCacheHeight: 150 ~/ 1,
-              memCacheWidth: 280 ~/ 1,
-              placeholder: (_, __) =>
-                  _ImagePlaceholder(colorScheme: colorScheme),
-              errorWidget: (_, __, ___) =>
-                  _ImageFallback(colorScheme: colorScheme),
-            ),
-    );
+    return memoryImage != null
+        ? Image.memory(
+            memoryImage,
+            fit: BoxFit.cover,
+            errorBuilder: (_, __, ___) =>
+                _ImageFallback(colorScheme: colorScheme),
+          )
+        : CachedNetworkImage(
+            imageUrl: anime.animeCover,
+            fit: BoxFit.cover,
+            memCacheHeight: 150 ~/ 1,
+            memCacheWidth: 280 ~/ 1,
+            placeholder: (_, __) => _ImagePlaceholder(colorScheme: colorScheme),
+            errorWidget: (_, __, ___) =>
+                _ImageFallback(colorScheme: colorScheme),
+          );
   }
 
   Widget _buildGradientOverlay(ColorScheme colorScheme) {
