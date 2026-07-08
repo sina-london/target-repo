@@ -10,7 +10,7 @@ class BottomPlayerBar extends StatelessWidget {
   final String title;
   final String id;
   final String image;
-  final String type;
+  final String? type;
 
   const BottomPlayerBar({
     super.key,
