@@ -45,9 +45,3 @@ app.*.map.json
 /android/app/release
 
 /hive_data/
-
-# FVM Version Cache
-.fvm/
-
-# Node (Unrelated to project but for personal fix automation)
-fixer.js

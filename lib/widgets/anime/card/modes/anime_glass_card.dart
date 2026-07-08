@@ -39,15 +39,15 @@ class GlassCard extends StatelessWidget {
                   end: Alignment.bottomRight,
                   colors: [
                     theme.colorScheme.surface
-                        .withOpacity(isHovered ? 0.2 : 0.15),
+                        .withValues(alpha: isHovered ? 0.2 : 0.15),
                     theme.colorScheme.surface
-                        .withOpacity(isHovered ? 0.3 : 0.2),
+                        .withValues(alpha: isHovered ? 0.3 : 0.2),
                   ],
                 ),
                 border: Border.all(
                   color: isHovered
-                      ? theme.colorScheme.primary.withOpacity(0.4)
-                      : Colors.white.withOpacity(0.2),
+                      ? theme.colorScheme.primary.withValues(alpha: 0.4)
+                      : Colors.white.withValues(alpha: 0.2),
                   width: isHovered ? 1.5 : 1.0,
                 ),
                 borderRadius: BorderRadius.circular(22),
@@ -103,7 +103,7 @@ class GlassCard extends StatelessWidget {
                         color: Colors.white,
                         shadows: [
                           Shadow(
-                            color: Colors.black.withOpacity(0.3),
+                            color: Colors.black.withValues(alpha: 0.3),
                             blurRadius: 4,
                           ),
                         ],
@@ -161,9 +161,9 @@ class _GlassTag extends StatelessWidget {
             vertical: large ? 6 : 4,
           ),
           decoration: BoxDecoration(
-            color: primaryColor.withOpacity(0.3),
+            color: primaryColor.withValues(alpha: 0.3),
             border: Border.all(
-              color: primaryColor.withOpacity(0.5),
+              color: primaryColor.withValues(alpha: 0.5),
               width: 1,
             ),
             borderRadius: BorderRadius.circular(large ? 10 : 8),

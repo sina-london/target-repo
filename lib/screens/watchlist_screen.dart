@@ -87,17 +87,17 @@ class _WatchlistScreenState extends ConsumerState<WatchlistScreen>
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                Theme.of(context).colorScheme.surface.withOpacity(0.9),
+                Theme.of(context).colorScheme.surface.withValues(alpha: 0.9),
                 Theme.of(context)
                     .colorScheme
                     .surfaceContainerHighest
-                    .withOpacity(0.8),
+                    .withValues(alpha: 0.8),
               ],
             ),
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.2),
+                color: Colors.black.withValues(alpha: 0.2),
                 blurRadius: 20,
                 offset: const Offset(0, 4),
               ),
@@ -195,7 +195,7 @@ class _WatchlistScreenState extends ConsumerState<WatchlistScreen>
                   backgroundColor: Theme.of(context)
                       .colorScheme
                       .surfaceContainerHighest
-                      .withOpacity(0.2),
+                      .withValues(alpha: 0.2),
                   padding: const EdgeInsets.all(10),
                 ),
               ),
@@ -208,7 +208,7 @@ class _WatchlistScreenState extends ConsumerState<WatchlistScreen>
                   backgroundColor: Theme.of(context)
                       .colorScheme
                       .surfaceContainerHighest
-                      .withOpacity(0.2),
+                      .withValues(alpha: 0.2),
                   padding: const EdgeInsets.all(10),
                 ),
               ),
@@ -245,7 +245,7 @@ class _WatchlistScreenState extends ConsumerState<WatchlistScreen>
                       ? Theme.of(context)
                           .colorScheme
                           .primary
-                          .withOpacity(0.1)
+                          .withValues(alpha: 0.1)
                       : Colors.transparent,
                   borderRadius: BorderRadius.circular(30),
                   border: Border.all(
@@ -254,7 +254,7 @@ class _WatchlistScreenState extends ConsumerState<WatchlistScreen>
                         : Theme.of(context)
                             .colorScheme
                             .onSurface
-                            .withOpacity(0.2),
+                            .withValues(alpha: 0.2),
                     width: 1.5,
                   ),
                 ),
@@ -383,7 +383,7 @@ class _WatchlistScreenState extends ConsumerState<WatchlistScreen>
                       Theme.of(context)
                           .colorScheme
                           .primary
-                          .withOpacity(0.1),
+                          .withValues(alpha: 0.1),
                       Theme.of(context).colorScheme.surface,
                     ],
                   ),
@@ -410,7 +410,7 @@ class _WatchlistScreenState extends ConsumerState<WatchlistScreen>
                       color: Theme.of(context)
                           .colorScheme
                           .onSurface
-                          .withOpacity(0.7),
+                          .withValues(alpha: 0.7),
                     ),
                 textAlign: TextAlign.center,
               ),
