@@ -243,6 +243,110 @@ class _DetailsScreenState extends State<DetailsScreen> {
     );
   }
 
+  Widget _buildSeasonsSection() {
+    if (info?.seasons == null || info!.seasons!.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    // Filter out current season
+    final filteredSeasons = info!.seasons!.where((season) => !season.isCurrent).toList();
+
+    if (filteredSeasons.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 16),
+        Text('Seasons', style: Theme.of(context).textTheme.headlineMedium),
+        const SizedBox(height: 8),
+        SizedBox(
+          height: 150,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            itemCount: filteredSeasons.length,
+            itemBuilder: (context, index) {
+              final season = filteredSeasons[index];
+              return Padding(
+                padding: EdgeInsets.only(right: 12),
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => DetailsScreen(
+                          name: season.title,
+                          id: season.id,
+                          image: season.poster,
+                          tag: 'season-$index',
+                        ),
+                      ),
+                    );
+                  },
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Stack(
+                        children: [
+                          Hero(
+                            tag: 'season-poster-$index',
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: CachedNetworkImage(
+                                imageUrl: season.poster ?? '',
+                                height: 150,
+                                width: 100,
+                                fit: BoxFit.cover,
+                                errorWidget: (_, __, ___) => Container(
+                                  height: 150,
+                                  width: 100,
+                                  color: Colors.grey[300],
+                                  child: Icon(Icons.error),
+                                ),
+                              ),
+                            ),
+                          ),
+                          Positioned(
+                            bottom: 0,
+                            left: 0,
+                            right: 0,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.bottomCenter,
+                                  end: Alignment.topCenter,
+                                  colors: [
+                                    Colors.black.withOpacity(0.8),
+                                    Colors.transparent,
+                                  ],
+                                ),
+                              ),
+                              padding: EdgeInsets.all(8),
+                              child: Text(
+                                season.title ?? 'Unknown',
+                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildDetailsSection({bool isLoading = false}) {
     ThemeData themeData = Theme.of(context);
     return Column(
@@ -304,6 +408,8 @@ class _DetailsScreenState extends State<DetailsScreen> {
           ),
         ),
         const SizedBox(height: 10),
+         _buildSeasonsSection(),
+        const SizedBox(height: 10),
         ValueListenableBuilder<Box<WatchlistModel>>(
           valueListenable: _watchlistBox!.listenable(),
           builder: (context, value, child) {
@@ -340,97 +446,93 @@ class _DetailsScreenState extends State<DetailsScreen> {
     final screenHeight = MediaQuery.of(context).size.height;
     ThemeData themeData = Theme.of(context);
 
-    return DismissiblePage(
-      onDismissed: () => Navigator.of(context).pop(),
-      direction: DismissiblePageDismissDirection.horizontal,
-      child: SafeArea(
-        maintainBottomViewPadding: true,
-        child: Scaffold(
-          extendBody: true,
-          backgroundColor: themeData.colorScheme.primary,
-          body: Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  themeData.colorScheme.primary,
-                  themeData.colorScheme.secondary,
-                  themeData.colorScheme.tertiary, // End color
-                ],
-                begin: Alignment.bottomLeft,
-                end: Alignment.topRight,
-              ),
-            ),
-            child: FutureBuilder<AnimeInfo?>(
-              future: fetchData(),
-              builder: (context, snapshot) {
-                final bool isLoading =
-                    snapshot.connectionState == ConnectionState.waiting;
-                info = snapshot.data?.data;
-        
-                return CustomScrollView(
-                  controller: _scrollController,
-                  slivers: [
-                    SliverAppBar(
-                      backgroundColor: Colors.transparent,
-                      expandedHeight: screenHeight * 0.6,
-                      flexibleSpace: FlexibleSpaceBar(
-                        background: _buildHeaderSection(),
-                      ),
-                      actions: [
-                        FavoriteButton(
-                          animeId: widget.id,
-                          title: widget.name,
-                          image: widget.image,
-                          type: widget.type,
-                        ),
-                        const SizedBox(width: 10),
-                      ],
-                    ),
-                    SliverToBoxAdapter(
-                      child: Container(
-                        padding: const EdgeInsets.only(
-                          left: 15,
-                          right: 15,
-                          top: 10,
-                        ),
-                        decoration: BoxDecoration(
-                          color: themeData.scaffoldBackgroundColor,
-                          borderRadius: const BorderRadius.only(
-                            topLeft: Radius.circular(50),
-                            topRight: Radius.circular(50),
-                          ),
-                        ),
-                        child: _buildDetailsSection(isLoading: isLoading),
-                      ),
-                    ),
-                  ],
-                );
-              },
+    return SafeArea(
+      maintainBottomViewPadding: true,
+      child: Scaffold(
+        extendBody: true,
+        backgroundColor: themeData.colorScheme.primary,
+        body: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                themeData.colorScheme.primary,
+                themeData.colorScheme.secondary,
+                themeData.colorScheme.tertiary, // End color
+              ],
+              begin: Alignment.bottomLeft,
+              end: Alignment.topRight,
             ),
           ),
-          bottomNavigationBar: ValueListenableBuilder<Box<WatchlistModel>>(
-            valueListenable: _watchlistBox!.listenable(),
-            builder: (context, box, _) {
-              // Get the continue watching item
-              continueWatchingItem =
-                  _watchlistBox.getContinueWatchingById(widget.id);
-        
-              if (continueWatchingItem == null || _episodes.value.length < 2) {
-                return const SizedBox.shrink();
-              }
-        
-              return BottomPlayerBar(
-                episodes: _episodes.value,
-                item: continueWatchingItem!,
-                title: continueWatchingItem!.title,
-                id: widget.id,
-                image: widget.image,
-                type: widget.type,
-                nextEpisodeId: _nextEpisodeId,
-                nextEpisodeTitle: _nextEpisodeTitle,
+          child: FutureBuilder<AnimeInfo?>(
+            future: fetchData(),
+            builder: (context, snapshot) {
+              final bool isLoading =
+                  snapshot.connectionState == ConnectionState.waiting;
+              info = snapshot.data?.data;
+      
+              return CustomScrollView(
+                controller: _scrollController,
+                slivers: [
+                  SliverAppBar(
+                    backgroundColor: Colors.transparent,
+                    expandedHeight: screenHeight * 0.6,
+                    flexibleSpace: FlexibleSpaceBar(
+                      background: _buildHeaderSection(),
+                    ),
+                    actions: [
+                      FavoriteButton(
+                        animeId: widget.id,
+                        title: widget.name,
+                        image: widget.image,
+                        type: widget.type,
+                      ),
+                      const SizedBox(width: 10),
+                    ],
+                  ),
+                  SliverToBoxAdapter(
+                    child: Container(
+                      padding: const EdgeInsets.only(
+                        left: 15,
+                        right: 15,
+                        top: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        color: themeData.scaffoldBackgroundColor,
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(50),
+                          topRight: Radius.circular(50),
+                        ),
+                      ),
+                      child: _buildDetailsSection(isLoading: isLoading),
+                    ),
+                  ),
+                ],
               );
             },
           ),
+        ),
+        bottomNavigationBar: ValueListenableBuilder<Box<WatchlistModel>>(
+          valueListenable: _watchlistBox!.listenable(),
+          builder: (context, box, _) {
+            // Get the continue watching item
+            continueWatchingItem =
+                _watchlistBox.getContinueWatchingById(widget.id);
+      
+            if (continueWatchingItem == null || _episodes.value.length < 2) {
+              return const SizedBox.shrink();
+            }
+      
+            return BottomPlayerBar(
+              episodes: _episodes.value,
+              item: continueWatchingItem!,
+              title: continueWatchingItem!.title,
+              id: widget.id,
+              image: widget.image,
+              type: widget.type,
+              nextEpisodeId: _nextEpisodeId,
+              nextEpisodeTitle: _nextEpisodeTitle,
+            );
+          },
         ),
       ),
     );
