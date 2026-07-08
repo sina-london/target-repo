@@ -8,6 +8,8 @@ import 'package:shonenx/data/hive/providers/ui_provider.dart';
 import 'dart:async';
 import 'dart:developer' as dev;
 
+import 'package:shonenx/providers/homepage_provider.dart';
+
 class LoadingScreen extends ConsumerStatefulWidget {
   const LoadingScreen({super.key});
 
@@ -84,7 +86,7 @@ class _LoadingScreenState extends ConsumerState<LoadingScreen>
       await Future.wait([
         //   // Initialize anime source registry
         ref.read(animeSourceRegistryProvider.notifier).initialize(null),
-
+        ref.read(homePageProvider.future)
         //   // Initialize all settings
         //   ref.read(themeSettingsProvider.notifier).initializeSettings(),
         //   ref.read(uiSettingsProvider.notifier).initializeSettings(),

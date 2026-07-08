@@ -10,7 +10,6 @@ import 'package:shonenx/screens/details_screen.dart';
 import 'package:shonenx/screens/error_screen.dart';
 import 'package:shonenx/screens/home_screen.dart';
 import 'package:shonenx/screens/loading_screen.dart';
-import 'package:shonenx/screens/see_all_screen.dart';
 import 'package:shonenx/screens/settings/about/about_screen.dart';
 import 'package:shonenx/screens/settings/about/help_support_screen.dart';
 import 'package:shonenx/screens/settings/about/privacy_policy_screen.dart';
@@ -80,13 +79,6 @@ final GoRouter router = GoRouter(
     ),
     _buildSettingsRoute(),
     GoRoute(
-      path: '/all/:path',
-      builder: (context, state) => SeeAllScreen(
-        title: state.uri.queryParameters['title'] ?? 'Untitled',
-        path: state.pathParameters['path'] ?? '',
-      ),
-    ),
-    GoRoute(
       path: '/continue-all',
       builder: (context, state) => ContinueWatchingScreen(),
     ),
@@ -121,11 +113,13 @@ GoRoute _buildSettingsRoute() {
     routes: [
       ..._buildSettingsSubRoutes([
         _SettingsRouteConfig(
+          headerIcon: Iconsax.user,
           path: 'profile',
           title: 'Profile',
           screen: const ProfileSettingsScreen(),
           subRoutes: [
             _SettingsRouteConfig(
+              headerIcon: Iconsax.refresh_circle,
               path: 'sync',
               title: 'Sync',
               screen: const SyncSettingsScreen(),
@@ -133,31 +127,37 @@ GoRoute _buildSettingsRoute() {
           ],
         ),
         _SettingsRouteConfig(
+          headerIcon: Iconsax.cloud,
           path: 'providers',
           title: 'Providers',
           screen: const ProviderSettingsScreen(),
         ),
         _SettingsRouteConfig(
+          headerIcon: Iconsax.brush_2,
           path: 'theme',
           title: 'Theme',
           screen: const ThemeSettingsScreen(),
         ),
         _SettingsRouteConfig(
+          headerIcon: Iconsax.square,
           path: 'ui',
           title: 'User Interface',
           screen: const UISettingsScreen(),
         ),
         _SettingsRouteConfig(
+          headerIcon: Iconsax.info_circle,
           path: 'about',
           title: 'About',
           screen: const AboutScreen(),
           subRoutes: [
             _SettingsRouteConfig(
+              headerIcon: Iconsax.info_circle,
               path: 'terms',
               title: 'Terms of Service',
               screen: const TermsOfServiceScreen(),
             ),
             _SettingsRouteConfig(
+              headerIcon: Iconsax.shield_tick,
               path: 'privacy',
               title: 'Privacy Policy',
               screen: const PrivacyPolicyScreen(),
@@ -165,11 +165,13 @@ GoRoute _buildSettingsRoute() {
           ],
         ),
         _SettingsRouteConfig(
+          headerIcon: Iconsax.video_play,
           path: 'player',
           title: 'Player',
           screen: const PlayerSettingsScreen(),
         ),
         _SettingsRouteConfig(
+          headerIcon: Iconsax.message_question,
           path: 'support',
           title: 'Help & Support',
           screen: const HelpSupportScreen(),
@@ -183,12 +185,15 @@ class _SettingsRouteConfig {
   final String path;
   final String title;
   final Widget screen;
+  final IconData? headerIcon;
   final List<_SettingsRouteConfig> subRoutes;
 
   _SettingsRouteConfig({
     required this.path,
     required this.title,
     required this.screen,
+    // ignore: unused_element
+    this.headerIcon,
     this.subRoutes = const [],
   });
 }
@@ -198,6 +203,7 @@ List<GoRoute> _buildSettingsSubRoutes(List<_SettingsRouteConfig> configs) {
     return GoRoute(
       path: config.path,
       builder: (context, state) => SettingsLayout(
+        headerIcon: config.headerIcon,
         title: config.title,
         child: config.screen,
       ),

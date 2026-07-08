@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:media_kit_video/media_kit_video.dart' as media_kit_video;
+import 'package:shonenx/core/registery/anime_source_registery_provider.dart';
 import 'package:shonenx/data/hive/models/settings/player_model.dart';
 import 'package:shonenx/data/hive/providers/player_provider.dart';
+import 'package:shonenx/data/hive/providers/provider_provider.dart';
 import 'package:shonenx/helpers/player/gesture_handler.dart';
 import 'package:shonenx/helpers/player/overlay_manager.dart';
-import 'package:shonenx/helpers/provider.dart';
 import 'package:shonenx/helpers/ui.dart';
 import 'package:shonenx/providers/watch_providers.dart';
 import 'package:shonenx/widgets/player/bottom_controls.dart';
@@ -312,8 +313,7 @@ class _CustomControlsState extends ConsumerState<CustomControls> {
           margin: const EdgeInsets.symmetric(horizontal: 16),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(10),
-            color:
-                theme.colorScheme.surfaceContainerLowest.withOpacity(0.3),
+            color: theme.colorScheme.surfaceContainerLowest.withOpacity(0.3),
           ),
           child: Column(
             children: [
@@ -328,7 +328,11 @@ class _CustomControlsState extends ConsumerState<CustomControls> {
               ),
               const SizedBox(height: 8),
               BottomControls(
-                animeProvider: getAnimeProvider(ref)!,
+                animeProvider: ref
+                    .read(animeSourceRegistryProvider.notifier)
+                    .getProvider(ref
+                        .read(providerSettingsProvider)
+                        .selectedProviderName)!,
                 watchState: watchState,
                 onChangeSource: _resetTimer,
                 isPlaying: playerState.isPlaying,

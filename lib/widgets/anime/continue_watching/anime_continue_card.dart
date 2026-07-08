@@ -1,10 +1,14 @@
 import 'dart:convert';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:shonenx/core/models/anilist/anilist_media_list.dart'
+    as anilist_media;
 import 'package:shonenx/data/hive/models/anime_watch_progress_model.dart';
+import 'package:shonenx/helpers/anime_match_popup.dart';
+
 final loadingProvider = StateProvider.family<bool, int>((ref, index) => false);
 
 class ContinueWatchingCard extends ConsumerWidget {
@@ -37,293 +41,440 @@ class ContinueWatchingCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Theme management
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final textTheme = theme.textTheme;
+
+    // Progress calculation
     final progress = _calculateProgress().clamp(0.0, 1.0);
     final remainingTime = _formatRemainingTime(
       episode.progressInSeconds ?? 0,
       episode.durationInSeconds ?? 0,
     );
+
+    // Loading state
     final isLoading = ref.watch(loadingProvider(index));
 
+    // Media
     final memoryImage = episode.episodeThumbnail != null
         ? base64Decode(episode.episodeThumbnail!)
         : null;
 
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      child: GestureDetector(
-        onTap: multiSelectMode
-            ? onTap
-            : (isLoading ? null : () => _handleTap(context, ref)),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          width: 290,
-          height: 150,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                color: colorScheme.shadow.withOpacity(0.08),
-                blurRadius: 6,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: Stack(
-              children: [
-                // Background Image
-                Positioned.fill(
-                  child: memoryImage != null
-                      ? Image.memory(
-                          memoryImage,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) =>
-                              _ImageFallback(colorScheme: colorScheme),
-                        )
-                      : CachedNetworkImage(
-                          imageUrl: anime.animeCover,
-                          fit: BoxFit.cover,
-                          placeholder: (_, __) =>
-                              _ImagePlaceholder(colorScheme: colorScheme),
-                          errorWidget: (_, __, ___) =>
-                              _ImageFallback(colorScheme: colorScheme),
-                        ),
-                ),
-
-                // Gradient Overlay
-                Positioned.fill(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.transparent,
-                          colorScheme.scrim.withOpacity(0.7),
-                        ],
-                        stops: const [0.6, 1.0],
-                      ),
-                    ),
-                  ),
-                ),
-
-                // Content
-                Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      // Progress Percentage or Completed
-                      Text(
-                        episode.isCompleted
-                            ? 'Completed'
-                            : '${(progress * 100).toStringAsFixed(0)}%',
-                        style: GoogleFonts.roboto(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: episode.isCompleted
-                              ? colorScheme.primary
-                              : Colors.white,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-
-                      // Anime Title
-                      Text(
-                        anime.animeTitle,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.roboto(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-
-                      // Episode Title
-                      Text(
-                        episode.episodeTitle,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.roboto(
-                          fontSize: 12,
-                          color: Colors.white.withOpacity(0.8),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-
-                      // Info Row
-                      Row(
-                        children: [
-                          // Episode Number
-                          _Tag(
-                            text: 'EP ${episode.episodeNumber}',
-                            color: colorScheme.primaryContainer,
-                          ),
-                          const SizedBox(width: 8),
-
-                          // Remaining Time
-                          Text(
-                            remainingTime,
-                            style: GoogleFonts.roboto(
-                              fontSize: 12,
-                              color: Colors.white.withOpacity(0.8),
-                            ),
-                          ),
-                          const Spacer(),
-
-                          // Play Button or Loading
-                          if (!multiSelectMode)
-                            isLoading
-                                ? const SizedBox(
-                                    width: 24,
-                                    height: 24,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                    ),
-                                  )
-                                : episode.isCompleted
-                                    ? _IconButton(
-                                        icon: Iconsax.next5,
-                                        onPressed: () => _handleTap(
-                                            context, ref,
-                                            plusEpisode: 1),
-                                      )
-                                    : _IconButton(
-                                        icon: Iconsax.play5,
-                                        onPressed: () =>
-                                            _handleTap(context, ref),
-                                      ),
-                        ],
-                      ),
-                      const SizedBox(height: 6),
-
-                      // Progress Bar
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(4),
-                        child: LinearProgressIndicator(
-                          value: progress,
-                          backgroundColor: Colors.white.withOpacity(0.2),
-                          valueColor:
-                              AlwaysStoppedAnimation(colorScheme.primary),
-                          minHeight: 3,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Multi-select Overlay
-                if (multiSelectMode)
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? colorScheme.primary.withOpacity(0.3)
-                          : Colors.transparent,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: isSelected
-                        ? Center(
-                            child: Icon(
-                              Iconsax.tick_circle,
-                              color: colorScheme.primary,
-                              size: 32,
-                            ),
-                          )
-                        : null,
-                  ),
-              ],
+    return GestureDetector(
+      onTap: multiSelectMode ? onTap : () => _handleTap(context, ref),
+      child: Container(
+        width: 280,
+        height: 150,
+        margin: const EdgeInsets.symmetric(horizontal: 4),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: colorScheme.shadow.withOpacity(0.15),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+              spreadRadius: 1,
             ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              // Thumbnail
+              _buildThumbnail(memoryImage, colorScheme),
+
+              // Gradient overlay
+              _buildGradientOverlay(colorScheme),
+
+              // Card content
+              _buildCardContent(context, ref, theme, colorScheme, textTheme,
+                  remainingTime, progress, isLoading),
+
+              // Multi-select overlay
+              if (multiSelectMode) _buildMultiSelectOverlay(colorScheme),
+            ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildThumbnail(Uint8List? memoryImage, ColorScheme colorScheme) {
+    return Hero(
+      tag: 'anime_${anime.animeId}_ep_${episode.episodeNumber}',
+      child: memoryImage != null
+          ? Image.memory(
+              memoryImage,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) =>
+                  _ImageFallback(colorScheme: colorScheme),
+            )
+          : CachedNetworkImage(
+              imageUrl: anime.animeCover,
+              fit: BoxFit.cover,
+              memCacheHeight: 150 ~/ 1,
+              memCacheWidth: 280 ~/ 1,
+              placeholder: (_, __) =>
+                  _ImagePlaceholder(colorScheme: colorScheme),
+              errorWidget: (_, __, ___) =>
+                  _ImageFallback(colorScheme: colorScheme),
+            ),
+    );
+  }
+
+  Widget _buildGradientOverlay(ColorScheme colorScheme) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Colors.transparent,
+            Colors.black.withOpacity(0.4),
+            Colors.black.withOpacity(0.8),
+          ],
+          stops: const [0.4, 0.75, 1.0],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCardContent(
+      BuildContext context,
+      WidgetRef ref,
+      ThemeData theme,
+      ColorScheme colorScheme,
+      TextTheme textTheme,
+      String remainingTime,
+      double progress,
+      bool isLoading) {
+    return Padding(
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          // Episode info
+          Row(
+            children: [
+              _EpisodeTag(
+                episode: episode.episodeNumber,
+                colorScheme: colorScheme,
+                textTheme: textTheme,
+              ),
+              const SizedBox(width: 8),
+              if (episode.episodeTitle.isNotEmpty &&
+                  episode.episodeTitle != 'Unknown')
+                Expanded(
+                  child: Text(
+                    episode.episodeTitle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: textTheme.labelMedium?.copyWith(
+                      color: Colors.white.withOpacity(0.9),
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+
+          const SizedBox(height: 8),
+
+          // Anime title
+          Text(
+            anime.animeTitle,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w800,
+              color: Colors.white,
+              fontSize: 16,
+              height: 1.2,
+              letterSpacing: -0.3,
+              shadows: [
+                Shadow(
+                  color: Colors.black.withOpacity(0.5),
+                  blurRadius: 4,
+                  offset: const Offset(0, 1),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 8),
+
+          // Progress bar and details row
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Progress bar with indicator
+              Stack(
+                children: [
+                  // Background bar
+                  Container(
+                    height: 4,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: colorScheme.surfaceVariant.withOpacity(0.5),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+
+                  // Progress bar
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeOut,
+                    height: 4,
+                    width: progress * (280 - 24), // Full width minus padding
+                    decoration: BoxDecoration(
+                      color: colorScheme.primary,
+                      borderRadius: BorderRadius.circular(4),
+                      boxShadow: [
+                        BoxShadow(
+                          color: colorScheme.primary.withOpacity(0.4),
+                          blurRadius: 3,
+                          offset: const Offset(0, 0),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 8),
+
+              // Time and action row
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // Format and time remaining
+                  Expanded(
+                    child: Row(
+                      children: [
+                        _FormatTag(
+                          format: anime.animeFormat,
+                          colorScheme: colorScheme,
+                          textTheme: textTheme,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            remainingTime,
+                            style: textTheme.bodySmall?.copyWith(
+                              color: Colors.white.withOpacity(0.9),
+                              fontWeight: FontWeight.w500,
+                              fontSize: 11,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Play button
+                  if (!multiSelectMode)
+                    _ActionButton(
+                      isLoading: isLoading,
+                      isCompleted: episode.isCompleted,
+                      colorScheme: colorScheme,
+                      onPressed: () => _handleTap(
+                        context,
+                        ref,
+                        plusEpisode: 0,
+                      ),
+                    ),
+                ],
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMultiSelectOverlay(ColorScheme colorScheme) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      decoration: BoxDecoration(
+        color: isSelected
+            ? colorScheme.primary.withOpacity(0.4)
+            : Colors.black.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: isSelected
+          ? Stack(
+              children: [
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: colorScheme.primary,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.check,
+                      color: colorScheme.onPrimary,
+                      size: 16,
+                    ),
+                  ),
+                ),
+              ],
+            )
+          : null,
     );
   }
 
   Future<void> _handleTap(BuildContext context, WidgetRef ref,
       {int plusEpisode = 0}) async {
     ref.read(loadingProvider(index).notifier).state = true;
-    // await providerAnimeMatchSearch(
-    //   context: context,
-    //   ref: ref,
-    //   animeMedia: anilist_media.Media(
-    //     id: anime.animeId,
-    //     coverImage: anilist_media.CoverImage(
-    //       large: anime.animeCover,
-    //       medium: anime.animeCover,
-    //     ),
-    //     format: anime.animeFormat,
-    //     title: anilist_media.Title(
-    //       romaji: anime.animeTitle,
-    //       english: anime.animeTitle,
-    //       native: anime.animeTitle,
-    //     ),
-    //   ),
-    //   animeWatchProgressBox: AnimeWatchProgressBox()..init(),
-    //   plusEpisode: plusEpisode,
-    //   afterSearchCallback: () =>
-    //       ref.read(loadingProvider(index).notifier).state = false,
-    // );
+    await providerAnimeMatchSearch(
+      context: context,
+      ref: ref,
+      animeMedia: anilist_media.Media(
+        id: anime.animeId,
+        title: anilist_media.Title(
+            english: anime.animeTitle,
+            romaji: anime.animeTitle,
+            native: anime.animeTitle),
+        coverImage: anilist_media.CoverImage(
+            large: anime.animeCover, medium: anime.animeCover),
+        format: anime.animeFormat,
+      ),
+    );
+    ref.read(loadingProvider(index).notifier).state = false;
   }
 }
 
-class _Tag extends StatelessWidget {
-  final String text;
-  final Color color;
+class _EpisodeTag extends StatelessWidget {
+  final int episode;
+  final ColorScheme colorScheme;
+  final TextTheme textTheme;
 
-  const _Tag({required this.text, required this.color});
+  const _EpisodeTag({
+    required this.episode,
+    required this.colorScheme,
+    required this.textTheme,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.9),
+        color: colorScheme.primary,
         borderRadius: BorderRadius.circular(6),
-        border: Border.all(
-          color: theme.colorScheme.outlineVariant.withOpacity(0.2),
-        ),
+        boxShadow: [
+          BoxShadow(
+            color: colorScheme.primary.withOpacity(0.4),
+            blurRadius: 4,
+            offset: const Offset(0, 1),
+          ),
+        ],
       ),
       child: Text(
-        text,
-        style: GoogleFonts.roboto(
-          fontSize: 11,
-          fontWeight: FontWeight.w600,
-          color: theme.colorScheme.onPrimaryContainer,
+        'EP $episode',
+        style: textTheme.labelSmall?.copyWith(
+          color: colorScheme.onPrimary,
+          fontWeight: FontWeight.w800,
+          fontSize: 10,
         ),
       ),
     );
   }
 }
 
-class _IconButton extends StatelessWidget {
-  final IconData icon;
-  final VoidCallback onPressed;
+class _FormatTag extends StatelessWidget {
+  final String format;
+  final ColorScheme colorScheme;
+  final TextTheme textTheme;
 
-  const _IconButton({required this.icon, required this.onPressed});
+  const _FormatTag({
+    required this.format,
+    required this.colorScheme,
+    required this.textTheme,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return GestureDetector(
-      onTap: onPressed,
-      child: Container(
-        padding: const EdgeInsets.all(6),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.primaryContainer.withOpacity(0.9),
-          shape: BoxShape.circle,
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceVariant.withOpacity(0.5),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(
+        format,
+        style: textTheme.labelSmall?.copyWith(
+          color: Colors.white.withOpacity(0.9),
+          fontWeight: FontWeight.w600,
+          fontSize: 9,
         ),
-        child: Icon(
-          icon,
-          size: 18,
-          color: theme.colorScheme.onPrimaryContainer,
+      ),
+    );
+  }
+}
+
+class _ActionButton extends StatelessWidget {
+  final bool isLoading;
+  final bool isCompleted;
+  final ColorScheme colorScheme;
+  final VoidCallback onPressed;
+
+  const _ActionButton({
+    required this.isLoading,
+    required this.isCompleted,
+    required this.colorScheme,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: colorScheme.primary,
+      borderRadius: BorderRadius.circular(24),
+      elevation: 2,
+      shadowColor: colorScheme.primary.withOpacity(0.5),
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(24),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          child: isLoading
+              ? SizedBox(
+                  width: 14,
+                  height: 14,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: colorScheme.onPrimary,
+                  ),
+                )
+              : Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      isCompleted ? Iconsax.repeat : Iconsax.play,
+                      size: 14,
+                      color: colorScheme.onPrimary,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      isCompleted ? 'Rewatch' : 'Play',
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                            color: colorScheme.onPrimary,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 10,
+                          ),
+                    ),
+                  ],
+                ),
         ),
       ),
     );
@@ -338,7 +489,7 @@ class _ImagePlaceholder extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: colorScheme.surfaceContainerLow,
+      color: colorScheme.surfaceContainerHighest,
       child: Center(
         child: CircularProgressIndicator(
           strokeWidth: 2,
@@ -357,12 +508,25 @@ class _ImageFallback extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: colorScheme.surfaceContainerLow.withOpacity(0.5),
+      color: colorScheme.surfaceContainerHighest,
       child: Center(
-        child: Icon(
-          Iconsax.gallery_slash,
-          size: 32,
-          color: colorScheme.onSurfaceVariant,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.broken_image_rounded,
+              size: 28,
+              color: colorScheme.onSurfaceVariant,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Image not available',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                    fontSize: 10,
+                  ),
+            ),
+          ],
         ),
       ),
     );
