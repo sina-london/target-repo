@@ -76,8 +76,17 @@ class _DetailsScreenState extends State<DetailsScreen> {
 
   void _loadContinueWatching() {
     continueWatchingItem = _watchlistBox.getContinueWatchingById(widget.id);
-    debugPrint("DETAIL : ${continueWatchingItem?.duration}");
+    debugPrint("DETAIL : ${continueWatchingItem?.watchedEpisodes}");
     setState(() {});
+  }
+
+  String? _getNextEpisodeId() {
+    int continueItemindex = _episodes.value.indexWhere(
+        (item) => item.episodeId == continueWatchingItem?.episodeId);
+    if (continueItemindex < _episodes.value.length) {
+      return _episodes.value[continueItemindex + 1].episodeId;
+    }
+    return null;
   }
 
   Future<AnimeInfo?> fetchData() async {
@@ -282,6 +291,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
           poster: info?.anime?.info?.poster ?? widget.image,
           type: info?.anime?.info?.stats?.type ?? 'N/A',
           episodes: _episodes, // Pass the ValueNotifier directly
+          watchedEpisodes: continueWatchingItem?.watchedEpisodes,
           isLoading: _isLoadingEpisodes, // Pass the ValueNotifier directly
         ),
       ],
@@ -371,7 +381,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
         ),
       ),
       bottomNavigationBar: ValueListenableBuilder<Box<WatchlistModel>>(
-        valueListenable: _watchlistBox.listenToContinueWatching(),
+        valueListenable: _watchlistBox.listenable(),
         builder: (context, box, _) {
           // Get the continue watching item
           continueWatchingItem =
@@ -387,6 +397,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
             id: widget.id,
             image: widget.image,
             type: widget.type,
+            nextEpisode: _getNextEpisodeId(),
           );
         },
       ),
