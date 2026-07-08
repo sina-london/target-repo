@@ -13,14 +13,12 @@ class StreamScreen extends StatefulWidget {
   final String episodeId;
   final String poster;
   final int episode;
-  final List<Episode> episodes;
 
   const StreamScreen({
     super.key,
     required this.title,
     required this.id,
     required this.episodeId,
-    required this.episodes,
     required this.poster,
     required this.episode,
   });
@@ -240,7 +238,7 @@ class _StreamScreenState extends State<StreamScreen> {
 
     // Find index of existing item with same title
     final existingIndex =
-        continueWatchingList.indexWhere((item) => item.id == widget.id);
+        continueWatchingList.indexWhere((item) => item?.id == widget.id);
 
     if (existingIndex != -1) {
       // Update existing item instead of adding new one

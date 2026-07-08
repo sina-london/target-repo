@@ -1,8 +1,11 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:nekoflow/data/models/info_model.dart';
 import 'package:nekoflow/data/models/watchlist/watchlist_model.dart';
 import 'package:nekoflow/data/services/anime_service.dart';
+import 'package:nekoflow/screens/main/stream/stream_screen.dart';
 import 'package:nekoflow/widgets/episodes_list.dart';
 import 'package:nekoflow/widgets/favorite_button.dart';
 import 'package:shimmer/shimmer.dart';
@@ -52,8 +55,15 @@ class _DetailsScreenState extends State<DetailsScreen> {
         WatchlistModel(continueWatching: []);
     // continueWatchingItem = watchlist.continueWatching
     if (watchlist.continueWatching!.isNotEmpty) {
-      continueWatchingItem = watchlist.continueWatching
-          ?.singleWhere((item) => item.id == widget.id);
+      try {
+        continueWatchingItem = watchlist.continueWatching?.singleWhere(
+          (item) => item.id == widget.id,
+        );
+      } catch (e) {
+        continueWatchingItem =
+            null; // Handle the case when no matching item is found
+        print('Item not found: $e');
+      }
     }
   }
 
@@ -241,6 +251,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
     final screenHeight = MediaQuery.of(context).size.height;
     ThemeData themeData = Theme.of(context);
     return Scaffold(
+      extendBody: true,
       backgroundColor: themeData.colorScheme.primary,
       body: FutureBuilder<AnimeInfo?>(
         future: fetchData(),
@@ -290,10 +301,52 @@ class _DetailsScreenState extends State<DetailsScreen> {
           );
         },
       ),
-      bottomNavigationBar: BottomAppBar(
-        child: Text(
-            continueWatchingItem != null ? continueWatchingItem!.name : ""),
-      ),
+      bottomNavigationBar: continueWatchingItem == null
+          ? SizedBox.shrink()
+          : BottomAppBar(
+              height: 100,
+              color: Colors.transparent, // Make BottomAppBar transparent
+              padding: EdgeInsets.symmetric(horizontal: 15, vertical: 15),
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(
+                      50), // Clip to match container's rounded corners
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(
+                        sigmaX: 3.0, sigmaY: 3.0), // Apply blur effect
+                    child: Container(
+                      color: themeData.textTheme.bodyMedium?.color
+                          ?.withOpacity(0.1),
+                      child: ListTile(
+                        contentPadding:
+                            EdgeInsets.symmetric(vertical: 0, horizontal: 15),
+                        title: Text(
+                            "EP : ${continueWatchingItem!.episode}", style: TextStyle(fontWeight: FontWeight.bold),),
+                            subtitle: Text(continueWatchingItem!.name, maxLines: 1,),
+                        trailing: IconButton(
+                            onPressed: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => StreamScreen(
+                                        title: widget.title,
+                                        id: widget.id,
+                                        episodeId:
+                                            continueWatchingItem!.episodeId,
+                                        poster: widget.image,
+                                        episode:
+                                            continueWatchingItem!.episode))),
+                            icon: Icon(
+                              Icons.play_circle,
+                            )),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
     );
   }
 }
