@@ -1,70 +1,79 @@
-import 'package:flutter/material.dart';
+import 'package:nekoflow/data/models/anime_model.dart';
 
-class SearchResponseModel {
+class SearchModel {
   final int currentPage;
   final bool hasNextPage;
   final int totalPages;
-  final List<AnimeResult> results;
+  final String searchQuery;
+  final Map<String, List<String>> searchFilters;
+  final List<AnimeResult> animes;
+  final List<AnimeResult> mostPopularAnimes;
 
-  SearchResponseModel({
+  SearchModel({
     required this.currentPage,
     required this.hasNextPage,
     required this.totalPages,
-    required this.results,
+    required this.searchQuery,
+    required this.searchFilters,
+    required this.animes,
+    required this.mostPopularAnimes,
   });
 
-  factory SearchResponseModel.fromJson(Map<String, dynamic> json) {
-    return SearchResponseModel(
-      currentPage: json['currentPage'] as int,
+  factory SearchModel.fromJson(Map<String, dynamic> json) {
+    return SearchModel(
+      currentPage: json['currentPage'] ?? 1,
       hasNextPage: json['hasNextPage'] as bool,
-      totalPages: json['totalPages'],
-      results: (json['results'] as List<dynamic>)
+      totalPages: json['totalPages'] ?? 1,
+      searchQuery: json['searchQuery'] ?? '',
+      searchFilters: (json['searchFilters'] as Map<String, dynamic>?)?.map(
+            (key, value) => MapEntry(key, List<String>.from(value)),
+          ) ??
+          {},
+      animes: (json['animes'] as List<dynamic>)
+          .map((animeResult) => AnimeResult.fromJson(animeResult))
+          .toList(),
+      mostPopularAnimes: (json['mostPopularAnimes'] as List<dynamic>)
           .map((animeResult) => AnimeResult.fromJson(animeResult))
           .toList(),
     );
   }
 }
 
+
 class AnimeResult {
   final String id;
-  final String title;
-  final String url;
-  final String image;
-  final String duration;
-  final String japaneseTitle;
+  final String name;
+  final String? japaneseTitle;
+  final String poster;
+  final String? duration;
   final String type;
-  final bool nsfw;
-  final int sub;
-  final int dub;
-  final int episodes;
+  final String? rating;
+  final bool? nsfw;
+  final AnimeEpisodes episodes;
 
   AnimeResult({
     required this.id,
-    required this.title,
-    required this.url,
-    required this.image,
-    required this.duration,
-    required this.japaneseTitle,
+    required this.name,
+    this.japaneseTitle,
+    required this.poster,
+    this.duration,
     required this.type,
-    required this.nsfw,
-    required this.sub,
-    required this.dub,
+    this.rating,
+    this.nsfw,
     required this.episodes,
   });
 
   factory AnimeResult.fromJson(Map<String, dynamic> json) {
     return AnimeResult(
       id: json['id'] as String,
-      title: json['title'] as String,
-      url: json['url'] as String,
-      image: json['image'] as String,
-      duration: json['duration'] as String,
-      japaneseTitle: json['japaneseTitle'] as String,
+      name: json['name'] ?? json['title'] as String,
+      japaneseTitle: json['jname'] as String?,
+      poster: json['poster'] ?? json['image'] as String,
+      duration: json['duration'] as String?,
       type: json['type'] as String,
-      nsfw: json['nsfw'] as bool,
-      sub: json['sub'] as int,
-      dub: json['dub'] as int,
-      episodes: json['episodes'] as int,
+      rating: json['rating'] as String?,
+      nsfw: json['nsfw'] ?? false,
+      episodes: AnimeEpisodes.fromJson(json['episodes']),
     );
   }
 }

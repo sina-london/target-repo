@@ -1,9 +1,12 @@
+// lib/screens/home_screen.dart
+
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:nekoflow/data/models/search_model.dart';
+import 'package:nekoflow/data/models/anime_interface.dart';
+import 'package:nekoflow/data/models/anime_model.dart';
+import 'package:nekoflow/data/models/home_model.dart';
 import 'package:nekoflow/data/services/anime_service.dart';
-import 'package:nekoflow/widgets/featured_item.dart';
-import 'package:nekoflow/widgets/popular_item.dart';
+import 'package:nekoflow/widgets/anime_card.dart';
+import 'package:nekoflow/widgets/snapping_scroll.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -14,9 +17,9 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final AnimeService _animeService = AnimeService();
-  List<AnimeResult>? _topAiring;
-  List<AnimeResult>? _favourite;
-  List<AnimeResult>? _popular;
+  List<TopAiringAnime> _topAiring = [];
+  List<LatestCompletedAnime> _completed = [];
+  List<MostPopularAnime> _popular = [];
   bool _isLoading = true;
   String? error;
 
@@ -27,21 +30,16 @@ class _HomeScreenState extends State<HomeScreen> {
     });
 
     try {
-      List<SearchResponseModel?> results = await Future.wait([
-        _animeService.fetchTopAiring(),
-        _animeService.fetchPopular(),
-        _animeService.fetchFavourite(),
-      ]);
+      HomeModel results = await _animeService.fetchHome();
 
       setState(() {
-        _topAiring = results[0]?.results;
-        _popular = results[1]?.results;
-        _favourite = results[2]?.results;
+        _topAiring = results.data.topAiringAnimes;
+        _popular = results.data.mostPopularAnimes;
+        _completed = results.data.latestCompletedAnimes;
         _isLoading = false;
       });
-
-      print(results);
     } catch (e) {
+      print("error fetching: $e");
       if (!mounted) return;
       setState(() {
         error = 'Something went wrong';
@@ -89,30 +87,43 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildContentSection({required String title}) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.start,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.w500,
-            letterSpacing: 0,
-            foreground: Paint()
-              ..shader = LinearGradient(
-                colors: [
-                  Color.fromARGB(255, 94, 96, 206),
-                  Color.fromARGB(255, 83, 144, 217),
-                ],
-              ).createShader(
-                Rect.fromLTWH(0.0, 0.0, 200.0,
-                    70.0), // Adjust the rect size based on your needs
-              ),
+  Widget _buildContentSection(
+      {required String title, required List<Anime> animeList}) {
+    return !_isLoading
+        ? Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildSectionTitle(title: title),
+              SizedBox(height: 10),
+              SnappingScroller(
+                widthFactor: 0.48,
+                children: animeList.map((anime) => AnimeCard(anime: anime)).toList(),
+              )
+            ],
+          )
+        : const Center(
+            child: CircularProgressIndicator(),
+          );
+  }
+
+  Widget _buildSectionTitle({required String title}) {
+    return Text(
+      title,
+      style: TextStyle(
+        fontSize: 24,
+        fontWeight: FontWeight.w500,
+        letterSpacing: 0,
+        foreground: Paint()
+          ..shader = LinearGradient(
+            colors: [
+              Color.fromARGB(255, 94, 96, 206),
+              Color.fromARGB(255, 83, 144, 217),
+            ],
+          ).createShader(
+            Rect.fromLTWH(0.0, 0.0, 200.0, 70.0),
           ),
-        ),
-      ],
+      ),
     );
   }
 
@@ -124,11 +135,15 @@ class _HomeScreenState extends State<HomeScreen> {
       body: RefreshIndicator(
         onRefresh: fetchData,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10.0),
+          padding: const EdgeInsets.symmetric(horizontal: 20.0),
           child: ListView(
             children: [
               _buildHeaderSection(),
-              _buildContentSection(title: "Recommended")
+              _buildContentSection(title: "Recommended", animeList: _popular),
+              SizedBox(height: 50),
+              _buildContentSection(title: "Top Airing", animeList: _topAiring),
+              SizedBox(height: 50),
+              _buildContentSection(title: "Latest Completed", animeList: _completed),
             ],
           ),
         ),

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:nekoflow/data/models/search_result.dart';
+import 'package:nekoflow/data/models/search_model.dart';
 import 'package:nekoflow/data/services/anime_service.dart';
 import 'package:nekoflow/widgets/result_card.dart';
 import 'package:nekoflow/widgets/search_bar.dart';
@@ -12,67 +12,73 @@ class SearchScreen extends StatefulWidget {
 }
 
 class _SearchScreenState extends State<SearchScreen> {
-  final TextEditingController _searchController = TextEditingController();
-  final AnimeService _animeService = AnimeService();
+  late TextEditingController _searchController;
+  late AnimeService _animeService;
+  SearchModel? _searchResult;
   bool _isLoading = false;
-  bool _isMoreLoading = false;
-  bool _hasNextPage = false;
-  int? _currentPage = 1;
-
-  String? error;
-  List<Anime>? _searchResults;
 
   Future<void> _performSearch() async {
     if (_searchController.text.isEmpty) return;
-
     setState(() {
       _isLoading = true;
-      error = null;
-      _hasNextPage = false;
-      _currentPage = 1;
     });
-
     try {
-      ResultResponse result = await _animeService.fetchByQuery(
-          query: _searchController.text, page: _currentPage ?? 1);
+      SearchModel? result = await _animeService.fetchByQuery(
+          query: _searchController.text, page: 1);
       setState(() {
+        _searchResult = result;
         _isLoading = false;
-        _searchResults = result.results;
-        _hasNextPage = result.hasNextPage;
-        _currentPage = result.currentPage;
       });
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        error = 'Something went wrong: $e';
         _isLoading = false;
       });
     }
   }
 
-  Future<void> _loadMoreResults() async {
-    if (!_hasNextPage || _isMoreLoading) return;
-    setState(() {
-      _isMoreLoading = true;
-      error = null;
-      _hasNextPage = false;
-    });
-    try {
-      ResultResponse result = await _animeService.fetchByQuery(
-          query: _searchController.text, page: _currentPage! + 1);
-      setState(() {
-        _isMoreLoading = false;
-        _searchResults!.addAll(result.results);
-        _hasNextPage = result.hasNextPage;
-        _currentPage = result.currentPage;
-      });
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        error = 'Something went wrong: $e';
-        _isMoreLoading = false;
-      });
+  List<Widget> _buildResultSection() {
+    if (_isLoading) {
+      return [
+        Expanded(
+          child: Center(
+            child: CircularProgressIndicator(),
+          ),
+        )
+      ];
+    } else if (_searchResult == null) {
+      return [
+        SizedBox(
+          height: 100,
+          child: Center(child: Text("Search it up")),
+        )
+      ];
     }
+    return [
+      SizedBox(
+        height: 15,
+      ),
+      Expanded(
+        child: ListView.builder(
+          itemCount: _searchResult!.animes.length,
+          itemBuilder: (context, index) =>
+              ResultCard(anime: _searchResult!.animes[index]),
+        ),
+      )
+    ];
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController = TextEditingController();
+    _animeService = AnimeService();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   @override
@@ -82,45 +88,13 @@ class _SearchScreenState extends State<SearchScreen> {
         toolbarHeight: 0,
       ),
       body: Padding(
-        padding: const EdgeInsets.all(10),
+        padding: const EdgeInsets.all(15.0),
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Searchbar(
-              controller: _searchController,
-              onSearch: _performSearch,
-            ),
-            const SizedBox(height: 10),
-            if (_isLoading)
-              const Center(child: CircularProgressIndicator())
-            else if (error != null)
-              Center(child: Text(error!))
-            else if (_searchResults == null ||
-                (_searchResults != null && _searchResults!.isEmpty))
-              const Center(child: Text('No items found'))
-            else
-              Expanded(
-                child: NotificationListener<ScrollNotification>(
-                  onNotification: (notification) {
-                    if (notification.metrics.outOfRange) {
-                      _loadMoreResults();
-                    }
-                    return true;
-                  },
-                  child: ListView.builder(
-                    itemCount: _searchResults!.length,
-                    scrollDirection: Axis.vertical,
-                    // shrinkWrap: true,
-
-                    physics: const BouncingScrollPhysics(),
-                    // Enable swiping to dismiss the keyboard
-                    keyboardDismissBehavior:
-                        ScrollViewKeyboardDismissBehavior.onDrag,
-                    itemBuilder: (context, index) =>
-                        ResultCard(anime: _searchResults![index], index: index),
-                  ),
-                ),
-              ),
+            Searchbar(controller: _searchController, onSearch: _performSearch),
+            ..._buildResultSection()
           ],
         ),
       ),
