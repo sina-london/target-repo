@@ -100,18 +100,20 @@ class ContinueWatchingItemAdapter extends TypeAdapter<ContinueWatchingItem> {
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
     return ContinueWatchingItem(
+      id: fields[5] as String,
       name: fields[0] as String,
       poster: fields[1] as String,
       episode: fields[2] as int,
       episodeId: fields[3] as String,
       timestamp: fields[4] as String,
+      type: fields[6] as String,
     );
   }
 
   @override
   void write(BinaryWriter writer, ContinueWatchingItem obj) {
     writer
-      ..writeByte(5)
+      ..writeByte(7)
       ..writeByte(0)
       ..write(obj.name)
       ..writeByte(1)
@@ -121,7 +123,11 @@ class ContinueWatchingItemAdapter extends TypeAdapter<ContinueWatchingItem> {
       ..writeByte(3)
       ..write(obj.episodeId)
       ..writeByte(4)
-      ..write(obj.timestamp);
+      ..write(obj.timestamp)
+      ..writeByte(5)
+      ..write(obj.id)
+      ..writeByte(6)
+      ..write(obj.type);
   }
 
   @override

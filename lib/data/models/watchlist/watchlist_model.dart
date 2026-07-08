@@ -6,7 +6,7 @@ abstract class BaseAnimeCard {
   String get name;
   String get poster;
   String get id;
-  String get type;
+  String? get type;
 }
 
 @HiveType(typeId: 1)
@@ -39,7 +39,7 @@ class RecentlyWatchedItem extends HiveObject implements BaseAnimeCard {
 
   @override
   @HiveField(2)
-  final String type; // e.g., "TV", "OTV"
+  final String? type; // e.g., "TV", "OTV"
 
   @override
   @HiveField(3)
@@ -54,10 +54,12 @@ class RecentlyWatchedItem extends HiveObject implements BaseAnimeCard {
 }
 
 @HiveType(typeId: 3)
-class ContinueWatchingItem extends HiveObject {
+class ContinueWatchingItem extends HiveObject implements BaseAnimeCard {
+  @override
   @HiveField(0)
   final String name;
 
+  @override
   @HiveField(1)
   final String poster;
 
@@ -70,17 +72,27 @@ class ContinueWatchingItem extends HiveObject {
   @HiveField(4)
   final String timestamp;
 
+  @override
+  @HiveField(5)
+  final String id;
+
+  @override
+  @HiveField(6)
+  final String? type;
+
   ContinueWatchingItem({
+    required this.id,
     required this.name,
     required this.poster,
     required this.episode,
     required this.episodeId,
     required this.timestamp,
+    this.type = 'N/A'
   });
 }
 
 @HiveType(typeId: 4)
-class AnimeItem extends HiveObject implements BaseAnimeCard{
+class AnimeItem extends HiveObject implements BaseAnimeCard {
   @override
   @HiveField(0)
   final String name;
@@ -97,10 +109,9 @@ class AnimeItem extends HiveObject implements BaseAnimeCard{
   @HiveField(3)
   final String type;
 
-  AnimeItem({
-    required this.name,
-    required this.poster,
-    required this.id,
-    required this.type
-  });
+  AnimeItem(
+      {required this.name,
+      required this.poster,
+      required this.id,
+      required this.type});
 }
