@@ -4,7 +4,7 @@ import 'package:nekoflow/data/models/episodes_model.dart';
 import 'package:nekoflow/data/models/home_model.dart';
 import 'package:nekoflow/data/models/info_model.dart';
 import 'package:nekoflow/data/models/search_model.dart';
-import 'package:nekoflow/data/models/watch_model.dart';
+import 'package:nekoflow/data/models/stream_model.dart';
 
 class AnimeService {
   static const String baseUrl =
@@ -16,15 +16,6 @@ class AnimeService {
 
   Future<HomeModel> fetchHome() async =>
       _get<HomeModel>('$baseUrl/home', (json) => HomeModel.fromJson(json));
-
-  Future<SearchModel?> fetchTopAiring() async => _get<SearchModel?>(
-      '$baseUrl/top-airing', (json) => SearchModel.fromJson(json));
-
-  Future<SearchModel?> fetchPopular() async => _get<SearchModel?>(
-      '$baseUrl/most-popular', (json) => SearchModel.fromJson(json));
-
-  Future<SearchModel?> fetchCompleted() async => _get<SearchModel?>(
-      '$baseUrl/latest-completed', (json) => SearchModel.fromJson(json));
 
   Future<AnimeInfo?> fetchAnimeInfoById({required String id}) async =>
       _get<AnimeInfo?>(
@@ -45,9 +36,22 @@ class AnimeService {
     });
   }
 
-  Future<WatchResponseModel> fetchWatchById({required String id}) async =>
-      _get<WatchResponseModel>(
-          '$baseUrl/watch/$id', (json) => WatchResponseModel.fromJson(json));
+  Future<EpisodeServersModel> fetchEpisodeServers(
+      {required String animeEpisodeId}) async {
+    final url = '$baseUrl/episode/servers?animeEpisodeId=$animeEpisodeId';
+    return _get<EpisodeServersModel>(
+        url, (json) => EpisodeServersModel.fromJson(json));
+  }
+
+  Future<EpisodeStreamingLinksModel> fetchEpisodeStreamingLinks(
+      {required String animeEpisodeId,
+      String server = "hd-1",
+      String category = "sub"}) async {
+    final url =
+        '$baseUrl/episode/sources?animeEpisodeId=$animeEpisodeId&server=$server&category=$category';
+    return _get<EpisodeStreamingLinksModel>(
+        url, (json) => EpisodeStreamingLinksModel.fromJson(json));
+  }
 
   /// Generic HTTP GET method that handles the response parsing and error handling.
   Future<T> _get<T>(String url, T Function(dynamic json) fromJson) async {

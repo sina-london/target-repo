@@ -56,3 +56,54 @@ class Episode {
     );
   }
 }
+
+// Model for the Episode Servers response
+class EpisodeServersModel {
+  final String episodeId;
+  final int episodeNo;
+  final List<Server> sub;
+  final List<Server> dub;
+  final List<Server> raw;
+
+  EpisodeServersModel({
+    required this.episodeId,
+    required this.episodeNo,
+    required this.sub,
+    required this.dub,
+    required this.raw,
+  });
+
+  factory EpisodeServersModel.fromJson(Map<String, dynamic> json) {
+    return EpisodeServersModel(
+      episodeId: json['data']['episodeId'],
+      episodeNo: json['data']['episodeNo'],
+      sub: (json['data']['sub'] as List)
+          .map((e) => Server.fromJson(e))
+          .toList(),
+      dub: (json['data']['dub'] as List)
+          .map((e) => Server.fromJson(e))
+          .toList(),
+      raw: (json['data']['raw'] as List)
+          .map((e) => Server.fromJson(e))
+          .toList(),
+    );
+  }
+}
+
+// Model for a server
+class Server {
+  final int serverId;
+  final String serverName;
+
+  Server({
+    required this.serverId,
+    required this.serverName,
+  });
+
+  factory Server.fromJson(Map<String, dynamic> json) {
+    return Server(
+      serverId: json['serverId'],
+      serverName: json['serverName'],
+    );
+  }
+}

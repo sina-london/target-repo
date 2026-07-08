@@ -170,6 +170,7 @@ class _EpisodesListState extends State<EpisodesList> {
                         builder: (context) => StreamScreen(
                           id: episode.episodeId,
                           title: episode.title,
+                          episodes: _episodes,
                         ),
                       ),
                     ),
