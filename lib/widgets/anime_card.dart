@@ -32,7 +32,7 @@ class AnimeCard extends StatelessWidget {
         MaterialPageRoute(
           builder: (context) => DetailsScreen(
             id: anime.id,
-            image: anime.poster,
+            image: anime.poster.replaceAll("300x400", "600x800"),
             title: anime.name,
             tag: tag,
           ),
@@ -64,7 +64,7 @@ class AnimeCard extends StatelessWidget {
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(20), // Same border radius
                   child: Image.network(
-                    anime.poster,
+                    anime.poster.replaceAll("300x400", "600x800"),
                     height: double.infinity,
                     width: double.infinity,
                     fit: BoxFit.cover,
