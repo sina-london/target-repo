@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:html/dom.dart';
 import 'package:http/http.dart' as http;
@@ -103,7 +102,6 @@ class AniwatchProvider extends AnimeProvider {
     final url = hianimeType != null
         ? '$baseUrl/search?keyword=$keyword&type=$hianimeType&page=$page'
         : '$baseUrl/search?keyword=$keyword&page=$page';
-    log(url);
     final response = await http.get(Uri.parse(url), headers: _getHeaders());
     final document = parse(response.body);
     return parseSearch(document, baseUrl, keyword: keyword, page: page);

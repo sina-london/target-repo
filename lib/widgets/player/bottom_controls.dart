@@ -6,11 +6,9 @@ import 'package:shonenx/providers/watch_providers.dart';
 import 'package:shonenx/utils/formatter.dart';
 import 'package:shonenx/widgets/ui/shonenx_dropdown.dart';
 import 'package:shonenx/widgets/ui/shonenx_icon_btn.dart';
-import 'dart:developer' as developer;
 
 class BottomControls extends StatelessWidget {
   static const _padding = EdgeInsets.symmetric(horizontal: 12, vertical: 6);
-  // static final _borderRadius = BorderRadius.circular(10);
 
   final AnimeProvider animeProvider;
   final WatchState watchState;
@@ -79,7 +77,6 @@ class BottomControls extends StatelessWidget {
   }
 
   void _showSettingsPanel(BuildContext context, {required Duration position}) {
-    developer.log('Showing settings panel', name: 'BottomControls');
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -93,8 +90,7 @@ class BottomControls extends StatelessWidget {
         position: position,
         onClose: () => Navigator.of(modalContext).pop(),
       ),
-    ).whenComplete(
-        () => developer.log('Settings panel closed', name: 'BottomControls'));
+    ).whenComplete(() => null);
   }
 }
 
@@ -230,7 +226,7 @@ class _SettingsPanel extends ConsumerWidget {
                       items: const ['dub', 'sub'],
                       onChanged: (value) => ref
                           .read(watchProvider.notifier)
-                          .changeCategory(value)),
+                          .updateCategory(value)),
                 ),
               if (animeProvider.getSupportedServers().isNotEmpty &&
                   animeProvider.getSupportedServers().length > 1)

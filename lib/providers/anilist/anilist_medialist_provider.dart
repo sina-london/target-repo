@@ -1,7 +1,7 @@
-import 'dart:developer';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shonenx/core/anilist/services/anilist_service.dart';
 import 'package:shonenx/core/models/anilist/anilist_media_list.dart';
+import 'package:shonenx/core/utils/app_logger.dart';
 import 'package:shonenx/providers/anilist/anilist_user_provider.dart';
 
 class AnimeListState {
@@ -48,13 +48,13 @@ class AnimeListNotifier extends StateNotifier<AnimeListState> {
   })  : _anilistService = anilistService,
         super(AnimeListState()) {
     if (accessToken.isEmpty || userId.isEmpty) {
-      log('Access token or user ID is empty',
-          error: true, name: "animeListProvider");
+      AppLogger.w('Access token or user ID is empty in AnimeListNotifier');
     }
     fetchInitialData();
   }
 
   Future<void> fetchInitialData() async {
+    AppLogger.d('Fetching initial data for anime lists and favorites');
     await Future.wait([
       fetchAllAnimeLists(),
       fetchFavorites(),
@@ -69,8 +69,7 @@ class AnimeListNotifier extends StateNotifier<AnimeListState> {
 
     try {
       if (accessToken.isEmpty || userId.isEmpty) {
-        log('Access token or user ID is empty',
-            error: true, name: "animeListProvider");
+        AppLogger.w('Access token or user ID is empty for status: $status');
       }
       final data = await _anilistService.getUserAnimeList(
         accessToken: accessToken,
@@ -87,25 +86,26 @@ class AnimeListNotifier extends StateNotifier<AnimeListState> {
         isLoading: false,
         fetchedStatuses: {...state.fetchedStatuses, status},
       );
-      log('$status ✅', name: "animeListProvider");
-    } catch (e) {
+      AppLogger.d('Successfully fetched anime list for status: $status');
+    } catch (e, stackTrace) {
       state = state.copyWith(
         isLoading: false,
         errors: {...state.errors, status: e.toString()},
-        fetchedStatuses: {
-          ...state.fetchedStatuses,
-          status
-        }, // Mark as fetched even on error
+        fetchedStatuses: {...state.fetchedStatuses, status},
       );
-      log('❌ Error fetching $status: $e',
-          error: true, name: "animeListProvider");
+      AppLogger.e(
+          'Error fetching anime list for status: $status', e, stackTrace);
     }
   }
 
   Future<void> fetchAllAnimeLists() async {
-    if (state.isLoading) return; // Prevent concurrent fetches
+    if (state.isLoading) {
+      AppLogger.d('Skipping fetchAllAnimeLists due to ongoing fetch');
+      return;
+    }
 
     state = state.copyWith(isLoading: true, errors: {});
+    AppLogger.d('Fetching all anime lists');
 
     final statuses = ['CURRENT', 'COMPLETED', 'PAUSED', 'DROPPED', 'PLANNING'];
     await Future.wait(
@@ -115,6 +115,7 @@ class AnimeListNotifier extends StateNotifier<AnimeListState> {
 
   Future<void> fetchFavorites() async {
     try {
+      AppLogger.d('Fetching favorites for userId: $userId');
       final favorites = await _anilistService.getFavorites(
         userId: int.parse(userId),
         accessToken: accessToken,
@@ -122,14 +123,16 @@ class AnimeListNotifier extends StateNotifier<AnimeListState> {
       state = state.copyWith(
         favorites: favorites?.anime ?? [],
       );
-      log('Favorites fetched successfully', name: "animeListProvider");
-    } catch (e) {
-      log('Error fetching favorites: $e', name: "animeListProvider");
+      AppLogger.d('Successfully fetched favorites');
+    } catch (e, stackTrace) {
+      AppLogger.e(
+          'Error fetching favorites for userId: $userId', e, stackTrace);
     }
   }
 
   // Method to refresh a specific status
   Future<void> refreshStatus(String status) async {
+    AppLogger.d('Refreshing anime list for status: $status');
     state = state.copyWith(
       fetchedStatuses: state.fetchedStatuses.difference({status}),
     );
@@ -138,27 +141,27 @@ class AnimeListNotifier extends StateNotifier<AnimeListState> {
 
   // Method to refresh all data
   Future<void> refreshAll() async {
+    AppLogger.d('Refreshing all anime list data');
     state = state.copyWith(fetchedStatuses: {});
     await fetchInitialData();
   }
 
   // Method to add or remove a favorite
   Future<void> toggleFavoritesStatic(List<Media> favorites) async {
-    final currentFavorites =
-        state.favorites.toSet(); // Convert to Set for efficient lookup
+    AppLogger.d('Toggling favorites: ${favorites.map((m) => m.id).toList()}');
+    final currentFavorites = state.favorites.toSet();
 
-    // Update favorites by adding new ones and removing existing ones
     for (var media in favorites) {
       if (currentFavorites.contains(media)) {
-        currentFavorites.remove(media); // Remove existing favorite
+        currentFavorites.remove(media);
       } else {
-        currentFavorites.add(media); // Add new favorite
+        currentFavorites.add(media);
       }
     }
 
-    state = state.copyWith(
-        favorites:
-            currentFavorites.toList()); // Update favorites with the new list
+    state = state.copyWith(favorites: currentFavorites.toList());
+    AppLogger.d(
+        'Updated favorites: ${currentFavorites.map((m) => m.id).toList()}');
   }
 
   /// Toggle the status of a Media item locally without fetching from the server
@@ -180,19 +183,16 @@ class AnimeListNotifier extends StateNotifier<AnimeListState> {
         final entries = List<MediaList>.from(group.entries);
         existingEntry = entries.firstWhere(
           (entry) => entry.media.id == media.id,
-          orElse: () => MediaList(
-              media: media,
-              status: '',
-              score: 0,
-              progress: 0), // Dummy for not found
+          orElse: () =>
+              MediaList(media: media, status: '', score: 0, progress: 0),
         );
         if (existingEntry.media.id != null) {
           entries.remove(existingEntry);
           if (entries.isEmpty) {
-            groupList.remove(group); // Remove empty group
+            groupList.remove(group);
           }
           currentGroups[status] = groupList;
-          break; // Found and removed, exit loop
+          break;
         }
       }
     }
@@ -202,11 +202,10 @@ class AnimeListNotifier extends StateNotifier<AnimeListState> {
       final newGroupList =
           List<MediaListGroup>.from(currentGroups[newStatus] ?? []);
       final existingGroup = newGroupList.firstWhere(
-        (group) => group.name == newStatus, // Match by name (status)
+        (group) => group.name == newStatus,
         orElse: () => MediaListGroup(name: newStatus, entries: []),
       );
 
-      // Create or update the MediaList entry
       final updatedEntry = MediaList(
         media: media,
         status: newStatus,
@@ -219,7 +218,6 @@ class AnimeListNotifier extends StateNotifier<AnimeListState> {
       final updatedGroup =
           MediaListGroup(name: newStatus, entries: updatedEntries);
 
-      // Replace or add the group
       if (newGroupList.contains(existingGroup)) {
         newGroupList[newGroupList.indexOf(existingGroup)] = updatedGroup;
       } else {
@@ -230,8 +228,8 @@ class AnimeListNotifier extends StateNotifier<AnimeListState> {
 
     // Step 3: Update the state
     state = state.copyWith(mediaListGroups: currentGroups);
-    log('Toggled status for ${media.title?.english ?? media.id} to $newStatus',
-        name: "animeListProvider");
+    AppLogger.d(
+        'Toggled status for ${media.title?.english ?? media.id} to $newStatus');
   }
 
   // Convenience method for single status toggle
@@ -242,6 +240,8 @@ class AnimeListNotifier extends StateNotifier<AnimeListState> {
     int? progress,
     int? score,
   }) {
+    AppLogger.d(
+        'Toggling status for ${media.title?.english ?? media.id} to $newStatus');
     toggleStatusStatic(
       media: media,
       newStatus: newStatus,
@@ -259,6 +259,7 @@ final animeListProvider =
   if (userState == null ||
       userState.accessToken.isEmpty ||
       userState.id == null) {
+    AppLogger.w('User state is invalid for animeListProvider');
     return AnimeListNotifier(
       anilistService: AnilistService(),
       accessToken: '',

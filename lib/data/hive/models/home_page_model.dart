@@ -35,9 +35,6 @@ class HomePageModel {
   HomePage toHomePage() {
     List<Media> safeParse(String label, List list) {
       try {
-        // Print raw JSON for debugging
-        print("Raw JSON for $label: $list");
-
         Map<String, dynamic> convertToStringKeys(Map<dynamic, dynamic> input) {
           return input.map((key, value) {
             if (value is Map) {

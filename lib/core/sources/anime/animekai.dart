@@ -1,12 +1,12 @@
 import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'dart:developer';
 import 'package:shonenx/core/models/anime/anime_model.dep.dart';
 import 'package:shonenx/core/models/anime/episode_model.dart';
 import 'package:shonenx/core/models/anime/page_model.dart';
 import 'package:shonenx/core/models/anime/server_model.dart';
 import 'package:shonenx/core/models/anime/source_model.dart';
 import 'package:shonenx/core/sources/anime/anime_provider.dart';
+import 'package:shonenx/core/utils/app_logger.dart';
 import 'package:http/http.dart' as http;
 
 class AnimekaiProvider extends AnimeProvider {
@@ -17,13 +17,6 @@ class AnimekaiProvider extends AnimeProvider {
                 : "${dotenv.env['API_URL']}/anime/animekai",
             baseUrl: 'https://animekai.to/',
             providerName: 'animekai');
-
-  // Map<String, String> _getHeaders() {
-  //   return {
-  //     'User-Agent':
-  //         'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36',
-  //   };
-  // }
 
   @override
   Future<HomePage> getHome() {
@@ -37,8 +30,10 @@ class AnimekaiProvider extends AnimeProvider {
 
   @override
   Future<BaseEpisodeModel> getEpisodes(String animeId) async {
+    AppLogger.d('Fetching episodes for animeId: $animeId');
     final response = await http.get(Uri.parse('$apiUrl/info?id=$animeId'));
     final data = jsonDecode(response.body);
+    AppLogger.d('Received episodes data for animeId: $animeId');
     return BaseEpisodeModel(
         totalEpisodes: data['totalEpisodes'],
         episodes: (data['episodes'] as List<dynamic>)
@@ -68,25 +63,10 @@ class AnimekaiProvider extends AnimeProvider {
 
   @override
   Future<SearchPage> getSearch(String keyword, String? type, int page) async {
-    log("Searching for $keyword");
+    AppLogger.d('Searching for keyword: $keyword, type: $type, page: $page');
     final response = await http.get(Uri.parse('$apiUrl/$keyword'));
-    // log(response.body);
     final data = jsonDecode(response.body);
-    log("${(data['results'] as List<dynamic>).map(
-          (anime) => BaseAnimeModel(
-            id: anime['id'],
-            name: anime['title'],
-            url: anime['url'],
-            jname: anime['japaneseTitle'],
-            type: anime['type'],
-            episodes: EpisodesModel(
-              sub: anime['sub'],
-              dub: anime['dub'],
-              total: anime['sub'],
-            ),
-            poster: anime['image'],
-          ),
-        ).toList()[0].name}");
+    AppLogger.d('Search results for $keyword: ${data['results'].length} items');
     return SearchPage(
         totalPages: data['totalPages'],
         currentPage: data['cucurrentPage'],
@@ -117,7 +97,7 @@ class AnimekaiProvider extends AnimeProvider {
     String? category,
   ) async {
     final dub = category == 'dub' ? 1 : 0;
-    log('Fetching : ${'$apiUrl/watch/$episodeId?dub=$dub'}');
+    AppLogger.d('Fetching sources for animeId: $animeId, episodeId: $episodeId, dub: $dub');
     try {
       final response =
           await http.get(Uri.parse('$apiUrl/watch/$episodeId?dub=$dub'));
@@ -129,7 +109,7 @@ class AnimekaiProvider extends AnimeProvider {
       if (!data.containsKey('sources')) {
         throw Exception('API response missing "sources" key');
       }
-      log(data.toString());
+      AppLogger.d('Received sources for episodeId: $episodeId');
       return BaseSourcesModel(
         sources: (data['sources'] as List<dynamic>)
             .map((source) => Source(
@@ -138,8 +118,8 @@ class AnimekaiProvider extends AnimeProvider {
                 ))
             .toList(),
       );
-    } catch (e) {
-      log('Error in getSources: $e', level: 1000);
+    } catch (e, stackTrace) {
+      AppLogger.e('Error fetching sources for episodeId: $episodeId', e, stackTrace);
       rethrow; // Propagate the error to the caller (e.g., WatchScreen)
     }
   }
