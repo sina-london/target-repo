@@ -11,8 +11,6 @@ import 'package:iconsax/iconsax.dart';
 import 'package:shonenx/core/anilist/services/anilist_service.dart';
 import 'package:shonenx/core/models/anilist/anilist_media_list.dart';
 import 'package:shonenx/helpers/anime_match_popup.dart';
-import 'package:shonenx/providers/anilist/anilist_medialist_provider.dart';
-import 'package:shonenx/providers/anilist/anilist_user_provider.dart';
 import 'package:shonenx/utils/html_parser.dart';
 
 class AnimeDetailsScreen extends ConsumerStatefulWidget {
@@ -36,75 +34,75 @@ class _AnimeDetailsScreenState extends ConsumerState<AnimeDetailsScreen> {
     super.initState();
     _scrollController = ScrollController();
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-    _checkFavorite();
-    _fetchCurrentStatus();
+    // _checkFavorite();
+    // _fetchCurrentStatus();
   }
 
-  Future<void> _fetchCurrentStatus() async {
-    final user = ref.read(userProvider);
-    if (user != null && user.accessToken.isNotEmpty) {
-      final statusData = await AnilistService().getAnimeStatus(
-        accessToken: user.accessToken,
-        userId: user.id!,
-        animeId: widget.anime.id!,
-      );
-      if (mounted && statusData != null) {
-        setState(() {
-          _currentStatus = statusData['status'] as String?;
-        });
-        ref.read(animeListProvider.notifier).toggleStatusStatic(
-              media: widget.anime,
-              newStatus: _currentStatus,
-            );
-      }
-    }
-  }
+  // Future<void> _fetchCurrentStatus() async {
+  //   final user = ref.read(userProvider);
+  //   if (user != null && user.accessToken.isNotEmpty) {
+  //     final statusData = await AnilistService().getAnimeStatus(
+  //       accessToken: user.accessToken,
+  //       userId: user.id!,
+  //       animeId: widget.anime.id!,
+  //     );
+  //     if (mounted && statusData != null) {
+  //       setState(() {
+  //         _currentStatus = statusData['status'] as String?;
+  //       });
+  //       ref.read(animeListProvider.notifier).toggleStatusStatic(
+  //             media: widget.anime,
+  //             newStatus: _currentStatus,
+  //           );
+  //     }
+  //   }
+  // }
 
-  Future<void> _checkFavorite() async {
-    final mediaListState = ref.read(animeListProvider);
-    if (mediaListState.favorites.any((media) => media.id == widget.anime.id)) {
-      setState(() => _isFavourite = true);
-      return;
-    }
-    final accessToken = ref.read(userProvider)?.accessToken;
-    if (accessToken != null) {
-      final isFavourite = await AnilistService().isAnimeFavorite(
-        animeId: widget.anime.id!,
-        accessToken: accessToken,
-      );
-      if (mounted) setState(() => _isFavourite = isFavourite);
-    }
-  }
+  // Future<void> _checkFavorite() async {
+  //   final mediaListState = ref.read(animeListProvider);
+  //   if (mediaListState.favorites.any((media) => media.id == widget.anime.id)) {
+  //     setState(() => _isFavourite = true);
+  //     return;
+  //   }
+  //   final accessToken = ref.read(userProvider)?.accessToken;
+  //   if (accessToken != null) {
+  //     final isFavourite = await AnilistService().isAnimeFavorite(
+  //       animeId: widget.anime.id!,
+  //       accessToken: accessToken,
+  //     );
+  //     if (mounted) setState(() => _isFavourite = isFavourite);
+  //   }
+  // }
 
   bool _isToggling = false;
 
-  Future<void> _toggleFavorite() async {
-    if (_isToggling) return;
-    setState(() => _isToggling = true);
-    final accessToken = ref.read(userProvider)?.accessToken;
-    if (accessToken != null) {
-      try {
-        await AnilistService().toggleFavorite(
-          animeId: widget.anime.id!,
-          accessToken: accessToken,
-        );
-        ref
-            .read(animeListProvider.notifier)
-            .toggleFavoritesStatic([widget.anime]);
-        setState(() => _isFavourite = !_isFavourite);
-      } catch (e) {
-        if (!mounted) return;
-        _showSnackBar(context, 'Toggling failed',
-            'Failed to toggle favorite: $e', ContentType.warning);
-      } finally {
-        setState(() => _isToggling = false);
-      }
-    } else {
-      _showSnackBar(context, 'Login required',
-          'You need to login to use this feature', ContentType.warning);
-      setState(() => _isToggling = false);
-    }
-  }
+  // Future<void> _toggleFavorite() async {
+  //   if (_isToggling) return;
+  //   setState(() => _isToggling = true);
+  //   final accessToken = ref.read(userProvider)?.accessToken;
+  //   if (accessToken != null) {
+  //     try {
+  //       await AnilistService().toggleFavorite(
+  //         animeId: widget.anime.id!,
+  //         accessToken: accessToken,
+  //       );
+  //       ref
+  //           .read(animeListProvider.notifier)
+  //           .toggleFavoritesStatic([widget.anime]);
+  //       setState(() => _isFavourite = !_isFavourite);
+  //     } catch (e) {
+  //       if (!mounted) return;
+  //       _showSnackBar(context, 'Toggling failed',
+  //           'Failed to toggle favorite: $e', ContentType.warning);
+  //     } finally {
+  //       setState(() => _isToggling = false);
+  //     }
+  //   } else {
+  //     _showSnackBar(context, 'Login required',
+  //         'You need to login to use this feature', ContentType.warning);
+  //     setState(() => _isToggling = false);
+  //   }
+  // }
 
   // Future<void> _handleWatchAction(AnimeWatchProgressBox box) async {
   //   if (_isLoading) return;
@@ -167,13 +165,13 @@ class _AnimeDetailsScreenState extends ConsumerState<AnimeDetailsScreen> {
                 anime: widget.anime,
                 tag: widget.tag,
                 currentStatus: _currentStatus,
-                onStatusChanged: _fetchCurrentStatus,
+                onStatusChanged: (){},
               ),
               SliverToBoxAdapter(
                 child: _Content(
                   anime: widget.anime,
                   isFavourite: _isFavourite,
-                  onToggleFavorite: _toggleFavorite,
+                  onToggleFavorite: (){},
                 ),
               ),
             ],
@@ -850,96 +848,96 @@ class _StatusMenuItem extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final userState = ref.read(userProvider);
+    // final userState = ref.read(userProvider);
     final anilistStatus = _mapToAnilistStatus(status.title);
     final isCurrent = currentStatus == anilistStatus;
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
     return InkWell(
-      onTap: () async {
-        if (userState == null || userState.accessToken.isEmpty) {
-          _showSnackBar(context, 'Login required',
-              'Please log in to update status', ContentType.warning);
-          return;
-        }
+      // onTap: () async {
+      // //   if (userState == null || userState.accessToken.isEmpty) {
+      //     _showSnackBar(context, 'Login required',
+      //         'Please log in to update status', ContentType.warning);
+      //     return;
+      //   }
 
-        final anilistService = AnilistService();
-        final currentData = await anilistService.getAnimeStatus(
-          accessToken: userState.accessToken,
-          userId: userState.id!,
-          animeId: animeMedia.id!,
-        );
-        final entryId = currentData?['id'] as int?;
+      //   final anilistService = AnilistService();
+      //   final currentData = await anilistService.getAnimeStatus(
+      //     accessToken: userState.accessToken,
+      //     userId: userState.id!,
+      //     animeId: animeMedia.id!,
+      //   );
+      //   final entryId = currentData?['id'] as int?;
 
-        try {
-          if (isCurrent && entryId != null) {
-            if (!context.mounted) return;
-            final shouldRemove = await showDialog<bool>(
-              context: context,
-              builder: (context) => AlertDialog(
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16)),
-                title: Text('Remove from ${status.title}?',
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: colorScheme.onSurface,
-                    )),
-                content: Text(
-                  'Do you want to remove "${animeMedia.title?.english ?? animeMedia.title?.romaji}" from your ${status.title} list?',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(context, false),
-                    child: Text('Cancel', style: theme.textTheme.labelLarge),
-                  ),
-                  TextButton(
-                    onPressed: () => Navigator.pop(context, true),
-                    child: Text('Remove',
-                        style: theme.textTheme.labelLarge?.copyWith(
-                          color: Colors.red,
-                        )),
-                  ),
-                ],
-              ),
-            );
+      //   try {
+      //     if (isCurrent && entryId != null) {
+      //       if (!context.mounted) return;
+      //       final shouldRemove = await showDialog<bool>(
+      //         context: context,
+      //         builder: (context) => AlertDialog(
+      //           shape: RoundedRectangleBorder(
+      //               borderRadius: BorderRadius.circular(16)),
+      //           title: Text('Remove from ${status.title}?',
+      //               style: theme.textTheme.titleLarge?.copyWith(
+      //                 fontWeight: FontWeight.bold,
+      //                 color: colorScheme.onSurface,
+      //               )),
+      //           content: Text(
+      //             'Do you want to remove "${animeMedia.title?.english ?? animeMedia.title?.romaji}" from your ${status.title} list?',
+      //             style: theme.textTheme.bodyMedium?.copyWith(
+      //               color: colorScheme.onSurfaceVariant,
+      //             ),
+      //           ),
+      //           actions: [
+      //             TextButton(
+      //               onPressed: () => Navigator.pop(context, false),
+      //               child: Text('Cancel', style: theme.textTheme.labelLarge),
+      //             ),
+      //             TextButton(
+      //               onPressed: () => Navigator.pop(context, true),
+      //               child: Text('Remove',
+      //                   style: theme.textTheme.labelLarge?.copyWith(
+      //                     color: Colors.red,
+      //                   )),
+      //             ),
+      //           ],
+      //         ),
+      //       );
 
-            if (shouldRemove == true) {
-              await anilistService.deleteAnimeEntry(
-                entryId: entryId,
-                accessToken: userState.accessToken,
-              );
-              ref
-                  .read(animeListProvider.notifier)
-                  .toggleStatusStatic(media: animeMedia, newStatus: null);
-              if (!context.mounted) return;
-              _showSnackBar(context, 'Removed', 'Removed from ${status.title}',
-                  ContentType.success);
-            }
-          } else {
-            await anilistService.updateAnimeStatus(
-              mediaId: animeMedia.id!,
-              accessToken: userState.accessToken,
-              newStatus: anilistStatus,
-            );
-            ref.read(animeListProvider.notifier).toggleStatusStatic(
-                media: animeMedia, newStatus: anilistStatus);
-            if (!context.mounted) return;
-            _showSnackBar(context, '${status.title} updated',
-                'Added to ${status.title}', ContentType.success);
-          }
-          onStatusChanged();
-        } catch (e) {
-          if (!context.mounted) return;
-          _showSnackBar(context, 'Update failed', 'Failed to update status: $e',
-              ContentType.failure);
-        }
-        if (!context.mounted) return;
-        Navigator.pop(context);
-      },
+      //       if (shouldRemove == true) {
+      //         await anilistService.deleteAnimeEntry(
+      //           entryId: entryId,
+      //           accessToken: userState.accessToken,
+      //         );
+      //         ref
+      //             .read(animeListProvider.notifier)
+      //             .toggleStatusStatic(media: animeMedia, newStatus: null);
+      //         if (!context.mounted) return;
+      //         _showSnackBar(context, 'Removed', 'Removed from ${status.title}',
+      //             ContentType.success);
+      //       }
+      //     } else {
+      //       await anilistService.updateAnimeStatus(
+      //         mediaId: animeMedia.id!,
+      //         accessToken: userState.accessToken,
+      //         newStatus: anilistStatus,
+      //       );
+      //       ref.read(animeListProvider.notifier).toggleStatusStatic(
+      //           media: animeMedia, newStatus: anilistStatus);
+      //       if (!context.mounted) return;
+      //       _showSnackBar(context, '${status.title} updated',
+      //           'Added to ${status.title}', ContentType.success);
+      //     }
+      //     onStatusChanged();
+      //   } catch (e) {
+      //     if (!context.mounted) return;
+      //     _showSnackBar(context, 'Update failed', 'Failed to update status: $e',
+      //         ContentType.failure);
+      //   }
+      //   if (!context.mounted) return;
+      //   Navigator.pop(context);
+      // },
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
         child: Row(

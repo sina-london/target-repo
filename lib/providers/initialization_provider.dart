@@ -4,9 +4,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shonenx/core/registery/anime_source_registery_provider.dart';
 import 'package:shonenx/core/utils/app_logger.dart';
-import 'package:shonenx/data/hive/providers/home_page_provider.dart';
 import 'package:shonenx/data/hive/providers/ui_provider.dart';
-import 'package:shonenx/data/hive/providers/theme_provider.dart';
+import 'package:shonenx/features/home/view_model/homepage_notifier.dart';
+import 'package:shonenx/features/settings/view_model/theme_notifier.dart';
 
 // A unique object to represent "no error" for clarity in the state.
 const noError = Object();
@@ -182,7 +182,7 @@ class InitializationNotifier extends StateNotifier<InitializationState> {
 
   Future<void> _applyThemeSettings() async {
     try {
-      await _ref.read(themeSettingsProvider);
+      _ref.read(themeSettingsProvider);
     } catch (e) {
       AppLogger.w('Failed to apply Theme settings: $e');
     }

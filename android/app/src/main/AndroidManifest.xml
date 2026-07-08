@@ -4,8 +4,10 @@
     <application
         android:label="ShonenX Beta"
         android:name="${applicationName}"
+        android:extractNativeLibs="true"
         android:icon="@mipmap/ic_launcher"
-        android:supportsRtl="false">
+        android:supportsRtl="false"
+        android:enableOnBackInvokedCallback="true">
         <activity
             android:name=".MainActivity"
             android:exported="true"

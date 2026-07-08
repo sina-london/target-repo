@@ -5,17 +5,21 @@ import 'package:flutter/services.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:path_provider/path_provider.dart';
+
 import 'package:shonenx/data/hive/models/anime_watch_progress_model.dart';
-import 'package:shonenx/data/hive/models/home_page_model.dart';
-import 'package:shonenx/data/hive/models/settings/player_model.dart';
 import 'package:shonenx/data/hive/models/settings/provider_model.dart';
-import 'package:shonenx/data/hive/models/settings/theme_model.dart';
-import 'package:shonenx/data/hive/models/settings/ui_model.dart';
+
 import 'package:shonenx/core/utils/app_logger.dart';
+
+import 'package:shonenx/features/home/model/home_page.dart';
+import 'package:shonenx/features/settings/model/player_model.dart';
+import 'package:shonenx/features/settings/model/subtitle_appearance_model.dart';
+import 'package:shonenx/features/settings/model/theme_model.dart';
+import 'package:shonenx/features/settings/model/ui_model.dart';
+
 import 'package:window_manager/window_manager.dart';
 
 class AppInitializer {
-  
   static Future<void> initialize() async {
     if (Platform.environment.containsKey('FLUTTER_TEST')) {
       AppLogger.w("⚠️ Running in test mode, exiting main.");
@@ -25,9 +29,9 @@ class AppInitializer {
     WidgetsFlutterBinding.ensureInitialized();
     AppLogger.i("✅ Flutter bindings initialized.");
 
-    await _initializeMediaKit();
     await _initializeHive();
     await _initializeWindowManager();
+    await _initializeMediaKit();
   }
 
   static Future<void> _initializeMediaKit() async {
@@ -47,20 +51,22 @@ class AppInitializer {
       await Hive.initFlutter(customPath);
       AppLogger.i("✅ Hive initialized at: $customPath");
 
+      Hive.registerAdapter(ThemeModelAdapter());
+      Hive.registerAdapter(SubtitleAppearanceModelAdapter());
       Hive.registerAdapter(HomePageModelAdapter());
-      Hive.registerAdapter(ThemeSettingsAdapter());
-      Hive.registerAdapter(UiSettingsAdapter());
+      Hive.registerAdapter(UiModelAdapter());
       Hive.registerAdapter(ProviderSettingsAdapter());
-      Hive.registerAdapter(PlayerSettingsAdapter());
+      Hive.registerAdapter(PlayerModelAdapter());
       Hive.registerAdapter(AnimeWatchProgressEntryAdapter());
       Hive.registerAdapter(EpisodeProgressAdapter());
 
       await Future.wait([
+        Hive.openBox<ThemeModel>('theme_settings'),
+        Hive.openBox<SubtitleAppearanceModel>('subtitle_appearance'),
         Hive.openBox<HomePageModel>('home_page'),
-        Hive.openBox<ThemeSettings>('theme_settings'),
-        Hive.openBox<UiSettings>('ui_settings'),
+        Hive.openBox<UiModel>('ui_settings'),
         Hive.openBox<ProviderSettings>('provider_settings'),
-        Hive.openBox<PlayerSettings>('player_settings'),
+        Hive.openBox<PlayerModel>('player_settings'),
         Hive.openBox<AnimeWatchProgressEntry>('anime_watch_progress'),
       ]);
 

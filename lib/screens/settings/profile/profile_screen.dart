@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shonenx/core/anilist/services/auth_service.dart';
-import 'package:shonenx/providers/anilist/anilist_user_provider.dart';
+import 'package:shonenx/features/auth/view/auth_button.dart';
 import 'package:shonenx/widgets/ui/shonenx_settings.dart';
 
 class ProfileSettingsScreen extends ConsumerWidget {
@@ -13,18 +13,18 @@ class ProfileSettingsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colorScheme = Theme.of(context).colorScheme;
-    final user = ref.watch(userProvider);
-    final authService = AniListAuthService();
+    // final user = ref.watch(userProvider);
+    // final authService = AniListAuthService();
 
     Future<void> loginAnilist() async {
       try {
-        final code = await authService.authenticate();
-        if (code != null) {
-          final accessToken = await authService.getAccessToken(code);
-          if (accessToken != null) {
-            await ref.read(userProvider.notifier).login(accessToken);
-          }
-        }
+        // final code = await authService.authenticate();
+        // if (code != null) {
+        //   final accessToken = await authService.getAccessToken(code);
+        //   if (accessToken != null) {
+        //     await ref.read(userProvider.notifier).login(accessToken);
+        //   }
+        // }
       } catch (e) {
         if (!context.mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
@@ -44,59 +44,59 @@ class ProfileSettingsScreen extends ConsumerWidget {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        _buildProfileCard(context, ref, user, loginAnilist),
-        if (user != null) ...[
-          const SizedBox(height: 24),
-          SettingsSection(context: context, title: 'Sync', items: [
-            SettingsItem(
-              icon: Iconsax.refresh_circle,
-              title: 'Sync Settings',
-              description: 'Configure AniList sync behavior',
-              onTap: () => context.push('/settings/profile/sync'),
-              disabled: true,
-            ),
-            SettingsItem(
-              icon: Iconsax.timer_1,
-              title: 'Auto Sync',
-              description: 'Manage background sync settings',
-              onTap: () => context.push('/settings/profile/auto-sync'),
-              disabled: true,
-            ),
-          ]),
-          SettingsSection(context: context, title: 'Lists', items: [
-            SettingsItem(
-              icon: Iconsax.task_square,
-              title: 'List Settings',
-              description: 'Customize your anime lists',
-              onTap: () => context.push('/settings/profile/lists'),
-              disabled: true,
-            ),
-            SettingsItem(
-              icon: Iconsax.import,
-              title: 'Import Lists',
-              description: 'Import lists from other services',
-              onTap: () => context.push('/settings/profile/import'),
-              disabled: true,
-            ),
-          ]),
-          SettingsSection(context: context, title: 'Account', items: [
-            SettingsItem(
-              icon: Iconsax.shield_tick,
-              title: 'Privacy',
-              description: 'Manage your privacy settings',
-              onTap: () => context.push('/settings/profile/privacy'),
-              disabled: true,
-            ),
-            SettingsItem(
-              icon: Iconsax.document_download,
-              title: 'Data & Storage',
-              description: 'Manage app data and cache',
-              onTap: () => context.push('/settings/profile/data'),
-              disabled: true,
-            ),
-          ]),
-        ],
-        const SizedBox(height: 48),
+        // _buildProfileCard(context, ref, user, loginAnilist),
+        // if (user != null) ...[
+        //   const SizedBox(height: 24),
+        //   SettingsSection(context: context, title: 'Sync', items: [
+        //     SettingsItem(
+        //       icon: Iconsax.refresh_circle,
+        //       title: 'Sync Settings',
+        //       description: 'Configure AniList sync behavior',
+        //       onTap: () => context.push('/settings/profile/sync'),
+        //       disabled: true,
+        //     ),
+        //     SettingsItem(
+        //       icon: Iconsax.timer_1,
+        //       title: 'Auto Sync',
+        //       description: 'Manage background sync settings',
+        //       onTap: () => context.push('/settings/profile/auto-sync'),
+        //       disabled: true,
+        //     ),
+        //   ]),
+        //   SettingsSection(context: context, title: 'Lists', items: [
+        //     SettingsItem(
+        //       icon: Iconsax.task_square,
+        //       title: 'List Settings',
+        //       description: 'Customize your anime lists',
+        //       onTap: () => context.push('/settings/profile/lists'),
+        //       disabled: true,
+        //     ),
+        //     SettingsItem(
+        //       icon: Iconsax.import,
+        //       title: 'Import Lists',
+        //       description: 'Import lists from other services',
+        //       onTap: () => context.push('/settings/profile/import'),
+        //       disabled: true,
+        //     ),
+        //   ]),
+        //   SettingsSection(context: context, title: 'Account', items: [
+        //     SettingsItem(
+        //       icon: Iconsax.shield_tick,
+        //       title: 'Privacy',
+        //       description: 'Manage your privacy settings',
+        //       onTap: () => context.push('/settings/profile/privacy'),
+        //       disabled: true,
+        //     ),
+        //     SettingsItem(
+        //       icon: Iconsax.document_download,
+        //       title: 'Data & Storage',
+        //       description: 'Manage app data and cache',
+        //       onTap: () => context.push('/settings/profile/data'),
+        //       disabled: true,
+        //     ),
+        //   ]),
+        // ],
+        // const SizedBox(height: 48),
       ],
     );
   }
@@ -212,9 +212,9 @@ class ProfileSettingsScreen extends ConsumerWidget {
                   ),
                   IconButton.filled(
                     onPressed: () async {
-                      await ref
-                          .read(userProvider.notifier)
-                          .logout(context: context);
+                      // await ref
+                      //     .read(userProvider.notifier)
+                      //     .logout(context: context);
                     },
                     icon: const Icon(Iconsax.logout),
                     style: IconButton.styleFrom(
@@ -271,16 +271,17 @@ class ProfileSettingsScreen extends ConsumerWidget {
                       ],
                     ),
                   ),
-                  IconButton.filled(
-                    onPressed: loginAnilist,
-                    icon: const Icon(Iconsax.login),
-                    style: IconButton.styleFrom(
-                      backgroundColor:
-                          theme.colorScheme.primaryContainer.withOpacity(0.1),
-                      foregroundColor: theme.colorScheme.primaryContainer,
-                      padding: const EdgeInsets.all(10),
-                    ),
-                  ),
+                  AniListLoginButton()
+                  // IconButton.filled(
+                  //   onPressed: loginAnilist,
+                  //   icon: const Icon(Iconsax.login),
+                  //   style: IconButton.styleFrom(
+                  //     backgroundColor:
+                  //         theme.colorScheme.primaryContainer.withOpacity(0.1),
+                  //     foregroundColor: theme.colorScheme.primaryContainer,
+                  //     padding: const EdgeInsets.all(10),
+                  //   ),
+                  // ),
                 ],
               ),
       ),
