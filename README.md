@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="https://i.postimg.cc/Fzm49sZc/Picsart-24-10-29-10-03-15-133.png" alt="ShonenX Logo" width="120"/>
+   <img src="https://i.postimg.cc/xC3MMMKr/Untitled-design-2.png" alt="ShonenX Logo" width="120"/>
   
   # ShonenX
   
@@ -7,7 +7,8 @@
   [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
   [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/Darkx-dev/ShonenX/pulls)
 
-  A modern, feature-rich anime streaming application built with Flutter
+A modern, feature-rich anime streaming application built with Flutter
+
 </div>
 
 ## ✨ Features
@@ -41,12 +42,14 @@
 ## 🛠️ Tech Stack
 
 ### Core
+
 - **Framework**: Flutter (≥3.3.4)
 - **Language**: Dart
 - **State Management**: Hive flutter
 - **Database**: Hive
 
 ### Key Dependencies
+
 ```yaml
 dependencies:
   better_player: ^0.0.84
@@ -81,22 +84,26 @@ dev_dependencies:
 ### Installation
 
 1. **Clone the repository**
+
 ```bash
 git clone https://github.com/Darkx-dev/ShonenX.git
 cd ShonenX
 ```
 
 2. **Install dependencies**
+
 ```bash
 flutter pub get
 ```
 
 3. **Run the app**
+
 ```bash
 flutter run
 ```
 
 ### Configuration
+
 1. **Build Configuration**
    - Modify `android/app/build.gradle` for Android settings
    - Update `ios/Runner.xcworkspace` for iOS settings
@@ -104,15 +111,18 @@ flutter run
 ## 🎯 Usage Guide
 
 ### First-time Setup
+
 1. Launch the app
 2. Choose your preferred theme
 
 ### Watching Anime
+
 1. Select an anime
 2. Choose episode and quality settings
 3. Enjoy streaming!
 
 ### Managing Watchlist
+
 - Tap the favorite icon to add/remove shows
 - Access your watchlist from the bottom navigator
 - Auto add to recent/continue
@@ -123,16 +133,19 @@ flutter run
 We welcome contributions! Here's how you can help:
 
 1. **Fork the Repository**
+
    ```bash
    git clone https://github.com/your-username/ShonenX.git
    ```
 
 2. **Create a Branch**
+
    ```bash
    git checkout -b feature/YourFeature
    ```
 
 3. **Make Changes**
+
    - Write clean, documented code
    - Follow the project's coding style
    - Add tests if applicable
@@ -142,6 +155,7 @@ We welcome contributions! Here's how you can help:
    - Link any related issues
 
 ### Development Guidelines
+
 - Follow Flutter's style guide
 - Write meaningful commit messages
 - Update documentation as needed
@@ -163,6 +177,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Email**: [darkx.dev.23@gmail.com](mailto:darkx.dev.23@gmail.com)
 
 ### Reporting Issues
+
 - Use the GitHub issue tracker
 - Include steps to reproduce
 - Attach relevant screenshots/logs
