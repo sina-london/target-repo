@@ -11,7 +11,8 @@ import 'package:nekoflow/screens/settings_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Hive.initFlutter();
-  Hive.registerAdapter(SettingsAdapter());
+  Hive.registerAdapter(SettingsModelAdapter());
+  await Hive.openBox<SettingsModel>('userSettings');
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
   runApp(const MainApp());
 }
@@ -39,17 +40,6 @@ class _MainAppState extends State<MainApp> {
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
     ]);
-    _initializeData();
-  }
-
-  Future<void> _initializeData() async {
-    // Simulating a network call or heavy computation
-    await Future.delayed(const Duration(seconds: 1));
-
-    // Check if the widget is still mounted before calling setState
-    if (mounted) {
-      // You can perform additional state updates here if needed
-    }
   }
 
   void _toggleTheme() {
@@ -63,42 +53,16 @@ class _MainAppState extends State<MainApp> {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: ThemeData.light().copyWith(
-        textTheme: GoogleFonts.robotoCondensedTextTheme(),
+        textTheme: GoogleFonts.poppinsTextTheme(),
       ),
       darkTheme: ThemeData.dark().copyWith(
-          textTheme:
-              GoogleFonts.montserratTextTheme().apply(bodyColor: Colors.white)),
+        textTheme:
+            GoogleFonts.poppinsTextTheme().apply(bodyColor: Colors.white,),
+      ),
       themeMode: _isDarkMode ? ThemeMode.dark : ThemeMode.light,
       home: Scaffold(
         appBar: AppBar(
-          title: RichText(
-            textAlign: TextAlign.center,
-            text: TextSpan(
-              style: GoogleFonts.oswald(
-                color: Colors.white, // Default color for the main text
-                fontSize: 24.0, // Set your desired font size
-                fontStyle: FontStyle.italic,
-              ),
-              children: const <TextSpan>[
-                TextSpan(
-                    text: 'SHONEN',
-                    style: TextStyle(
-                        color: Colors.white)), // Default color for 'SHONEN'
-                TextSpan(
-                  text: 'X',
-                  style: TextStyle(
-                    color: Colors.red, // Red color for 'X'
-                  ),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            IconButton(
-              icon: Icon(_isDarkMode ? Icons.dark_mode : Icons.light_mode),
-              onPressed: _toggleTheme,
-            ),
-          ],
+          toolbarHeight: 0,
         ),
         body: AnimatedSwitcher(
           duration: const Duration(milliseconds: 300),

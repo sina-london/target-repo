@@ -14,8 +14,8 @@ class ResultCard extends StatelessWidget {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) =>
-                DetailsScreen(id: anime.id, image: anime.image, title: anime.title),
+            builder: (context) => DetailsScreen(
+                id: anime.id, image: anime.image, title: anime.title),
           ),
         );
       },
@@ -132,18 +132,7 @@ class ResultCard extends StatelessWidget {
                       width: double.infinity,
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          ButtonBar(
-                            children: [
-                              ButtonBar(
-                                children: [
-                                  Text("Watch Now"),
-                                  Icon(Icons.play_arrow)
-                                ],
-                              )
-                            ],
-                          )
-                        ],
+                        children: [Text("Watch Now"), Icon(Icons.play_arrow)],
                       ),
                     )
                   ],

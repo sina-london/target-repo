@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/widgets.dart';
 import 'package:nekoflow/data/models/watch_model.dart';
 import 'package:nekoflow/data/services/anime_service.dart';
 import 'package:video_player/video_player.dart';

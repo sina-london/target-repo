@@ -27,8 +27,8 @@ class PopularItem extends StatelessWidget {
           borderRadius: BorderRadius.circular(12.0),
           // color: Colors.yellow,
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Stack(
+          alignment: Alignment.bottomCenter,
           children: [
             ClipRRect(
               borderRadius: const BorderRadius.only(
@@ -49,31 +49,7 @@ class PopularItem extends StatelessWidget {
                 },
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.all(12.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    anime['title'],
-                    style: const TextStyle(
-                      fontSize: 16.0,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4.0),
-                  Text(
-                    anime['releaseDate'],
-                    style: const TextStyle(
-                      fontSize: 14.0,
-                      color: Colors.grey,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+           
           ],
         ),
       ),
