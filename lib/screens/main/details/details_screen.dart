@@ -1,4 +1,3 @@
-
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -39,7 +38,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
       ValueNotifier<List<Episode>>([]);
   final ValueNotifier<bool> _isLoadingEpisodes = ValueNotifier<bool>(true);
   late final AnimeService _animeService;
-  late final WatchlistBox _watchlistBox;
+  late final WatchlistBox? _watchlistBox;
   final ScrollController _scrollController = ScrollController();
   ContinueWatchingItem? continueWatchingItem;
   String? _nextEpisodeId;
@@ -75,13 +74,12 @@ class _DetailsScreenState extends State<DetailsScreen> {
 
   Future<void> _initWatchlistBox() async {
     _watchlistBox = WatchlistBox();
-    await _watchlistBox.init();
+    await _watchlistBox!.init();
     _loadContinueWatching();
   }
 
   void _loadContinueWatching() {
-    continueWatchingItem = _watchlistBox.getContinueWatchingById(widget.id);
-    print(continueWatchingItem?.episode);
+    continueWatchingItem = _watchlistBox!.getContinueWatchingById(widget.id);
     setState(() {});
   }
 
@@ -290,14 +288,22 @@ class _DetailsScreenState extends State<DetailsScreen> {
           ),
         ),
         const SizedBox(height: 10),
-        EpisodesList(
-          id: widget.id,
-          name: widget.name,
-          poster: info?.anime?.info?.poster ?? widget.image,
-          type: info?.anime?.info?.stats?.type ?? 'N/A',
-          episodes: _episodes, // Pass the ValueNotifier directly
-          watchedEpisodes: continueWatchingItem?.watchedEpisodes,
-          isLoading: _isLoadingEpisodes, // Pass the ValueNotifier directly
+        ValueListenableBuilder<Box<WatchlistModel>>(
+          valueListenable: _watchlistBox!.listenable(),
+          builder: (context, value, child) {
+            // Rebuild episodes UI when the box changes
+            continueWatchingItem =
+                _watchlistBox.getContinueWatchingById(widget.id);
+            return EpisodesList(
+              id: widget.id,
+              name: widget.name,
+              poster: info?.anime?.info?.poster ?? widget.image,
+              type: info?.anime?.info?.stats?.type ?? 'N/A',
+              watchedEpisodes: continueWatchingItem?.watchedEpisodes,
+              episodes: _episodes, // Pass the ValueNotifier directly
+              isLoading: _isLoadingEpisodes, // Pass the ValueNotifier directly
+            );
+          },
         ),
       ],
     );
@@ -386,7 +392,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
         ),
       ),
       bottomNavigationBar: ValueListenableBuilder<Box<WatchlistModel>>(
-        valueListenable: _watchlistBox.listenable(),
+        valueListenable: _watchlistBox!.listenable(),
         builder: (context, box, _) {
           // Get the continue watching item
           continueWatchingItem =
