@@ -176,18 +176,17 @@ class WatchStateNotifier extends StateNotifier<WatchState> {
     Duration startAt = Duration.zero,
     bool withPlay = true,
   }) async {
-    AppLogger.d('Fetching episodes for animeId: $animeId');
     try {
       state = state.copyWith(
+        animeId: animeId.toString(),
         episodesLoading: true,
         error: null,
         loadingMessage: 'Loading episodes...',
       );
       final episodes =
-          (await animeProvider.getEpisodes(animeId)).episodes ?? [];
+          (await animeProvider.getEpisodes(animeId.toString())).episodes ?? [];
       state = state.copyWith(
         episodesLoading: false,
-        animeId: animeId.toString(),
         episodes: episodes,
         selectedServer: animeProvider.getSupportedServers().firstOrNull,
         error: null,
