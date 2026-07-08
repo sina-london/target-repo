@@ -79,14 +79,14 @@ class ResultCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(15),
                     child: Image.network(
                       anime.poster,
-                      height: screenSize.width * 0.4,
+                      height: screenSize.width * 0.3,
                       width: screenSize.width * 0.25,
                       fit: BoxFit.cover,
                       loadingBuilder: (context, child, loadingProgress) {
                         if (loadingProgress == null) return child;
                         return _buildShimmerPlaceholder(
                           width: screenSize.width * 0.25,
-                          height: screenSize.width * 0.4,
+                          height: screenSize.width * 0.3,
                         );
                       },
                       errorBuilder: (context, error, stackTrace) => _buildShimmerPlaceholder(

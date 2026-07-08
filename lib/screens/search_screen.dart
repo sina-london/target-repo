@@ -38,9 +38,11 @@ class _SearchScreenState extends State<SearchScreen> {
         _error = 'An error occurred. Please try again.';
       });
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      setState(
+        () {
+          _isLoading = false;
+        },
+      );
     }
   }
 

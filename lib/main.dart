@@ -33,6 +33,7 @@ class _MainAppState extends State<MainApp> {
     SettingsScreen(),
     HomeScreen(),
     SearchScreen(),
+    
   ];
 
   @override
@@ -111,6 +112,11 @@ class _MainAppState extends State<MainApp> {
             CrystalNavigationBarItem(
               icon: Icons.search,
               unselectedIcon: Icons.search,
+              selectedColor: Colors.pink,
+            ),
+            CrystalNavigationBarItem(
+              icon: Icons.bookmark,
+              unselectedIcon: Icons.bookmark,
               selectedColor: Colors.pink,
             ),
           ],

@@ -9,29 +9,60 @@ class ThemeScreen extends StatefulWidget {
 
 class _ThemeScreenState extends State<ThemeScreen> {
   bool _isDarkMode = false; // Default to false, i.e., light mode
+  String? _selectedTheme = 'Dark';
+  final List<Map<String, dynamic>> _themeOptions = [
+    {'icon': Icons.sunny, 'label': 'Light'},
+    {'icon': Icons.dark_mode, 'label': 'Dark'},
+    {'icon': Icons.brightness_auto, 'label': 'Auto'}
+  ];
 
   @override
   Widget build(BuildContext context) {
+    // Icon and label for each theme mode
+
     return Scaffold(
       appBar: AppBar(
         title: const Text("Theme", style: TextStyle(fontSize: 35)),
         toolbarHeight: 200,
       ),
-      body: Center(
+      body: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 15.0),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Toggle Dark Mode',
-              style: TextStyle(fontSize: 24),
-            ),
-            Switch(
-              value: _isDarkMode,
-              onChanged: (bool value) {
-                setState(() {
-                  _isDarkMode = value; // Toggle the value of the switch
-                });
-              },
+            Row(
+              children: [
+                const Text(
+                  "Themes",
+                  style: TextStyle(fontSize: 20),
+                ),
+                const Spacer(),
+                // Theme mode options using ListView
+                ..._themeOptions.map((option) => GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _selectedTheme = option['label'];
+                        });
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.only(right: 10),
+                        child: Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.white),
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                          child: Row(
+                            children: [
+                              if (_selectedTheme == option['label'])
+                                Icon(Icons.check),
+                              Icon(option['icon'] as IconData)
+                            ],
+                          ),
+                        ),
+                      ),
+                    )),
+              ],
             ),
           ],
         ),
