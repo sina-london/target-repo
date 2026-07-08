@@ -11,47 +11,43 @@ class OnboardingScreen extends StatefulWidget {
 class _OnboardingScreenState extends State<OnboardingScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
-  String _userName = '';
-  final _nameController = TextEditingController();
+  String name = '';
 
-  // List of onboarding steps
   final List<Map<String, String>> onboardingData = [
     {
-      "title": "Welcome to ShonenX!",
-      "description": "Dive into the ultimate anime streaming experience.",
+      "title": "Welcome to ShonenX",
+      "description": "Your gateway to endless anime adventures",
       "image": "lib/assets/images/onboarding/logo.png",
     },
     {
-      "title": "Track Your Progress",
-      "description": "Keep tabs on your favorite shows and episodes.",
-      "image": "lib/assets/images/onboarding/luffy.png",
+      "title": "Discover New Worlds",
+      "description": "Explore thousands of anime series and movies",
+      "image": "lib/assets/images/onboarding/home.png",
     },
+    {
+      "title": "Track Your Journey",
+      "description": "Keep track of your watchlist and continue where you left off",
+      "image": "lib/assets/images/onboarding/watchlist.png",
+    },
+    // {
+    //   "title": "Join the Community",
+    //   "description": "Connect with fellow anime fans and share your thoughts",
+    //   "image": "lib/assets/images/onboarding/community.png",
+    // },
   ];
 
-  // Method to go to the next page
   void _nextPage() {
     if (_currentPage < onboardingData.length) {
       _pageController.nextPage(
         duration: const Duration(milliseconds: 300),
-        curve: Curves.easeIn,
+        curve: Curves.easeInOut,
       );
     } else {
-      // After the last page, navigate to the AppRouter (Home screen) with the user's name
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (context) => AppRouter(userName: _userName ),
+          builder: (context) => AppRouter(name: name.trim()),
         ),
-      );
-    }
-  }
-
-  // Method to go to the previous page
-  void _previousPage() {
-    if (_currentPage > 0) {
-      _pageController.previousPage(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeIn,
       );
     }
   }
@@ -59,191 +55,157 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      extendBody: true,
-      backgroundColor: Colors.black,
-      body: PageView.builder(
-        controller: _pageController,
-        onPageChanged: (index) {
-          setState((){
-            _currentPage = index;
-          });
-        },
-        itemCount: onboardingData.length + 1, // Add 1 for the name input page
-        itemBuilder: (context, index) {
-          if (index < onboardingData.length) {
-            return OnboardingPage(
-              title: onboardingData[index]['title']!,
-              description: onboardingData[index]['description']!,
-              image: onboardingData[index]['image']!,
-            );
-          } else {
-            return NameInputPage(
-              onUserNameChanged: (value) {
-                setState(() {
-                  _userName = value;
-                });
-              },
-            );
-          }
-        },
-      ),
-      bottomNavigationBar: BottomAppBar(
-        color: Colors.transparent,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            _currentPage > 0
-                ? IconButton(
-                    icon: const Icon(Icons.arrow_back, size: 40, color: Colors.white),
-                    onPressed: _previousPage,
-                  )
-                : const SizedBox(width: 40),
-            Row(
-              children: List.generate(onboardingData.length + 1, (index) {
-                return Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 4),
-                  width: 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    color: _currentPage == index
-                        ? Colors.white
-                        : Colors.white.withOpacity(0.5),
-                    shape: BoxShape.circle,
-                  ),
-                );
-              }),
-            ),
-            _currentPage < onboardingData.length
-                ? IconButton(
-                    icon: const Icon(Icons.arrow_forward, size: 40, color: Colors.white),
-                    onPressed: _nextPage,
-                  )
-                : TextButton(
-                    onPressed: _nextPage,
-                    child: const Text(
-                      'Get Started',
-                      style: TextStyle(fontSize: 18, color: Colors.white),
-                    ),
-                  ),
-          ],
+      body: SafeArea(
+        child: PageView.builder(
+          controller: _pageController,
+          onPageChanged: (index) => setState(() => _currentPage = index),
+          itemCount: onboardingData.length + 1,
+          itemBuilder: (context, index) {
+            if (index < onboardingData.length) {
+              return _buildOnboardingPage(index);
+            }
+            return _buildNameInputPage();
+          },
         ),
       ),
+      bottomNavigationBar: _buildNavigationBar(),
     );
   }
 
-  @override
-  void dispose() {
-    _nameController.dispose();
-    super.dispose();
-  }
-}
-
-class OnboardingPage extends StatelessWidget {
-  final String title;
-  final String description;
-  final String image;
-
-  const OnboardingPage({super.key, 
-    required this.title,
-    required this.description,
-    required this.image,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(32.0),
+  Widget _buildOnboardingPage(int index) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(16),
+          Expanded(
+            flex: 3,
             child: Image.asset(
-              image,
-              // width: 300,
-              // height: 200,
-              // fit: BoxFit.contain,
+              onboardingData[index]['image']!,
+              fit: BoxFit.contain,
             ),
           ),
-          const SizedBox(height: 30),
+          const SizedBox(height: 32),
           Text(
-            title,
+            onboardingData[index]['title']!,
             style: const TextStyle(
-              fontSize: 26,
+              fontSize: 28,
               fontWeight: FontWeight.bold,
               color: Colors.white,
-              letterSpacing: 1.5,
+              letterSpacing: 0.5,
             ),
+            textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
           Text(
-            description,
+            onboardingData[index]['description']!,
+            style: const TextStyle(
+              fontSize: 18,
+              color: Colors.white70,
+              height: 1.4,
+            ),
             textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 16, color: Colors.white60),
+          ),
+          const SizedBox(height: 48),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNameInputPage() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Text(
+            "What should we call you?",
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+              letterSpacing: 0.5,
+            ),
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            "Enter your name to personalize your experience",
+            style: TextStyle(
+              fontSize: 18,
+              color: Colors.white70,
+              height: 1.4,
+            ),
+            // textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 32),
+          TextField(
+            onChanged: (value) => setState(() => name = value),
+            style: const TextStyle(color: Colors.white, fontSize: 18),
+            decoration: InputDecoration(
+              filled: true,
+              fillColor: Colors.white.withOpacity(0.1),
+              hintText: 'Name',
+              hintStyle: TextStyle(color: Colors.white.withOpacity(0.5)),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
+              contentPadding: const EdgeInsets.all(16),
+            ),
           ),
         ],
       ),
     );
   }
-}
 
-class NameInputPage extends StatefulWidget {
-  final ValueChanged<String> onUserNameChanged;
-
-  const NameInputPage({super.key, required this.onUserNameChanged});
-
-  @override
-  State<NameInputPage> createState() => _NameInputPageState();
-}
-
-class _NameInputPageState extends State<NameInputPage> {
-  final _nameController = TextEditingController();
+  Widget _buildNavigationBar() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      color: Colors.transparent,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          // Progress indicators
+          Row(
+            children: List.generate(
+              onboardingData.length + 1,
+              (index) => Container(
+                margin: const EdgeInsets.symmetric(horizontal: 4),
+                width: 8,
+                height: 8,
+                decoration: BoxDecoration(
+                  color: _currentPage == index
+                      ? Colors.white
+                      : Colors.white.withOpacity(0.3),
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ),
+          ),
+          // Next/Get Started button
+          TextButton(
+            onPressed: name.trim().isNotEmpty || _currentPage < onboardingData.length
+                ? _nextPage
+                : null,
+            child: Text(
+              _currentPage < onboardingData.length ? 'Next' : 'Get Started',
+              style: TextStyle(
+                fontSize: 18,
+                color: (name.trim().isNotEmpty || _currentPage < onboardingData.length)
+                    ? Colors.white
+                    : Colors.white.withOpacity(0.5),
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   void dispose() {
-    _nameController.dispose();
+    _pageController.dispose();
     super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(32.0),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          const SizedBox(height: 30),
-          Text(
-            'Enter your name',
-            style: const TextStyle(
-              fontSize: 26,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-              letterSpacing: 1.5,
-            ),
-          ),
-          const SizedBox(height: 16),
-          TextField(
-            controller: _nameController,
-            onChanged: widget.onUserNameChanged,
-            style: const TextStyle(color: Colors.white),
-            decoration: InputDecoration(
-              hintText: 'Your Name',
-              hintStyle: const TextStyle(color: Colors.white54),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: Colors.white54),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: Colors.white),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
   }
 }
