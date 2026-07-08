@@ -16,6 +16,7 @@ class AnimeInfoResponseModel {
   final bool hasSub;
   final bool hasDub;
   final int totalEpisodes;
+  final List<Episode> episodes;
 
   AnimeInfoResponseModel({
     required this.id,
@@ -33,6 +34,7 @@ class AnimeInfoResponseModel {
     required this.hasDub,
     required this.hasSub,
     required this.totalEpisodes,
+    required this.episodes
   });
 
   factory AnimeInfoResponseModel.fromJson(Map<String, dynamic> json) {
@@ -52,6 +54,7 @@ class AnimeInfoResponseModel {
       hasDub: json['hasDub'],
       hasSub: json['hasSub'],
       totalEpisodes: json['totalEpisodes'],
+      episodes: (json['episodes'] as List<dynamic>).map((episodeJson) => Episode.fromJson(episodeJson)).toList(),
     );
   }
 }
