@@ -58,6 +58,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
   Future<void> _fetchEpisodes() async {
     try {
       final episodes = await _animeService.fetchEpisodes(id: widget.id);
+      if (episodes.isEmpty) _fetchEpisodes();
       if (!mounted) return;
       _episodes.value = episodes;
     } catch (e) {
@@ -87,10 +88,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
   Episode? _getNextEpisode() {
     int continueItemindex = _episodes.value.indexWhere(
         (item) => item.episodeId == continueWatchingItem?.episodeId);
-    if (continueItemindex < _episodes.value.length) {
-      return _episodes.value[continueItemindex + 1];
-    }
-    return null;
+    return _episodes.value[continueItemindex + 1];
   }
 
   Future<AnimeInfo?> fetchData() async {
@@ -313,10 +311,12 @@ class _DetailsScreenState extends State<DetailsScreen> {
             continueWatchingItem =
                 _watchlistBox.getContinueWatchingById(widget.id);
             return EpisodesList(
-              id: widget.id,
-              name: widget.name,
-              poster: info?.anime?.info?.poster ?? widget.image,
-              type: info?.anime?.info?.stats?.type ?? 'N/A',
+              anime: AnimeItem(
+                name: widget.name,
+                poster: info?.anime?.info?.poster ?? widget.image,
+                id: widget.id,
+                type: info?.anime?.info?.stats?.type,
+              ),
               watchedEpisodes: continueWatchingItem?.watchedEpisodes,
               episodes: _episodes, // Pass the ValueNotifier directly
               isLoading: _isLoadingEpisodes, // Pass the ValueNotifier directly
@@ -374,7 +374,6 @@ class _DetailsScreenState extends State<DetailsScreen> {
                     flexibleSpace: FlexibleSpaceBar(
                       background: _buildHeaderSection(),
                     ),
-
                     actions: [
                       FavoriteButton(
                         animeId: widget.id,
@@ -414,17 +413,18 @@ class _DetailsScreenState extends State<DetailsScreen> {
             continueWatchingItem =
                 _watchlistBox.getContinueWatchingById(widget.id);
 
-            if (continueWatchingItem == null) {
+            if (continueWatchingItem == null || _episodes.value.length < 2) {
               return const SizedBox.shrink();
             }
 
             return BottomPlayerBar(
+              episodes: _episodes.value,
               item: continueWatchingItem!,
               title: continueWatchingItem!.title,
               id: widget.id,
               image: widget.image,
               type: widget.type,
-              nextEpisode: _nextEpisodeId,
+              nextEpisodeId: _nextEpisodeId,
               nextEpisodeTitle: _nextEpisodeTitle,
             );
           },
