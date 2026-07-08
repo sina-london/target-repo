@@ -8,15 +8,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:media_kit_video/media_kit_video.dart' as media_kit_video;
 import 'package:shonenx/core/utils/app_logger.dart';
-import 'package:shonenx/widgets/ui/subtitle_customization_sheet.dart';
 import 'package:window_manager/window_manager.dart';
 
 import 'package:shonenx/core/registery/anime_source_registery_provider.dart';
 import 'package:shonenx/data/hive/models/settings/player_model.dart';
 import 'package:shonenx/data/hive/providers/player_provider.dart';
 import 'package:shonenx/data/hive/providers/provider_provider.dart';
-import 'package:shonenx/helpers/player/gesture_handler.dart';
-import 'package:shonenx/helpers/player/overlay_manager.dart';
 import 'package:shonenx/helpers/ui.dart';
 import 'package:shonenx/providers/watch_providers.dart';
 import 'package:shonenx/widgets/player/bottom_controls.dart';
@@ -208,8 +205,8 @@ class _CustomControlsState extends ConsumerState<CustomControls> {
             child: GestureDetector(
               behavior: HitTestBehavior.opaque,
               onVerticalDragUpdate: (details) {
-                final dragStartY = details.localPosition.dy;
-                AppLogger.d(dragStartY);
+                // final dragStartY = details.localPosition.dy;
+                // AppLogger.d(dragStartY);
               },
               onTap: () {
                 if (_controlsVisible) {
