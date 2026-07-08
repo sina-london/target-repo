@@ -4,12 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
-import 'package:shonenx/core/models/anilist/anilist_media_list.dart'
-    as anilist_media;
-import 'package:shonenx/data/hive/boxes/anime_watch_progress_box.dart';
 import 'package:shonenx/data/hive/models/anime_watch_progress_model.dart';
-import 'package:shonenx/helpers/anime_match_popup.dart';
-
 final loadingProvider = StateProvider.family<bool, int>((ref, index) => false);
 
 class ContinueWatchingCard extends ConsumerWidget {
@@ -254,27 +249,27 @@ class ContinueWatchingCard extends ConsumerWidget {
   Future<void> _handleTap(BuildContext context, WidgetRef ref,
       {int plusEpisode = 0}) async {
     ref.read(loadingProvider(index).notifier).state = true;
-    await providerAnimeMatchSearch(
-      context: context,
-      ref: ref,
-      animeMedia: anilist_media.Media(
-        id: anime.animeId,
-        coverImage: anilist_media.CoverImage(
-          large: anime.animeCover,
-          medium: anime.animeCover,
-        ),
-        format: anime.animeFormat,
-        title: anilist_media.Title(
-          romaji: anime.animeTitle,
-          english: anime.animeTitle,
-          native: anime.animeTitle,
-        ),
-      ),
-      animeWatchProgressBox: AnimeWatchProgressBox()..init(),
-      plusEpisode: plusEpisode,
-      afterSearchCallback: () =>
-          ref.read(loadingProvider(index).notifier).state = false,
-    );
+    // await providerAnimeMatchSearch(
+    //   context: context,
+    //   ref: ref,
+    //   animeMedia: anilist_media.Media(
+    //     id: anime.animeId,
+    //     coverImage: anilist_media.CoverImage(
+    //       large: anime.animeCover,
+    //       medium: anime.animeCover,
+    //     ),
+    //     format: anime.animeFormat,
+    //     title: anilist_media.Title(
+    //       romaji: anime.animeTitle,
+    //       english: anime.animeTitle,
+    //       native: anime.animeTitle,
+    //     ),
+    //   ),
+    //   animeWatchProgressBox: AnimeWatchProgressBox()..init(),
+    //   plusEpisode: plusEpisode,
+    //   afterSearchCallback: () =>
+    //       ref.read(loadingProvider(index).notifier).state = false,
+    // );
   }
 }
 

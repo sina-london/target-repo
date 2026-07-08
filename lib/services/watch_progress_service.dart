@@ -4,22 +4,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shonenx/core/models/anilist/anilist_media_list.dart'
     as anilist_media;
-import 'package:shonenx/data/hive/boxes/anime_watch_progress_box.dart';
+import 'package:shonenx/data/hive/models/anime_watch_progress_model.dart';
+import 'package:shonenx/data/hive/providers/anime_watch_progress_provider.dart';
+import 'package:shonenx/data/hive/providers/player_provider.dart';
 import 'package:shonenx/providers/watch_providers.dart';
-import 'package:shonenx/screens/settings/player/player_screen.dart';
 import 'package:shonenx/services/thumbnail_service.dart';
 
 /// Service responsible for managing watch progress
 class WatchProgressService {
-  final AnimeWatchProgressBox _animeWatchProgressBox = AnimeWatchProgressBox();
   final ThumbnailService _thumbnailService = ThumbnailService();
   Timer? _saveProgressTimer;
   static const Duration _progressSaveInterval = Duration(seconds: 10);
-
-  /// Initialize the service
-  Future<void> initialize() async {
-    await _animeWatchProgressBox.init();
-  }
 
   /// Start the progress saving timer
   void startProgressTimer(VoidCallback saveCallback) {
@@ -63,7 +58,7 @@ class WatchProgressService {
   }) async {
     final watchState = ref.read(watchProvider);
     final playerState = ref.read(playerStateProvider);
-    final playerSettings = ref.read(playerSettingsProvider).playerSettings;
+    final playerSettings = ref.read(playerSettingsProvider);
     if (!shouldSaveProgress(watchState, playerState)) {
       log("Skipping progress save - conditions not met");
       return;
@@ -99,14 +94,37 @@ class WatchProgressService {
           "Progress: ${progress.inSeconds}s / ${duration.inSeconds}s, "
           "Thumbnail length: ${thumbnailBase64.length}");
 
-      await _animeWatchProgressBox.updateEpisodeProgress(
-        animeMedia: animeMedia,
-        episodeNumber: episode.number!,
-        episodeTitle: episode.title ?? 'Episode ${episode.number}',
-        episodeThumbnail: thumbnailBase64,
-        progressInSeconds: progress.inSeconds,
-        durationInSeconds: duration.inSeconds,
-        isCompleted: isCompleted,
+      final animeProgressNotifier =
+          ref.read(animeWatchProgressProvider.notifier);
+
+      if (isCompleted) {
+        animeProgressNotifier.markEpisodeCompleted(
+            animeId: animeMedia.id!, episodeNumber: episode.number!);
+      }
+
+      animeProgressNotifier.updateEpisodeProgress(
+        animeId: animeMedia.id!,
+        episode: EpisodeProgress(
+          episodeNumber: episode.number!,
+          episodeTitle: episode.title ?? 'Untitled',
+          episodeThumbnail: episode.thumbnail,
+          progressInSeconds: progress.inSeconds,
+          durationInSeconds: duration.inSeconds,
+          watchedAt: DateTime.now(),
+          isCompleted: isCompleted,
+        ),
+        animeEntryBase: AnimeWatchProgressEntry(
+          animeId: animeMedia.id!,
+          animeTitle: animeMedia.title?.english ??
+              animeMedia.title?.romaji ??
+              animeMedia.title?.native ??
+              'Unknown',
+          animeFormat: animeMedia.format ?? 'N/A',
+          animeCover: animeMedia.coverImage?.medium ??
+              animeMedia.coverImage?.large ??
+              '',
+          totalEpisodes: animeMedia.episodes ?? 0,
+        ),
       );
 
       log("Progress saved successfully");

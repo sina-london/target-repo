@@ -3,12 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shonenx/core/registery/anime_source_registery_provider.dart';
-import 'package:shonenx/providers/homepage_provider.dart';
-import 'package:shonenx/providers/selected_provider.dart';
-import 'package:shonenx/screens/settings/appearance/theme_screen.dart';
-import 'package:shonenx/screens/settings/appearance/ui_screen.dart';
-import 'package:shonenx/screens/settings/player/player_screen.dart';
-import 'package:shonenx/data/hive/boxes/anime_watch_progress_box.dart';
+import 'package:shonenx/data/hive/providers/theme_provider.dart';
+import 'package:shonenx/data/hive/providers/ui_provider.dart';
 import 'dart:async';
 import 'dart:developer' as dev;
 
@@ -77,33 +73,38 @@ class _LoadingScreenState extends ConsumerState<LoadingScreen>
       dev.log('Starting app initialization', name: 'LoadingScreen');
 
       // Get the selected provider key and custom API URL
-      final selectedProviderState = ref.read(selectedProviderKeyProvider);
-      final customApiUrl = selectedProviderState.customApiUrl;
+      // final selectedProviderState = ref.read(selectedProviderKeyProvider);
+      // final customApiUrl = selectedProviderState.customApiUrl;
 
-      dev.log(
-          'Selected provider: ${selectedProviderState.selectedProviderKey}, API URL: $customApiUrl',
-          name: 'LoadingScreen');
+      // dev.log(
+      //     'Selected provider: ${selectedProviderState.selectedProviderKey}, API URL: $customApiUrl',
+      //     name: 'LoadingScreen');
 
       // Initialize with all required services
       await Future.wait([
-        // Initialize anime source registry
-        ref.read(animeSourceRegistryProvider.notifier).initialize(customApiUrl),
+        //   // Initialize anime source registry
+        ref.read(animeSourceRegistryProvider.notifier).initialize(null),
 
-        // Initialize all settings
-        ref.read(themeSettingsProvider.notifier).initializeSettings(),
-        ref.read(uiSettingsProvider.notifier).initializeSettings(),
-        ref.read(playerSettingsProvider.notifier).initializeSettings(),
+        //   // Initialize all settings
+        //   ref.read(themeSettingsProvider.notifier).initializeSettings(),
+        //   ref.read(uiSettingsProvider.notifier).initializeSettings(),
+        //   ref.read(playerSettingsProvider.notifier).initializeSettings(),
 
-        // Initialize homepage and watch progress
-        ref.read(homePageProvider.future),
-        AnimeWatchProgressBox().init(),
+        //   // Initialize homepage and watch progress
+        //   ref.read(homePageProvider.future),
 
-        // Force minimum delay for better UX
-        Future.delayed(const Duration(seconds: 2)),
+        //   // Force minimum delay for better UX
+        //   Future.delayed(const Duration(seconds: 2)),
       ]);
+
+      // ref.read(animeWatchProgressProvider);
+      // ref.read(uiSettingsProvider);
+      ref.read(themeSettingsProvider);
+      // ref.read(providerSettingsProvider);
 
       // Verify that the registry was initialized successfully
       final registryState = ref.read(animeSourceRegistryProvider);
+
       if (!registryState.registry.isInitialized) {
         throw Exception(
             'Failed to initialize anime source registry: ${registryState.error}');
@@ -122,7 +123,7 @@ class _LoadingScreenState extends ConsumerState<LoadingScreen>
         await Future.delayed(const Duration(milliseconds: 300));
       }
 
-      final uiSettings = ref.read(uiSettingsProvider).uiSettings;
+      final uiSettings = ref.read(uiSettingsProvider);
       if (uiSettings.immersiveMode) {
         // Hide the status bar and navigation bar for immersive mode
         SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersive);
@@ -224,8 +225,7 @@ class _LoadingScreenState extends ConsumerState<LoadingScreen>
                             borderRadius: BorderRadius.circular(24),
                             boxShadow: [
                               BoxShadow(
-                                color:
-                                    colorScheme.primary.withOpacity(0.12),
+                                color: colorScheme.primary.withOpacity(0.12),
                                 blurRadius: 20,
                                 spreadRadius: 2,
                                 offset: const Offset(0, 4),

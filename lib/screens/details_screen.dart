@@ -8,7 +8,6 @@ import 'package:go_router/go_router.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:shonenx/core/anilist/services/anilist_service.dart';
 import 'package:shonenx/core/models/anilist/anilist_media_list.dart';
-import 'package:shonenx/data/hive/boxes/anime_watch_progress_box.dart';
 import 'package:shonenx/helpers/anime_match_popup.dart';
 import 'package:shonenx/providers/anilist/anilist_medialist_provider.dart';
 import 'package:shonenx/providers/anilist/anilist_user_provider.dart';
@@ -27,7 +26,6 @@ class AnimeDetailsScreen extends ConsumerStatefulWidget {
 
 class _AnimeDetailsScreenState extends ConsumerState<AnimeDetailsScreen> {
   late final ScrollController _scrollController;
-  late final Future<AnimeWatchProgressBox> _boxFuture;
   bool _isFavourite = false;
   bool _isLoading = false;
   String? _currentStatus;
@@ -36,7 +34,6 @@ class _AnimeDetailsScreenState extends ConsumerState<AnimeDetailsScreen> {
   void initState() {
     super.initState();
     _scrollController = ScrollController();
-    _boxFuture = _initializeBox();
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
     _checkFavorite();
     _fetchCurrentStatus();
@@ -60,12 +57,6 @@ class _AnimeDetailsScreenState extends ConsumerState<AnimeDetailsScreen> {
             );
       }
     }
-  }
-
-  Future<AnimeWatchProgressBox> _initializeBox() async {
-    final box = AnimeWatchProgressBox();
-    await box.init();
-    return box;
   }
 
   Future<void> _checkFavorite() async {
@@ -114,20 +105,20 @@ class _AnimeDetailsScreenState extends ConsumerState<AnimeDetailsScreen> {
     }
   }
 
-  Future<void> _handleWatchAction(AnimeWatchProgressBox box) async {
-    if (_isLoading) return;
-    setState(() => _isLoading = true);
-    await providerAnimeMatchSearch(
-      context: context,
-      ref: ref,
-      animeMedia: widget.anime,
-      animeWatchProgressBox: box,
-      afterSearchCallback: () {
-        if (!mounted) return;
-        setState(() => _isLoading = false);
-      },
-    );
-  }
+  // Future<void> _handleWatchAction(AnimeWatchProgressBox box) async {
+  //   if (_isLoading) return;
+  //   setState(() => _isLoading = true);
+  //   await providerAnimeMatchSearch(
+  //     context: context,
+  //     ref: ref,
+  //     animeMedia: widget.anime,
+  //     animeWatchProgressBox: box,
+  //     afterSearchCallback: () {
+  //       if (!mounted) return;
+  //       setState(() => _isLoading = false);
+  //     },
+  //   );
+  // }
 
   void _showSnackBar(
       BuildContext context, String title, String message, ContentType type) {
@@ -183,9 +174,7 @@ class _AnimeDetailsScreenState extends ConsumerState<AnimeDetailsScreen> {
           ),
           _WatchButton(
             anime: widget.anime,
-            boxFuture: _boxFuture,
             isLoading: _isLoading,
-            onTap: _handleWatchAction,
           ),
         ],
       ),
@@ -384,8 +373,7 @@ class _Tag extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: color?.withOpacity(0.2) ??
-            Colors.white.withOpacity(0.1),
+        color: color?.withOpacity(0.2) ?? Colors.white.withOpacity(0.1),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -762,85 +750,66 @@ class _RankingCard extends StatelessWidget {
   }
 }
 
-class _WatchButton extends StatelessWidget {
+class _WatchButton extends ConsumerWidget {
   final Media anime;
-  final Future<AnimeWatchProgressBox> boxFuture;
   final bool isLoading;
-  final Function(AnimeWatchProgressBox) onTap;
 
   const _WatchButton({
     required this.anime,
-    required this.boxFuture,
     required this.isLoading,
-    required this.onTap,
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
     return Positioned(
       bottom: 16,
       right: 16,
-      child: FutureBuilder<AnimeWatchProgressBox>(
-        future: boxFuture,
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) return const SizedBox.shrink();
-          final box = snapshot.data!;
-          final episodeProgress =
-              box.getMostRecentEpisodeProgressByAnimeId(anime.id!);
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: colorScheme.primary.withOpacity(0.4),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: FloatingActionButton.extended(
+          onPressed: () async {
+            if (isLoading) return;
 
-          return AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: colorScheme.primary.withOpacity(0.4),
-                  blurRadius: 8,
-                  offset: const Offset(0, 4),
+            await providerAnimeMatchSearch(
+              context: context,
+              ref: ref,
+              animeMedia: anime,
+            );
+          },
+          label: AnimatedSwitcher(
+            duration: const Duration(
+              milliseconds: 200,
+            ),
+            child: Row(
+              children: [
+                Icon(Iconsax.play_circle,
+                    color: colorScheme.onPrimary, size: 24),
+                const SizedBox(width: 8),
+                Text(
+                  'Watch Now',
+                  style: GoogleFonts.montserrat(
+                    color: colorScheme.onPrimary,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                  ),
                 ),
               ],
             ),
-            child: FloatingActionButton.extended(
-              onPressed: isLoading ? null : () => onTap(box),
-              backgroundColor: colorScheme.primary,
-              elevation: 0,
-              label: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 300),
-                child: isLoading
-                    ? SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: colorScheme.onPrimary,
-                        ),
-                      )
-                    : Row(
-                        key:
-                            ValueKey(episodeProgress?.episodeNumber ?? 'watch'),
-                        children: [
-                          Icon(Iconsax.play_circle,
-                              color: colorScheme.onPrimary, size: 24),
-                          const SizedBox(width: 8),
-                          Text(
-                            episodeProgress != null
-                                ? 'EP ${episodeProgress.episodeNumber}'
-                                : 'Watch Now',
-                            style: GoogleFonts.montserrat(
-                              color: colorScheme.onPrimary,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 16,
-                            ),
-                          ),
-                        ],
-                      ),
-              ),
-            ),
-          );
-        },
+          ),
+        ),
       ),
     );
   }

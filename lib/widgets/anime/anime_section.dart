@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shonenx/core/models/anilist/anilist_media_list.dart';
-import 'package:shonenx/data/hive/models/settings_offline_model.dart';
+import 'package:shonenx/data/hive/models/settings/ui_model.dart';
 import 'package:shonenx/helpers/navigation.dart';
 import 'package:shonenx/widgets/anime/card/anime_card.dart';
 import 'package:uuid/uuid.dart';
@@ -8,9 +8,9 @@ import 'package:uuid/uuid.dart';
 class HorizontalAnimeSection extends StatelessWidget {
   final String title;
   final List<Media>? animes;
-  final UISettingsModel uiSettings;
+  final UiSettings uiSettings;
 
-  const HorizontalAnimeSection({
+  const HorizontalAnimeSection({super.key, 
     required this.title,
     required this.animes,
     required this.uiSettings,
@@ -102,11 +102,11 @@ class HorizontalAnimeSection extends StatelessWidget {
 class VerticalAnimeSection extends StatelessWidget {
   final String title;
   final List<Media>? animes;
-  final UISettingsModel uiSettings;
+  final UiSettings uiSettings;
   final int crossAxisCount;
   final double aspectRatio;
 
-  const VerticalAnimeSection({
+  const VerticalAnimeSection({super.key, 
     required this.title,
     required this.animes,
     required this.uiSettings,

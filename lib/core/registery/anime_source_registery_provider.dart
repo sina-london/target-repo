@@ -8,17 +8,19 @@ import 'package:shonenx/core/sources/anime/aniwatch/hianime.dart';
 import 'package:shonenx/core/registery/anime_source_registery.dart';
 import 'package:shonenx/core/sources/anime/anime_provider.dart';
 import 'package:shonenx/core/sources/anime/aniwatch/kaido.dart';
-import 'package:shonenx/providers/selected_provider.dart';
+import 'package:shonenx/data/hive/providers/provider_provider.dart';
 
 /// State class for the anime source registry
 class AnimeSourceRegistryState {
   final AnimeSourceRegistery registry;
   final bool isInitializing;
+  final String? selectedProviderKey;
   final String? error;
   final String? customApiUrl;
 
   const AnimeSourceRegistryState({
     required this.registry,
+    this.selectedProviderKey = "hianime",
     this.isInitializing = false,
     this.error,
     this.customApiUrl,
@@ -164,14 +166,19 @@ final animeSourceRegistryProvider = StateNotifierProvider<
 /// Provider for the current anime provider based on the selected provider key
 final currentAnimeProviderProvider = Provider<AnimeProvider?>((ref) {
   final registryState = ref.watch(animeSourceRegistryProvider);
-  final selectedState = ref.watch(selectedProviderKeyProvider);
+  String? selectedKey = registryState.selectedProviderKey;
+
+  if (selectedKey == null) {
+    final key = ref.read(providerSettingsProvider).selectedProviderName;
+    selectedKey = key;
+  }
 
   // If the registry is not initialized or the selected provider is loading, return null
-  if (!registryState.registry.isInitialized || selectedState.isLoading) {
+  if (!registryState.registry.isInitialized) {
     return null;
   }
 
-  final selectedKey = selectedState.selectedProviderKey;
+  // final selectedKey = selectedState.selectedProviderKey;
   return registryState.registry.getProvider(selectedKey);
 });
 
