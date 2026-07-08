@@ -54,3 +54,6 @@ fixer.js
 
 # env
 .env
+
+# expression for github history cleaing
+expressions.txt
