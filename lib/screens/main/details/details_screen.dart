@@ -43,6 +43,8 @@ class _DetailsScreenState extends State<DetailsScreen> {
   late final WatchlistBox _watchlistBox;
   final ScrollController _scrollController = ScrollController();
   ContinueWatchingItem? continueWatchingItem;
+  String? _nextEpisodeId;
+  String? _nextEpisodeTitle;
   AnimeData? info;
   String? error;
 
@@ -64,6 +66,10 @@ class _DetailsScreenState extends State<DetailsScreen> {
     } finally {
       if (mounted) {
         _isLoadingEpisodes.value = false;
+        final Episode? nextEpisode = _getNextEpisode();
+        _nextEpisodeId = nextEpisode?.episodeId;
+        _nextEpisodeTitle = nextEpisode?.title;
+        setState(() {});
       }
     }
   }
@@ -76,15 +82,14 @@ class _DetailsScreenState extends State<DetailsScreen> {
 
   void _loadContinueWatching() {
     continueWatchingItem = _watchlistBox.getContinueWatchingById(widget.id);
-    debugPrint("DETAIL : ${continueWatchingItem?.watchedEpisodes}");
     setState(() {});
   }
 
-  String? _getNextEpisodeId() {
+  Episode? _getNextEpisode() {
     int continueItemindex = _episodes.value.indexWhere(
         (item) => item.episodeId == continueWatchingItem?.episodeId);
     if (continueItemindex < _episodes.value.length) {
-      return _episodes.value[continueItemindex + 1].episodeId;
+      return _episodes.value[continueItemindex + 1];
     }
     return null;
   }
@@ -397,7 +402,8 @@ class _DetailsScreenState extends State<DetailsScreen> {
             id: widget.id,
             image: widget.image,
             type: widget.type,
-            nextEpisode: _getNextEpisodeId(),
+            nextEpisode: _nextEpisodeId,
+            nextEpisodeTitle: _nextEpisodeTitle,
           );
         },
       ),
