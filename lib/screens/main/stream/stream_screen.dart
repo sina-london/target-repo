@@ -9,7 +9,7 @@ class StreamScreen extends StatefulWidget {
   final String title;
   final String id;
   final List<Episode> episodes;
-  
+
   const StreamScreen({
     super.key,
     required this.title,
@@ -24,14 +24,14 @@ class StreamScreen extends StatefulWidget {
 class _StreamScreenState extends State<StreamScreen> {
   late final AnimeService _animeService;
   BetterPlayerController? _playerController;
-  
+
   // State management
   String _selectedServer = "hd-1";
   String _selectedDubSub = "sub";
   String _selectedEpisodeId = "";
   bool _isLoading = true;
-  bool _isPlayerInitializing = true;
-  
+  bool _isPlayerInitializing = false; // Initialize to false
+
   // Cache management
   EpisodeServersModel? _episodeServers;
   EpisodeStreamingLinksModel? _streamingLinks;
@@ -45,7 +45,6 @@ class _StreamScreenState extends State<StreamScreen> {
     _selectedEpisodeId = widget.id;
     _initializeData();
   }
-
 
   Future<void> _initializeData() async {
     try {
@@ -78,7 +77,7 @@ class _StreamScreenState extends State<StreamScreen> {
 
   Future<void> _fetchStreamingLinks(String episodeId) async {
     if (episodeId.isEmpty) episodeId = widget.id;
-    
+
     final cacheKey = '$episodeId-$_selectedServer-$_selectedDubSub';
     try {
       if (_linksCache.containsKey(cacheKey)) {
@@ -100,23 +99,32 @@ class _StreamScreenState extends State<StreamScreen> {
   }
 
   Future<void> initializePlayer() async {
-    setState(() => _isPlayerInitializing = true);
-    
-    try {
-      _playerController?.dispose();
-      _playerController = null;
+    if (_isPlayerInitializing || _streamingLinks == null || _streamingLinks!.sources.isEmpty) {
+      // Avoid re-initializing if already in progress or if no streaming links
+      return;
+    }
 
-      if (_streamingLinks?.sources.isEmpty ?? true) return;
+    setState(() => _isPlayerInitializing = true);
+
+    try {
+      // Dispose of existing controller if it exists
+      _playerController?.dispose();
 
       final sourceUrl = _streamingLinks!.sources[0].url;
-      final subtitleSources = _streamingLinks!.tracks
-          ?.map((track) => BetterPlayerSubtitlesSource(
-                type: BetterPlayerSubtitlesSourceType.network,
-                urls: [track.file],
-                name: track.kind,
-              ))
-          .toList() ?? [];
+      final subtitleSources = _streamingLinks?.tracks
+              ?.where((track) => track.label != null)
+              .map(
+                (track) => BetterPlayerSubtitlesSource(
+                  type: BetterPlayerSubtitlesSourceType.network,
+                  urls: [track.file],
+                  name: track.label,
+                  selectedByDefault: track.isDefault ?? false
+                ),
+              )
+              .toList() ??
+          [];
 
+      // Initialize new controller with updated configuration
       _playerController = BetterPlayerController(
         BetterPlayerConfiguration(
           autoPlay: true,
@@ -128,6 +136,7 @@ class _StreamScreenState extends State<StreamScreen> {
             controlBarColor: Colors.black54,
             enableProgressText: true,
             enableAudioTracks: false,
+            enableSubtitles: true,
           ),
         ),
         betterPlayerDataSource: BetterPlayerDataSource(
@@ -136,6 +145,14 @@ class _StreamScreenState extends State<StreamScreen> {
           subtitles: subtitleSources,
         ),
       );
+
+      // Set the first subtitle as the default if available
+      if (subtitleSources.isNotEmpty) {
+        _playerController?.setupSubtitleSource(subtitleSources.firstWhere((subtitle) => subtitle.selectedByDefault == true));
+      }
+
+    } catch (e) {
+      debugPrint("Error initializing player: $e");
     } finally {
       if (mounted) {
         setState(() => _isPlayerInitializing = false);
@@ -169,15 +186,11 @@ class _StreamScreenState extends State<StreamScreen> {
       color: Colors.black,
       height: 230,
       width: double.infinity,
-      child: _isPlayerInitializing
+      child: _isPlayerInitializing || _playerController == null
           ? Center(
               child: _buildShimmerLoading(230),
             )
-          : _playerController != null
-              ? BetterPlayer(controller: _playerController!)
-              : const Center(
-                  child: CircularProgressIndicator(),
-                ),
+          : BetterPlayer(controller: _playerController!),
     );
   }
 
@@ -199,9 +212,9 @@ class _StreamScreenState extends State<StreamScreen> {
         height: 50,
         child: ListView.builder(
           scrollDirection: Axis.horizontal,
-          itemCount: 3,
+          itemCount: 4,
           itemBuilder: (context, index) => Padding(
-            padding: const EdgeInsets.only(right: 15),
+            padding: const EdgeInsets.only(right: 10),
             child: _buildShimmerLoading(80),
           ),
         ),
@@ -301,8 +314,8 @@ class _StreamScreenState extends State<StreamScreen> {
             ),
             const SizedBox(height: 10),
             _buildServersList(),
-            const SizedBox(height: 20),
-            Expanded(child: _buildEpisodesList()),
+            // const SizedBox(height: 20),
+            // Expanded(child: _buildEpisodesList()),
           ],
         ),
       ),
@@ -318,7 +331,9 @@ class _StreamScreenState extends State<StreamScreen> {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 15),
           decoration: BoxDecoration(
-            color: isSelected ? Theme.of(context).secondaryHeaderColor : color.withOpacity(0.7),
+            color: isSelected
+                ? Theme.of(context).secondaryHeaderColor
+                : color.withOpacity(0.7),
             borderRadius: BorderRadius.circular(10),
             boxShadow: [
               BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 5)
@@ -340,10 +355,12 @@ class _StreamScreenState extends State<StreamScreen> {
 
   Widget _buildServerCard(String label, bool isSelected, VoidCallback onTap) {
     return Container(
-      margin: const EdgeInsets.only(right: 15),
+      margin: const EdgeInsets.only(right: 10),
       padding: const EdgeInsets.symmetric(horizontal: 20),
       decoration: BoxDecoration(
-        color: isSelected ? Theme.of(context).secondaryHeaderColor : Colors.grey[600],
+        color: isSelected
+            ? Theme.of(context).secondaryHeaderColor
+            : Colors.grey[600],
         borderRadius: BorderRadius.circular(10),
         boxShadow: [
           BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 5)
@@ -364,7 +381,8 @@ class _StreamScreenState extends State<StreamScreen> {
     );
   }
 
-  Widget _buildEpisodeCard(String episodeTitle, int episodeNumber, String episodeId) {
+  Widget _buildEpisodeCard(
+      String episodeTitle, int episodeNumber, String episodeId) {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),

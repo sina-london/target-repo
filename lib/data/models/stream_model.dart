@@ -60,16 +60,22 @@ class Source {
 class Track {
   final String file;
   final String kind;
+  final String? label;
+  final bool? isDefault;
 
   Track({
     required this.file,
     required this.kind,
+    required this.label,
+    required this.isDefault
   });
 
   factory Track.fromJson(Map<String, dynamic> json) {
     return Track(
       file: json['file'],
       kind: json['kind'],
+      label: json['label'],
+      isDefault: json['default']
     );
   }
 }
