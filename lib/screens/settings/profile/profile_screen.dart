@@ -143,7 +143,8 @@ class ProfileSettingsScreen extends ConsumerWidget {
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         border: Border.all(
-                            color: theme.colorScheme.primary, width: 2),
+                            color: theme.colorScheme.primaryContainer,
+                            width: 2),
                       ),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(50),
@@ -156,18 +157,18 @@ class ProfileSettingsScreen extends ConsumerWidget {
                                 placeholder: (context, url) => Container(
                                   width: 48,
                                   height: 48,
-                                  color: theme.colorScheme.primary
+                                  color: theme.colorScheme.primaryContainer
                                       .withOpacity(0.1),
                                 ),
                               )
                             : Container(
                                 width: 48,
                                 height: 48,
-                                color:
-                                    theme.colorScheme.primary.withOpacity(0.1),
+                                color: theme.colorScheme.primaryContainer
+                                    .withOpacity(0.1),
                                 child: Icon(
                                   Iconsax.user,
-                                  color: theme.colorScheme.primary,
+                                  color: theme.colorScheme.primaryContainer,
                                   size: 24,
                                 ),
                               ),
@@ -193,7 +194,7 @@ class ProfileSettingsScreen extends ConsumerWidget {
                             Icon(
                               Iconsax.verify5,
                               size: 18,
-                              color: theme.colorScheme.primary,
+                              color: theme.colorScheme.primaryContainer,
                             ),
                             const SizedBox(width: 6),
                             Text(
@@ -201,7 +202,7 @@ class ProfileSettingsScreen extends ConsumerWidget {
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w500,
-                                color: theme.colorScheme.primary,
+                                color: theme.colorScheme.primaryContainer,
                               ),
                             ),
                           ],
@@ -217,8 +218,9 @@ class ProfileSettingsScreen extends ConsumerWidget {
                     },
                     icon: const Icon(Iconsax.logout),
                     style: IconButton.styleFrom(
-                      backgroundColor: theme.colorScheme.error.withOpacity(0.1),
-                      foregroundColor: theme.colorScheme.error,
+                      backgroundColor:
+                          theme.colorScheme.errorContainer.withOpacity(0.1),
+                      foregroundColor: theme.colorScheme.errorContainer,
                       padding: const EdgeInsets.all(10),
                     ),
                   ),
@@ -231,8 +233,8 @@ class ProfileSettingsScreen extends ConsumerWidget {
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [
-                          theme.colorScheme.primary.withOpacity(0.2),
-                          theme.colorScheme.primary.withOpacity(0.1),
+                          theme.colorScheme.primaryContainer.withOpacity(0.2),
+                          theme.colorScheme.primaryContainer.withOpacity(0.1),
                         ],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
@@ -241,7 +243,7 @@ class ProfileSettingsScreen extends ConsumerWidget {
                     ),
                     child: Icon(
                       Iconsax.profile_add,
-                      color: theme.colorScheme.primary,
+                      color: theme.colorScheme.primaryContainer,
                       size: 24,
                     ),
                   ),
@@ -274,8 +276,8 @@ class ProfileSettingsScreen extends ConsumerWidget {
                     icon: const Icon(Iconsax.login),
                     style: IconButton.styleFrom(
                       backgroundColor:
-                          theme.colorScheme.primary.withOpacity(0.1),
-                      foregroundColor: theme.colorScheme.primary,
+                          theme.colorScheme.primaryContainer.withOpacity(0.1),
+                      foregroundColor: theme.colorScheme.primaryContainer,
                       padding: const EdgeInsets.all(10),
                     ),
                   ),
