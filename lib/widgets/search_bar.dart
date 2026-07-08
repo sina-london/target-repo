@@ -12,11 +12,11 @@ class Searchbar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    ThemeData _themeContext = Theme.of(context);
+    ThemeData themeContext = Theme.of(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
-        color: _themeContext.highlightColor,
+        color: themeContext.highlightColor,
         borderRadius: BorderRadius.circular(15),
       ),
       child: Row(
@@ -34,7 +34,7 @@ class Searchbar extends StatelessWidget {
                 FocusScope.of(context).unfocus(); // Unfocus after submitting
                 onSearch();
               },
-              style: _themeContext.textTheme.bodyMedium?.copyWith(fontSize: 18),
+              style: themeContext.textTheme.bodyMedium?.copyWith(fontSize: 18),
               decoration: const InputDecoration(
                 hintText: "Search Anime...",
                 border: InputBorder.none,
