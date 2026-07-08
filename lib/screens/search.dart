@@ -1,11 +1,9 @@
 // ignore_for_file: prefer_const_literals_to_create_immutables, prefer_const_constructors
 
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:nekoflow/data/models/search_result.dart';
 import 'package:nekoflow/data/services/anime_service.dart';
 import 'package:nekoflow/screens/details.dart';
-import 'package:nekoflow/widgets/result_card.dart';
 import 'package:nekoflow/widgets/search_bar.dart';
 
 class Search extends StatefulWidget {
@@ -34,7 +32,6 @@ class _SearchState extends State<Search> {
     try {
       ResultResponse? result =
           await _animeService.fetchByQuery(query: _searchController.text);
-      print(result);
       setState(() {
         _isLoading = false;
         _searchResults = result != null ? result.results : [];
