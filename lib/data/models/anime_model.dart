@@ -1,5 +1,4 @@
 import 'package:nekoflow/data/models/anime_interface.dart';
-import 'package:nekoflow/data/models/episodes_model.dart';
 
 class SpotlightAnime {
   final int rank;

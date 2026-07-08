@@ -2,13 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:nekoflow/data/models/anime_interface.dart';
 import 'package:nekoflow/data/models/anime_model.dart';
-import 'package:nekoflow/data/models/home_model.dart';
 import 'package:nekoflow/data/services/anime_service.dart';
 import 'package:nekoflow/widgets/anime_card.dart';
 import 'package:nekoflow/widgets/snapping_scroll.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+  const HomeScreen({super.key});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();

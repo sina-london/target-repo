@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:nekoflow/data/models/episodes_model.dart';
 import 'package:nekoflow/data/models/stream_model.dart';
+import 'package:nekoflow/data/models/watchlist/watchlist_model.dart';
 import 'package:nekoflow/data/services/anime_service.dart';
 import 'package:better_player/better_player.dart';
 import 'package:shimmer/shimmer.dart';
@@ -45,6 +47,7 @@ class _StreamScreenState extends State<StreamScreen> {
     _selectedEpisodeId = widget.id;
     _initializeData();
   }
+
 
   Future<void> _initializeData() async {
     try {

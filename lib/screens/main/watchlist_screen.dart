@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:nekoflow/data/models/anime_interface.dart';
+import 'package:nekoflow/data/models/watchlist/watchlist_model.dart';
+import 'package:nekoflow/widgets/anime_card.dart';
 
 class WatchlistScreen extends StatefulWidget {
   const WatchlistScreen({super.key});
@@ -8,40 +12,72 @@ class WatchlistScreen extends StatefulWidget {
 }
 
 class _WatchlistScreenState extends State<WatchlistScreen> {
+  late Box<WatchlistModel> _watchlistBox;
+  List<RecentlyWatchedItem> _recentlyWatched = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _watchlistBox = Hive.box<WatchlistModel>("user_watchlist");
+    _loadWatchlist();
+  }
+
+  Future<void> _loadWatchlist() async {
+    try {
+      setState(() {
+        _isLoading = true;
+      });
+
+      final watchlist = _watchlistBox.get("recentlyWatched");
+      if (watchlist != null) {
+        setState(() {
+          _recentlyWatched = watchlist.recentlyWatched ?? [];
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading watchlist: $e');
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Watchlist", style: TextStyle(fontSize: 30),),),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: ListView(
-          children: [
-            _buildSectionTitle("Recently Watched"),
-            const SizedBox(height: 8),
-            _buildHorizontalList([
-              "Anime A",
-              "Anime B",
-              "Anime C",
-            ]),
-            const SizedBox(height: 24),
-            
-            _buildSectionTitle("Continue Watching"),
-            const SizedBox(height: 8),
-            _buildHorizontalList([
-              "Anime D",
-              "Anime E",
-              "Anime F",
-            ]),
-            const SizedBox(height: 24),
-
-            _buildSectionTitle("Favorites"),
-            const SizedBox(height: 8),
-            _buildHorizontalList([
-              "Anime G",
-              "Anime H",
-              "Anime I",
-            ]),
-          ],
+      appBar: AppBar(
+        title: const Text(
+          "Watchlist",
+          style: TextStyle(fontSize: 30),
+        ),
+      ),
+      body: RefreshIndicator(
+        onRefresh: _loadWatchlist,
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: ListView(
+            children: [
+              _buildSectionTitle("Recently Watched"),
+              const SizedBox(height: 8),
+              _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : _recentlyWatched.isEmpty
+                      ? const Center(
+                          child: Text('No recently watched anime'),
+                        )
+                      : _buildAnimeList(_recentlyWatched),
+              const SizedBox(height: 24),
+              _buildSectionTitle("Continue Watching"),
+              const SizedBox(height: 8),
+              _buildHorizontalList([]),
+              const SizedBox(height: 24),
+              _buildSectionTitle("Favorites"),
+              const SizedBox(height: 8),
+              _buildHorizontalList([]),
+            ],
+          ),
         ),
       ),
     );
@@ -57,9 +93,30 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
     );
   }
 
+  Widget _buildAnimeList(List<RecentlyWatchedItem> items) {
+    return SizedBox(
+      height: 220,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: items.length,
+        itemBuilder: (context, index) {
+          final anime = items[index];
+          return AnimeCard(
+              anime: Anime(
+                id: anime.id,
+                name: anime.name,
+                poster: anime.poster,
+                type: anime.type,
+              ),
+              tag: 'tag');
+        },
+      ),
+    );
+  }
+
   Widget _buildHorizontalList(List<String> items) {
     return SizedBox(
-      height: 200,
+      height: 220,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         itemCount: items.length,
