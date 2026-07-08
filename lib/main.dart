@@ -1,7 +1,6 @@
-// ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:nekoflow/screens/browse.dart';
 import 'package:nekoflow/screens/home.dart';
 import 'package:nekoflow/screens/search.dart';
@@ -22,7 +21,13 @@ class MainApp extends StatefulWidget {
 
 class _MainAppState extends State<MainApp> {
   int _selectedIndex = 0;
-  final _screens = [Home(), Search(), Browse(), Settings()];
+  bool _isDarkMode = true;
+  static const _screens = [
+    KeyedSubtree(key: ValueKey("Home"), child: Home()),
+    KeyedSubtree(key: ValueKey("Search"), child: Search()),
+    KeyedSubtree(key: ValueKey("Browse"), child: Browse()),
+    KeyedSubtree(key: ValueKey("Settings"), child: Settings()),
+  ];
 
   @override
   void initState() {
@@ -30,42 +35,74 @@ class _MainAppState extends State<MainApp> {
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
     ]);
+    _initializeData();
+  }
+
+  Future<void> _initializeData() async {
+    // Simulating a network call or heavy computation
+    await Future.delayed(const Duration(seconds: 1));
+
+    // Check if the widget is still mounted before calling setState
+    if (mounted) {
+      // You can perform additional state updates here if needed
+    }
+  }
+
+  void _toggleTheme() {
+    setState(() {
+      _isDarkMode = !_isDarkMode;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
+      theme: ThemeData.light().copyWith(
+        textTheme: GoogleFonts.robotoCondensedTextTheme(),
+      ),
+      darkTheme: ThemeData.dark().copyWith(
+          textTheme:
+              GoogleFonts.montserratTextTheme().apply(bodyColor: Colors.white)),
+      themeMode: _isDarkMode ? ThemeMode.dark : ThemeMode.light,
       home: Scaffold(
+        appBar: AppBar(
+          title: RichText(
+            textAlign: TextAlign.center,
+            text: TextSpan(
+              style: GoogleFonts.oswald(
+                color: Colors.white, // Default color for the main text
+                fontSize: 24.0, // Set your desired font size
+                fontStyle: FontStyle.italic,
+              ),
+              children: const <TextSpan>[
+                TextSpan(
+                    text: 'SHONEN',
+                    style: TextStyle(
+                        color: Colors.white)), // Default color for 'SHONEN'
+                TextSpan(
+                  text: 'X',
+                  style: TextStyle(
+                    color: Colors.red, // Red color for 'X'
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            IconButton(
+              icon: Icon(_isDarkMode ? Icons.dark_mode : Icons.light_mode),
+              onPressed: _toggleTheme,
+            ),
+          ],
+        ),
         body: AnimatedSwitcher(
           duration: const Duration(milliseconds: 300),
           transitionBuilder: (child, animation) {
-            // Slide Transition
-            // return SlideTransition(
-            //   position: Tween<Offset>(
-            //     begin: const Offset(1.0, 0.0),
-            //     end: Offset.zero,
-            //   ).animate(animation),
-            //   child: child,
-            // );
-
-            // Scale Transition
-            // return ScaleTransition(
-            //   scale: Tween<double>(begin: 0.0, end: 1.0).animate(animation),
-            //   child: child,
-            // );
-
-            // Fade Transition
             return FadeTransition(
-              opacity: Tween<double>(begin: 0.0, end: 1.0).animate(animation),
+              opacity: animation,
               child: child,
             );
-
-            // Rotate Transition
-            // return RotationTransition(
-            //   turns: Tween<double>(begin: 0.8, end: 1.0).animate(animation),
-            //   child: child,
-            // );
           },
           child: IndexedStack(
             index: _selectedIndex,
@@ -79,9 +116,9 @@ class _MainAppState extends State<MainApp> {
               _selectedIndex = index;
             });
           },
-          selectedItemColor: Colors.black,
+          selectedItemColor: _isDarkMode ? Colors.white : Colors.black,
           unselectedItemColor: Colors.grey,
-          items: [
+          items: const [
             BottomNavigationBarItem(
               icon: Icon(Icons.home),
               label: 'Home',
