@@ -1,22 +1,45 @@
 import 'package:flutter/material.dart';
+import 'package:nekoflow/data/boxes/user_box.dart';
+import 'package:nekoflow/data/models/user_model.dart';
 
-class ProfileScreen extends StatelessWidget {
-  final String name;
-  // final String email;
-  final int watchedAnime;
-  final int watchlist;
+class ProfileScreen extends StatefulWidget {
+  const ProfileScreen({super.key});
 
-  const ProfileScreen({
-    super.key,
-    required this.name,
-    // required this.email,
-    this.watchedAnime = 0,
-    this.watchlist = 0,
-  });
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  late final UserBox _userBox;
+  UserModel _user = UserModel(name: null);
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeUserBox();
+  }
+
+  Future<void> _initializeUserBox() async {
+    _userBox = UserBox();
+    await _userBox.init(); // Initialize the box
+    _user = _userBox.getUser(); // Fetch user data
+
+    // Update UI once data is loaded
+    setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+
+    // Show a loading spinner while user data is being fetched
+    if (_user.name == null) {
+      return Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
 
     return Scaffold(
       extendBody: true,
@@ -48,20 +71,16 @@ class ProfileScreen extends StatelessWidget {
                 CircleAvatar(
                   radius: 40,
                   backgroundColor: theme.colorScheme.primary,
-                  child: ClipRRect(
-                      borderRadius: BorderRadius.circular(20),
-                      child: Image.asset('lib/assets/images/profile/user.png')),
+                  child: Text(
+                    _user.name?.split('')[0] ?? '',
+                    style: Theme.of(context).textTheme.displayMedium,
+                  ),
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  name,
+                  _user.name ?? "Unknown User",
                   style: theme.textTheme.titleLarge,
                 ),
-                // const SizedBox(height: 4),
-                // Text(
-                //   email,
-                //   style: theme.textTheme.bodyMedium,
-                // ),
               ],
             ),
           ),
@@ -75,11 +94,9 @@ class ProfileScreen extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    _buildStat(context, 'Watched', watchedAnime),
+                    _buildStat(context, 'Watched', 0), // Placeholder values
                     _buildVerticalDivider(),
-                    _buildStat(context, 'Watchlist', watchlist),
-                    // _buildVerticalDivider(),
-                    // _buildStat(context, 'Reviews', 0),
+                    _buildStat(context, 'Watchlist', 0),
                   ],
                 ),
               ),
@@ -101,24 +118,6 @@ class ProfileScreen extends StatelessWidget {
             'Watch History',
             'Shows you have completed',
           ),
-          // _buildMenuItem(
-          //   context,
-          //   Icons.star,
-          //   'Reviews',
-          //   'Your thoughts on anime',
-          // ),
-          // _buildMenuItem(
-          //   context,
-          //   Icons.notifications,
-          //   'Notifications',
-          //   'Manage your alerts',
-          // ),
-          // _buildMenuItem(
-          //   context,
-          //   Icons.person,
-          //   'Account Settings',
-          //   'Manage your profile',
-          // ),
         ],
       ),
     );
@@ -164,21 +163,6 @@ class ProfileScreen extends StatelessWidget {
       onTap: () {
         // Navigate to respective screens
       },
-    );
-  }
-}
-
-// Usage
-class ProfilePage extends StatelessWidget {
-  const ProfilePage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const ProfileScreen(
-      name: 'AnimeUser123',
-      // email: 'user@example.com',
-      watchedAnime: 42,
-      watchlist: 15,
     );
   }
 }
