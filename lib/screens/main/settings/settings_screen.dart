@@ -16,16 +16,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
         toolbarHeight: 200,
         title: Text(
           "Settings",
-          style: TextStyle(fontSize: 35),
+          style: Theme.of(context).textTheme.headlineLarge,
         ),
       ),
       body: ListView(
         children: [
           ListTile(
-            leading: Icon(Icons.color_lens, size: 35),
+            leading: Icon(Icons.color_lens, size: 35, color: Theme.of(context).iconTheme.color,),
             title: Text("Theme", style: TextStyle(fontSize: 20)),
             subtitle: Text("Change the app theme"),
-            trailing: Icon(Icons.navigate_next, size: 35),
+            trailing: Icon(Icons.navigate_next, size: 35, color: Theme.of(context).iconTheme.color,),
             onTap: () => Navigator.push(
               context,
               ModalBottomSheetRoute(

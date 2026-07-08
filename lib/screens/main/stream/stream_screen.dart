@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 import 'package:nekoflow/data/models/episodes_model.dart';
 import 'package:nekoflow/data/models/stream_model.dart';
-import 'package:nekoflow/data/models/watchlist/watchlist_model.dart';
 import 'package:nekoflow/data/services/anime_service.dart';
 import 'package:better_player/better_player.dart';
 import 'package:shimmer/shimmer.dart';
@@ -320,7 +318,7 @@ class _StreamScreenState extends State<StreamScreen> {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 15),
           decoration: BoxDecoration(
-            color: isSelected ? Colors.purple : color.withOpacity(0.7),
+            color: isSelected ? Theme.of(context).secondaryHeaderColor : color.withOpacity(0.7),
             borderRadius: BorderRadius.circular(10),
             boxShadow: [
               BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 5)
@@ -345,7 +343,7 @@ class _StreamScreenState extends State<StreamScreen> {
       margin: const EdgeInsets.only(right: 15),
       padding: const EdgeInsets.symmetric(horizontal: 20),
       decoration: BoxDecoration(
-        color: isSelected ? Colors.purple : Colors.grey[600],
+        color: isSelected ? Theme.of(context).secondaryHeaderColor : Colors.grey[600],
         borderRadius: BorderRadius.circular(10),
         boxShadow: [
           BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 5)

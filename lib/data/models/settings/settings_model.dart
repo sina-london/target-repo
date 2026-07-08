@@ -1,4 +1,5 @@
 import 'package:hive/hive.dart';
+import 'package:nekoflow/data/theme/theme_manager.dart';
 
 part 'settings_model.g.dart';
 
@@ -7,7 +8,7 @@ class SettingsModel extends HiveObject {
   @HiveField(0)
   String? defaultQuality;
   @HiveField(1)
-  bool? isDarkTheme;
+  ThemeType? theme;
   @HiveField(2)
   String? defaultOrientation;
   @HiveField(3)
@@ -17,7 +18,7 @@ class SettingsModel extends HiveObject {
 
   SettingsModel({
     this.defaultQuality = '720p',
-    this.isDarkTheme = false,
+    this.theme = ThemeType.light,
     this.defaultOrientation = 'Portrait',
     this.layoutMode = 'Grid',
     this.isLabelEnabled = true,
@@ -27,7 +28,7 @@ class SettingsModel extends HiveObject {
   factory SettingsModel.fromJson(Map<String, dynamic> json) {
     return SettingsModel(
       defaultQuality: json['defaultQuality'] as String,
-      isDarkTheme: json['isDarkTheme'] as bool,
+      theme: json['theme'] as ThemeType,
       defaultOrientation: json['defaultOrientation'] as String,
       layoutMode: json['layoutMode'] as String,
       isLabelEnabled: json['isLabelEnabled'] as bool,
@@ -38,7 +39,7 @@ class SettingsModel extends HiveObject {
   Map<String, dynamic> toJson() {
     return {
       'defaultQuality': defaultQuality,
-      'isDarkTheme': isDarkTheme,
+      'theme': theme,
       'defaultOrientation': defaultOrientation,
       'layoutMode': layoutMode,
       'isLabelEnabled': isLabelEnabled,

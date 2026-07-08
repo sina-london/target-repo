@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:nekoflow/data/models/info_model.dart';
@@ -32,7 +30,6 @@ class _DetailsScreenState extends State<DetailsScreen> {
   late final AnimeService _animeService = AnimeService();
   late final Box<WatchlistModel> _watchlistBox;
   final ScrollController _scrollController = ScrollController();
-  bool _isFavorite = false;
   AnimeData? info;
   String? error;
 
@@ -67,8 +64,6 @@ class _DetailsScreenState extends State<DetailsScreen> {
     // If the item is already in the favorites list, remove it
     if (favourites.any((item) => item.id == newItem.id)) {
       favourites.removeWhere((item) => item.id == newItem.id);
-      print("Removed from favorites");
-      _isFavorite = false;
     } else {
       // If the item is not in the list, add it
       favourites = [
@@ -76,8 +71,6 @@ class _DetailsScreenState extends State<DetailsScreen> {
         ...favourites
             .where((item) => item.id != newItem.id), // Avoid duplicates
       ].take(10).toList();
-      print("Added to favorites");
-      _isFavorite = true;
     }
 
     // Update the favorites list in the watchlist
@@ -157,11 +150,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
                 children: [
                   Text(
                     widget.title,
-                    style: const TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
+                    style: Theme.of(context).textTheme.headlineLarge,
                   ),
                 ],
               ),
@@ -178,13 +167,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
         children: [
           Icon(icon),
           const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
-              color: Theme.of(context).secondaryHeaderColor,
-              fontSize: 12,
-            ),
-          ),
+          Text(label, style: Theme.of(context).textTheme.labelMedium),
           const SizedBox(height: 2),
           value == null
               ? Shimmer.fromColors(
@@ -201,10 +184,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
                 )
               : Text(
                   value.isEmpty ? 'N/A' : value,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                  ),
+                  style: Theme.of(context).textTheme.titleSmall,
                   textAlign: TextAlign.center,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
@@ -228,7 +208,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
           const SizedBox(height: 16),
           Text(
             'Details',
-            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            style: Theme.of(context).textTheme.headlineMedium,
           ),
           const SizedBox(height: 8),
           Shimmer.fromColors(
@@ -290,7 +270,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
         const SizedBox(height: 16),
         Text(
           'Details',
-          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          style: Theme.of(context).textTheme.headlineMedium,
         ),
         const SizedBox(height: 8),
         ValueListenableBuilder(
@@ -303,13 +283,13 @@ class _DetailsScreenState extends State<DetailsScreen> {
               duration: const Duration(milliseconds: 300),
               firstChild: Text(
                 info?.anime?.info?.description ?? 'Description not available',
-                style: const TextStyle(fontSize: 16, height: 1.4),
+                style: Theme.of(context).textTheme.bodyMedium,
                 maxLines: 3,
                 overflow: TextOverflow.ellipsis,
               ),
               secondChild: Text(
                 info?.anime?.info?.description ?? 'Description not available',
-                style: const TextStyle(fontSize: 16, height: 1.4),
+                style: Theme.of(context).textTheme.bodyMedium,
               ),
             );
           },
@@ -320,7 +300,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
           child: ValueListenableBuilder<bool>(
             valueListenable: _isDescriptionExpanded,
             builder: (context, isExpanded, child) {
-              return Text(isExpanded ? 'Show Less' : 'Show More');
+              return Text(isExpanded ? 'Show Less' : 'Show More', style: Theme.of(context).textTheme.labelMedium,);
             },
           ),
         ),
@@ -339,7 +319,6 @@ class _DetailsScreenState extends State<DetailsScreen> {
   void initState() {
     super.initState();
     _watchlistBox = Hive.box<WatchlistModel>('user_watchlist');
-    _isFavorite = _checkFavourites();
   }
 
   @override
@@ -394,7 +373,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
                 child: Container(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
-                  color: Theme.of(context).primaryColorDark,
+                  color: Theme.of(context).cardColor,
                   child: _buildDetailsSection(isLoading: isLoading),
                 ),
               ),

@@ -29,8 +29,7 @@ class EpisodeInfo {
       totalEpisodes: json['totalEpisodes'] ?? 0,
       episodes: (json['episodes'] as List)
               .map((e) => Episode.fromJson(e as Map<String, dynamic>))
-              .toList() ??
-          [],
+              .toList(),
     );
   }
 }

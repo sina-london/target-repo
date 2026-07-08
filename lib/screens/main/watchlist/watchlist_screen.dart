@@ -53,9 +53,9 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
       extendBody: true,
       appBar: AppBar(
         forceMaterialTransparency: true,
-        title: const Text(
+        title: Text(
           "Watchlist",
-          style: TextStyle(fontSize: 30),
+          style: Theme.of(context).textTheme.headlineLarge,
         ),
       ),
       body: RefreshIndicator(
@@ -100,10 +100,7 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
       children: [
         Text(
           title,
-          style: const TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
-          ),
+          style: Theme.of(context).textTheme.titleLarge
         ),
         IconButton(onPressed: (){}, icon: Icon(Icons.navigate_next, size: 35,))
       ],
