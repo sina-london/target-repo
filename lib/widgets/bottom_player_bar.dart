@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:nekoflow/data/models/watchlist/watchlist_model.dart';
 import 'package:nekoflow/screens/main/stream/stream_screen.dart';
+import 'package:dismissible_page/dismissible_page.dart';
 
 class BottomPlayerBar extends StatelessWidget {
   final ContinueWatchingItem item;
@@ -15,16 +16,15 @@ class BottomPlayerBar extends StatelessWidget {
   final String? nextEpisode;
   final String? nextEpisodeTitle;
 
-  const BottomPlayerBar({
-    super.key,
-    required this.item,
-    required this.title,
-    required this.id,
-    required this.image,
-    required this.type,
-    this.nextEpisode,
-    this.nextEpisodeTitle
-  });
+  const BottomPlayerBar(
+      {super.key,
+      required this.item,
+      required this.title,
+      required this.id,
+      required this.image,
+      required this.type,
+      this.nextEpisode,
+      this.nextEpisodeTitle});
 
   // Refactored method for more robust timestamp parsing
   double _calculateProgress() {
@@ -49,11 +49,10 @@ class BottomPlayerBar extends StatelessWidget {
     switch (parts.length) {
       case 3: // HH:mm:ss format
         return int.parse(parts[0]) * 3600 +
-               int.parse(parts[1]) * 60 +
-               int.parse(parts[2].split('.')[0]);
+            int.parse(parts[1]) * 60 +
+            int.parse(parts[2].split('.')[0]);
       case 2: // mm:ss format
-        return int.parse(parts[0]) * 60 +
-               int.parse(parts[1].split('.')[0]);
+        return int.parse(parts[0]) * 60 + int.parse(parts[1].split('.')[0]);
       default:
         throw FormatException('Invalid time format: $timeString');
     }
@@ -61,31 +60,37 @@ class BottomPlayerBar extends StatelessWidget {
 
   // Extracted navigation logic for better separation of concerns
   void _navigateToPlayer(
-    BuildContext context, 
-    String episodeId, 
-    String episodeTitle
-  ) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => StreamScreen(
-          name: item.name,
-          title: episodeTitle,
-          id: id,
-          episodeId: episodeId,
-          poster: image,
-          episode: item.episode,
-          type: type,
-        ),
-      ),
-    );
+      BuildContext context, String episodeId, String episodeTitle) {
+    context.pushTransparentRoute(StreamScreen(
+      name: item.name,
+      title: episodeTitle,
+      id: id,
+      episodeId: episodeId,
+      poster: image,
+      episode: item.episode,
+      type: type,
+    ));
+    // Navigator.push(
+    //   context,
+    //   MaterialPageRoute(
+    //     builder: (context) => StreamScreen(
+    //       name: item.name,
+    //       title: episodeTitle,
+    //       id: id,
+    //       episodeId: episodeId,
+    //       poster: image,
+    //       episode: item.episode,
+    //       type: type,
+    //     ),
+    //   ),
+    // );
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final progress = _calculateProgress();
-    
+
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeInOut,
@@ -123,10 +128,11 @@ class BottomPlayerBar extends StatelessWidget {
                   minHeight: 4,
                 ),
               ),
-              
+
               // Content
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                 child: Row(
                   children: [
                     // Thumbnail
@@ -149,7 +155,7 @@ class BottomPlayerBar extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 15),
-                    
+
                     // Episode Info
                     Expanded(
                       child: Column(
@@ -167,34 +173,37 @@ class BottomPlayerBar extends StatelessWidget {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            'Episode ${item.episode} • ${item.timestamp.split(':')[1]}:${double.parse(item.timestamp.split(':')[2]).floor()}',
+                            'Episode ${item.episode} • ${item.timestamp.split(':').length > 2 ? item.timestamp.split(':')[1] : '00'}:${item.timestamp.split(':').length > 2 ? double.parse(item.timestamp.split(':')[2]).floor() : '00'}',
                             style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurface.withOpacity(0.7),
+                              color:
+                                  theme.colorScheme.onSurface.withOpacity(0.7),
                             ),
                           ),
                         ],
                       ),
                     ),
-                    
+
                     // Action Buttons
                     Row(
                       children: [
                         IconButton(
                           icon: HugeIcon(
-                            icon: HugeIcons.strokeRoundedPlay, 
+                            icon: HugeIcons.strokeRoundedPlay,
                             color: theme.colorScheme.onSurface,
                             size: 28,
                           ),
-                          onPressed: () => _navigateToPlayer(context, item.episodeId, item.title),
+                          onPressed: () => _navigateToPlayer(
+                              context, item.episodeId, item.title),
                         ),
                         if (nextEpisode != null && nextEpisodeTitle != null)
                           IconButton(
                             icon: HugeIcon(
-                              icon: HugeIcons.strokeRoundedArrowRight01, 
+                              icon: HugeIcons.strokeRoundedArrowRight01,
                               color: theme.colorScheme.onSurface,
                               size: 28,
                             ),
-                            onPressed: () => _navigateToPlayer(context, nextEpisode!, nextEpisodeTitle!),
+                            onPressed: () => _navigateToPlayer(
+                                context, nextEpisode!, nextEpisodeTitle!),
                           ),
                       ],
                     ),

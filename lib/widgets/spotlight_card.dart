@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:nekoflow/data/models/anime_model.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:nekoflow/screens/main/details/details_screen.dart';
+import 'package:dismissible_page/dismissible_page.dart';
 
 class SpotlightCard extends StatelessWidget {
   final SpotlightAnime anime;
@@ -18,19 +19,14 @@ class SpotlightCard extends StatelessWidget {
     final theme = Theme.of(context);
 
     return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => DetailsScreen(
-              name: anime.name,
-              id: anime.id,
-              image: anime.poster,
-              tag: tag,
-            ),
-          ),
-        );
-      },
+      onTap: () => context.pushTransparentRoute(
+        DetailsScreen(
+          name: anime.name,
+          id: anime.id,
+          image: anime.poster,
+          tag: tag,
+        ),
+      ),
       child: Container(
         width: double.infinity,
         height: 240, // Adjusted height for better layout
@@ -40,9 +36,9 @@ class SpotlightCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: theme.shadowColor.withOpacity(0.1),
-              blurRadius: 10,
-              offset: Offset(0, 4), // Soft shadow for depth
+              color: theme.colorScheme.onSurface.withOpacity(0.8),
+              blurRadius: 2,
+              offset: Offset(0, 2), // Soft shadow for depth
             ),
           ],
         ),
@@ -70,7 +66,7 @@ class SpotlightCard extends StatelessWidget {
                       theme.colorScheme.surface.withOpacity(0.2),
                     ],
                     begin: Alignment.bottomCenter,
-                    end: Alignment.topCenter,
+                    end: Alignment.center,
                   ),
                 ),
               ),
@@ -94,7 +90,6 @@ class SpotlightCard extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
-                          
                         ),
                       ),
                     ),
