@@ -1,4 +1,4 @@
-import 'package:nekoflow/data/models/anime_interface.dart';
+import 'package:nekoflow/data/models/watchlist/watchlist_model.dart';
 
 class SpotlightAnime {
   final int rank;
@@ -6,10 +6,10 @@ class SpotlightAnime {
   final String name;
   final String description;
   final String poster;
-  final String jname;
-  final AnimeEpisodes episodes;
-  final String type;
-  final List<String> otherInfo;
+  final String? jname;
+  final AnimeEpisodes? episodes;
+  final String? type;
+  final List<String>? otherInfo;
 
   SpotlightAnime({
     required this.rank,
@@ -65,7 +65,7 @@ class TrendingAnime {
   }
 }
 
-class LatestEpisodeAnime implements Anime{
+class LatestEpisodeAnime implements BaseAnimeCard{
   @override
   final String id;
   @override
@@ -194,7 +194,7 @@ class TopAnime {
   }
 }
 
-class TopAiringAnime implements Anime {
+class TopAiringAnime implements BaseAnimeCard {
   @override
   final String id;
   @override
@@ -227,7 +227,7 @@ class TopAiringAnime implements Anime {
   }
 }
 
-class MostPopularAnime implements Anime {
+class MostPopularAnime implements BaseAnimeCard {
   @override
   final String id;
   @override
@@ -289,7 +289,7 @@ class MostFavoriteAnime {
   }
 }
 
-class LatestCompletedAnime implements Anime {
+class LatestCompletedAnime implements BaseAnimeCard {
   @override
   final String id;
   @override

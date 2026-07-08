@@ -8,7 +8,7 @@ import 'package:shimmer/shimmer.dart';
 
 class EpisodesList extends StatefulWidget {
   final String id;
-  final String title;
+  final String name;
   final String poster;
   final int rangeSize;
   final String type;
@@ -17,7 +17,7 @@ class EpisodesList extends StatefulWidget {
     super.key,
     required this.id,
     required this.poster,
-    required this.title,
+    required this.name,
     required this.type,
     this.rangeSize = 50,
   });
@@ -53,7 +53,7 @@ class _EpisodesListState extends State<EpisodesList> {
           favorites: [],
         );
 
-    final newItem = RecentlyWatchedItem(name: widget.title, poster: widget.poster, type: widget.type, id: widget.id);
+    final newItem = RecentlyWatchedItem(name: widget.name, poster: widget.poster, type: widget.type, id: widget.id);
 
     var recentlyWatched = watchlist.recentlyWatched ?? [];
     recentlyWatched = [
@@ -107,7 +107,7 @@ class _EpisodesListState extends State<EpisodesList> {
       MaterialPageRoute(
         builder: (context) => StreamScreen(
           id: widget.id,
-          name: widget.title,
+          name: widget.name,
           episodeId: episode.episodeId,
           poster: widget.poster,
           episode: episode.number,

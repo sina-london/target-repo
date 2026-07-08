@@ -57,7 +57,7 @@ class ResultCard extends StatelessWidget {
           context,
           MaterialPageRoute(
             builder: (context) => DetailsScreen(
-              title: anime.name,
+              name: anime.name,
               id: anime.id,
               image: anime.poster.replaceAll(RegExp(r'(\d+)x(\d+)'), '600x800'),
               tag: "result",
@@ -90,13 +90,13 @@ class ResultCard extends StatelessWidget {
                         loadingBuilder: (context, child, loadingProgress) {
                           if (loadingProgress == null) return child;
                           return _buildShimmerPlaceholder(
-                            width: screenSize.width * 0.25,
+                            width: screenSize.width * 0.35,
                             height: screenSize.width * 0.3,
                           );
                         },
                         errorBuilder: (context, error, stackTrace) =>
                             _buildShimmerPlaceholder(
-                          width: screenSize.width * 0.25,
+                          width: screenSize.width * 0.35,
                           height: screenSize.width * 0.3,
                         ),
                       ),

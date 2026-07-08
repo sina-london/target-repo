@@ -1,5 +1,4 @@
 import 'package:hive/hive.dart';
-import 'package:nekoflow/data/theme/theme_manager.dart';
 
 part 'settings_model.g.dart';
 

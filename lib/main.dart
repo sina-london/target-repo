@@ -1,4 +1,3 @@
-import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -7,7 +6,6 @@ import 'package:nekoflow/data/models/settings/settings_model.dart';
 import 'package:nekoflow/data/models/watchlist/watchlist_model.dart';
 import 'package:nekoflow/data/theme/theme_manager.dart';
 import 'package:nekoflow/routes/app_router.dart';
-import 'package:nekoflow/screens/onboarding/onboarding_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -69,7 +67,7 @@ class _MainAppState extends State<MainApp> {
         // Update theme when 'theme' value changes in settingsBox
         _theme = ThemeManager.getThemeType(
                 box.get('theme')?.theme ?? _theme.toString()) ??
-            ThemeType.light;
+            ThemeType.dark;
 
         return MaterialApp(
           debugShowCheckedModeBanner: false,
