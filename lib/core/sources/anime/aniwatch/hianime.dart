@@ -115,15 +115,13 @@ class HiAnimeProvider extends AnimeProvider {
   @override
   Future<BaseSourcesModel> getSources(String animeId, String episodeId,
       String? serverName, String? category) async {
-    final actualAnimeId = episodeId.split('?').first;
-    final actualEpisodeId = episodeId.split('?').last.split('=').last;
     AppLogger.d(
-        'Fetching sources for animeId: $actualAnimeId, episodeId: $actualEpisodeId, server: $serverName, category: $category');
+        'Fetching sources for animeId: $animeId, episodeId: $episodeId, server: $serverName, category: $category');
     final response = await http.get(
       Uri.parse(
-          'https://yumaapi.vercel.app/watch?episodeId=$actualAnimeId\$episode\$$actualEpisodeId&type=dub&server=$serverName'),
+          'https://shonenx-aniwatch-instance.vercel.app/api/v2/hianime/episode/sources?animeEpisodeId=$episodeId&server=$serverName&category=${category ?? 'sub'}'),
     );
-    final data = jsonDecode(response.body);
+    final data = jsonDecode(response.body)['data'];
     AppLogger.w(data.toString());
 
     return BaseSourcesModel(
@@ -145,37 +143,6 @@ class HiAnimeProvider extends AnimeProvider {
               [],
     );
   }
-  // @override
-  // Future<BaseSourcesModel> getSources(String animeId, String episodeId,
-  //     String? serverName, String? category) async {
-  //   AppLogger.d(
-  //       'Fetching sources for animeId: $animeId, episodeId: $episodeId, server: $serverName, category: $category');
-  //   final response = await http.get(
-  //     Uri.parse(
-  //         'https://shonenx-aniwatch-instance.vercel.app/api/v2/hianime/episode/sources?animeEpisodeId=$episodeId&server=$serverName&category=${category ?? 'sub'}'),
-  //   );
-  //   final data = jsonDecode(response.body)['data'];
-  //   AppLogger.w(data.toString());
-
-  //   return BaseSourcesModel(
-  //     sources: (data['sources'] as List<dynamic>)
-  //         .map((source) => Source(
-  //               url: source['url'],
-  //               isM3U8: source['isM3U8'],
-  //               quality: source[
-  //                   'quality'], // this might be null — handle it if needed
-  //             ))
-  //         .toList(),
-  //     tracks:
-  //         (data['tracks'] as List<dynamic>?) // ✅ was 'subtitles', now 'tracks'
-  //                 ?.map((track) => Subtitle(
-  //                       url: track['url'],
-  //                       lang: track['lang'],
-  //                     ))
-  //                 .toList() ??
-  //             [],
-  //   );
-  // }
 
   @override
   Future<SearchPage> getSearch(String keyword, String? type, int page) async {
@@ -215,7 +182,7 @@ class HiAnimeProvider extends AnimeProvider {
 
   @override
   List<String> getSupportedServers() {
-    return ["vidcloud", "megacloud"];
+    return ["hd-1", "hd-2"];
   }
 
   @override

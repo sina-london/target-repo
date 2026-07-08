@@ -1,3 +1,4 @@
+import 'dart:developer';
 import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -8,10 +9,7 @@ import 'package:shonenx/core/anilist/services/anilist_service.dart';
 import 'package:shonenx/core/models/anilist/fuzzy_date.dart';
 import 'package:shonenx/core/models/anilist/media.dart';
 import 'package:shonenx/core/services/auth_provider_enum.dart';
-import 'package:shonenx/core/utils/app_logger.dart';
 import 'package:shonenx/features/auth/view_model/auth_notifier.dart';
-import 'package:shonenx/features/watchlist/view_model/watchlist_notifier.dart';
-import 'package:collection/collection.dart';
 
 /// Bottom sheet for editing anime list entry
 class EditListBottomSheet extends ConsumerStatefulWidget {
@@ -46,7 +44,6 @@ class _EditListBottomSheetState extends ConsumerState<EditListBottomSheet> {
   DateTime? _completedDate;
   late bool _isPrivate;
   bool _isSaving = false;
-  bool _isFetching = true;
 
   @override
   void initState() {
@@ -56,7 +53,6 @@ class _EditListBottomSheetState extends ConsumerState<EditListBottomSheet> {
     _scoreController = TextEditingController(text: '0');
     _repeatsController = TextEditingController(text: '0');
     _notesController = TextEditingController();
-    _fetchEntry(ref);
     _isPrivate = false;
   }
 
@@ -69,43 +65,6 @@ class _EditListBottomSheetState extends ConsumerState<EditListBottomSheet> {
     super.dispose();
   }
 
-  Future<void> _fetchEntry(WidgetRef ref) async {
-    setState(() {
-      _isFetching = true;
-    });
-    final auth = ref.read(authProvider);
-    if (auth.authPlatform == null) {
-      _showSnackBar('Login Required', 'Sar plz login!', ContentType.failure);
-      return;
-    }
-    final watchlist = ref.read(watchlistProvider);
-    final watchlistNotifier = ref.read(watchlistProvider.notifier);
-
-    switch (auth.authPlatform!) {
-      case AuthPlatform.anilist:
-        {
-          final entries = watchlist.lists.entries;
-          final entry = entries.map((entry) => entry.value.firstWhereOrNull((media) => media.id == widget.anime.id!));
-          // Todo: Entry sync load
-          if (entry.isNotEmpty ) {
-            AppLogger.d('Entry is already in list');
-            return;
-          }
-          AppLogger.d('Entry is being fetched');
-          break;
-        }
-      case AuthPlatform.mal:
-        {
-          _showSnackBar(
-            'Info',
-            'MAL support not implemented yet.',
-            ContentType.warning,
-          );
-          break;
-        }
-    }
-  }
-
   Future<void> _saveChanges(WidgetRef ref) async {
     final auth = ref.read(authProvider);
     if (auth.authPlatform == null) {
@@ -116,6 +75,17 @@ class _EditListBottomSheetState extends ConsumerState<EditListBottomSheet> {
     setState(() => _isSaving = true);
 
     try {
+      log('--- Saving Anime Status ---');
+      log('Status: $_selectedStatus');
+      log('Progress: ${_progressController.text}');
+      log('Score: ${_scoreController.text}');
+      log('Start Date: $_startDate');
+      log('Completed Date: $_completedDate');
+      log('Repeats: ${_repeatsController.text}');
+      log('Private: $_isPrivate');
+      log('Notes: ${_notesController.text}');
+
+      // Safe parsing with defaults
       final score = double.tryParse(_scoreController.text) ?? 0.0;
       final progress = int.tryParse(_progressController.text) ?? 0;
       final repeats = int.tryParse(_repeatsController.text) ?? 0;
@@ -161,7 +131,7 @@ class _EditListBottomSheetState extends ConsumerState<EditListBottomSheet> {
         Navigator.pop(context);
       }
     } catch (e, st) {
-      AppLogger.e('Error while saving anime list: $e\n$st');
+      log('Error while saving anime list: $e\n$st');
       _showSnackBar(
         'Error',
         'Failed to update anime list. Please try again.',
