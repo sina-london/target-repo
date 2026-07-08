@@ -52,8 +52,8 @@ class AboutScreen extends StatelessWidget {
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: [
-                theme.colorScheme.primary,
-                theme.colorScheme.primary.withOpacity(0.8),
+                theme.colorScheme.primaryContainer,
+                theme.colorScheme.primaryContainer.withOpacity(0.8),
               ],
             ),
           ),
@@ -109,11 +109,12 @@ class AboutScreen extends StatelessWidget {
                 children: [
                   CircleAvatar(
                     radius: 30,
-                    backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
+                    backgroundColor:
+                        theme.colorScheme.primaryContainer.withOpacity(0.1),
                     child: Icon(
                       Iconsax.code_circle,
                       size: 32,
-                      color: theme.colorScheme.primary,
+                      color: theme.colorScheme.primaryContainer,
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -183,13 +184,13 @@ class AboutScreen extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: theme.colorScheme.primary.withOpacity(0.1),
+          color: theme.colorScheme.primaryContainer.withOpacity(0.1),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Icon(
           icon,
           size: 20,
-          color: theme.colorScheme.primary,
+          color: theme.colorScheme.primaryContainer,
         ),
       ),
     );
@@ -205,13 +206,13 @@ class AboutScreen extends StatelessWidget {
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
-            color: theme.colorScheme.primary,
+            color: theme.colorScheme.primaryContainer,
           ),
         ),
         const SizedBox(width: 12),
         Expanded(
           child: Divider(
-            color: theme.colorScheme.primary.withOpacity(0.2),
+            color: theme.colorScheme.primaryContainer.withOpacity(0.2),
             thickness: 1,
           ),
         ),
@@ -289,7 +290,7 @@ class AboutScreen extends StatelessWidget {
         side: BorderSide(
           color: item.disabled
               ? Colors.grey.withOpacity(0.2)
-              : colorScheme.primary.withOpacity(0.2),
+              : colorScheme.primaryContainer.withOpacity(0.2),
           width: 1,
         ),
       ),
@@ -305,13 +306,15 @@ class AboutScreen extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: item.disabled
                       ? Colors.grey.withOpacity(0.1)
-                      : colorScheme.primary.withOpacity(0.1),
+                      : colorScheme.primaryContainer.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
                   item.icon,
                   size: 20,
-                  color: item.disabled ? Colors.grey : colorScheme.primary,
+                  color: item.disabled
+                      ? Colors.grey
+                      : colorScheme.primaryContainer,
                 ),
               ),
               const SizedBox(width: 16),
@@ -363,7 +366,7 @@ class AboutScreen extends StatelessWidget {
             Icon(
               Iconsax.heart,
               size: 16,
-              color: Theme.of(context).colorScheme.primary,
+              color: Theme.of(context).colorScheme.primaryContainer,
             ),
             const SizedBox(width: 8),
             const Text(

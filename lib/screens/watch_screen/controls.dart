@@ -60,7 +60,7 @@ class _CustomControlsState extends ConsumerState<CustomControls> {
 
   bool _controlsVisible = true;
   Timer? _hideControlsTimer;
-  bool _isFullscreen = false;
+  bool _isFullscreen = (Platform.isAndroid && Platform.isIOS ? true : false);
   late GestureHandler _gestureHandler;
   late OverlayManager _overlayManager;
 

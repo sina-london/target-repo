@@ -791,8 +791,10 @@ class _WatchButton extends ConsumerWidget {
             ),
             child: Row(
               children: [
-                Icon(Iconsax.play_circle,
-                    color: colorScheme.onPrimaryContainer, size: 24),
+                isLoading
+                    ? CircularProgressIndicator()
+                    : Icon(Iconsax.play_circle,
+                        color: colorScheme.onPrimaryContainer, size: 24),
                 const SizedBox(width: 8),
                 Text('Watch Now',
                     style: theme.textTheme.labelLarge?.copyWith(

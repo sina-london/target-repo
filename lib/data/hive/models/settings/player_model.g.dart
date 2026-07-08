@@ -31,13 +31,17 @@ class PlayerSettingsAdapter extends TypeAdapter<PlayerSettings> {
       defaultPlaybackSpeed: fields[11] as double,
       skipIntro: fields[12] as bool,
       skipOutro: fields[13] as bool,
+      subtitleBoldText: fields[14] as bool,
+      subtitleForceUppercase: fields[15] as bool,
+      showRemainingTime: fields[16] as bool,
+      showNextEpisodeAutoPlay: fields[17] as bool,
     );
   }
 
   @override
   void write(BinaryWriter writer, PlayerSettings obj) {
     writer
-      ..writeByte(14)
+      ..writeByte(18)
       ..writeByte(0)
       ..write(obj.episodeCompletionThreshold)
       ..writeByte(1)
@@ -65,7 +69,15 @@ class PlayerSettingsAdapter extends TypeAdapter<PlayerSettings> {
       ..writeByte(12)
       ..write(obj.skipIntro)
       ..writeByte(13)
-      ..write(obj.skipOutro);
+      ..write(obj.skipOutro)
+      ..writeByte(14)
+      ..write(obj.subtitleBoldText)
+      ..writeByte(15)
+      ..write(obj.subtitleForceUppercase)
+      ..writeByte(16)
+      ..write(obj.showRemainingTime)
+      ..writeByte(17)
+      ..write(obj.showNextEpisodeAutoPlay);
   }
 
   @override

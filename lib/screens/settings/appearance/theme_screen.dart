@@ -91,8 +91,8 @@ class ThemeSettingsScreen extends ConsumerWidget {
               value: settings.themeMode != 'light',
               onChanged: (value) => notifier.updateField(
                   (prev) => prev.copyWith(themeMode: value ? 'dark' : 'light')),
-              activeColor: colorScheme.primary,
-              activeTrackColor: colorScheme.primary.withOpacity(0.5),
+              activeColor: colorScheme.primaryContainer,
+              activeTrackColor: colorScheme.primaryContainer.withOpacity(0.5),
             ),
             onTap: () {},
           ),
@@ -105,8 +105,8 @@ class ThemeSettingsScreen extends ConsumerWidget {
                 value: settings.amoled,
                 onChanged: (value) => notifier
                     .updateField((prev) => prev.copyWith(amoled: value)),
-                activeColor: colorScheme.primary,
-                activeTrackColor: colorScheme.primary.withOpacity(0.5),
+                activeColor: colorScheme.primaryContainer,
+                activeTrackColor: colorScheme.primaryContainer.withOpacity(0.5),
               ),
               onTap: () {},
             ),
@@ -123,8 +123,8 @@ class ThemeSettingsScreen extends ConsumerWidget {
               value: settings.useMaterial3,
               onChanged: (value) => notifier
                   .updateField((prev) => prev.copyWith(useMaterial3: value)),
-              activeColor: colorScheme.primary,
-              activeTrackColor: colorScheme.primary.withOpacity(0.5),
+              activeColor: colorScheme.primaryContainer,
+              activeTrackColor: colorScheme.primaryContainer.withOpacity(0.5),
             ),
             onTap: () {},
           ),
@@ -136,8 +136,8 @@ class ThemeSettingsScreen extends ConsumerWidget {
               value: settings.useSubThemes,
               onChanged: (value) => notifier
                   .updateField((prev) => prev.copyWith(useSubThemes: value)),
-              activeColor: colorScheme.primary,
-              activeTrackColor: colorScheme.primary.withOpacity(0.5),
+              activeColor: colorScheme.primaryContainer,
+              activeTrackColor: colorScheme.primaryContainer.withOpacity(0.5),
             ),
             onTap: () {},
           ),
@@ -148,28 +148,28 @@ class ThemeSettingsScreen extends ConsumerWidget {
         items: [
           SettingItemConfig(
             title: 'Swap Light Colors',
-            description: 'Swap primary/secondary in light mode',
+            description: 'Swap primaryContainer/secondary in light mode',
             icon: Iconsax.arrange_square,
             trailing: Switch(
               value: settings.swapLightColors,
               onChanged: (value) => notifier
                   .updateField((prev) => prev.copyWith(swapLightColors: value)),
-              activeColor: colorScheme.primary,
-              activeTrackColor: colorScheme.primary.withOpacity(0.5),
+              activeColor: colorScheme.primaryContainer,
+              activeTrackColor: colorScheme.primaryContainer.withOpacity(0.5),
             ),
             onTap: () {},
           ),
           if (settings.themeMode != 'light')
             SettingItemConfig(
               title: 'Swap Dark Colors',
-              description: 'Swap primary/secondary in dark mode',
+              description: 'Swap primaryContainer/secondary in dark mode',
               icon: Iconsax.arrange_square,
               trailing: Switch(
                 value: settings.swapDarkColors,
                 onChanged: (value) => notifier.updateField(
                     (prev) => prev.copyWith(swapDarkColors: value)),
-                activeColor: colorScheme.primary,
-                activeTrackColor: colorScheme.primary.withOpacity(0.5),
+                activeColor: colorScheme.primaryContainer,
+                activeTrackColor: colorScheme.primaryContainer.withOpacity(0.5),
               ),
               onTap: () {},
             ),
@@ -181,8 +181,8 @@ class ThemeSettingsScreen extends ConsumerWidget {
           //     value: settings.useKeyColors,
           //     onChanged: (value) => notifier
           //         .updateField((prev) => prev.copyWith(useKeyColors: value)),
-          //     activeColor: colorScheme.primary,
-          //     activeTrackColor: colorScheme.primary.withOpacity(0.5),
+          //     activeColor: colorScheme.primaryContainer,
+          //     activeTrackColor: colorScheme.primaryContainer.withOpacity(0.5),
           //   ),
           //   onTap: () {},
           // ),
@@ -194,8 +194,8 @@ class ThemeSettingsScreen extends ConsumerWidget {
           //     value: settings.useTertiary,
           //     onChanged: (value) => notifier
           //         .updateField((prev) => prev.copyWith(useTertiary: value)),
-          //     activeColor: colorScheme.primary,
-          //     activeTrackColor: colorScheme.primary.withOpacity(0.5),
+          //     activeColor: colorScheme.primaryContainer,
+          //     activeTrackColor: colorScheme.primaryContainer.withOpacity(0.5),
           //   ),
           //   onTap: () {},
           // ),
@@ -241,8 +241,8 @@ class ThemeSettingsScreen extends ConsumerWidget {
               value: settings.useAppbarColors,
               onChanged: (value) => notifier
                   .updateField((prev) => prev.copyWith(useAppbarColors: value)),
-              activeColor: colorScheme.primary,
-              activeTrackColor: colorScheme.primary.withOpacity(0.5),
+              activeColor: colorScheme.primaryContainer,
+              activeTrackColor: colorScheme.primaryContainer.withOpacity(0.5),
             ),
             onTap: () {},
           ),
@@ -284,8 +284,8 @@ class ThemeSettingsScreen extends ConsumerWidget {
               value: settings.transparentStatusBar,
               onChanged: (value) => notifier.updateField(
                   (prev) => prev.copyWith(transparentStatusBar: value)),
-              activeColor: colorScheme.primary,
-              activeTrackColor: colorScheme.primary.withOpacity(0.5),
+              activeColor: colorScheme.primaryContainer,
+              activeTrackColor: colorScheme.primaryContainer.withOpacity(0.5),
             ),
             onTap: () {},
           ),
@@ -311,8 +311,8 @@ class ThemeSettingsScreen extends ConsumerWidget {
               value: settings.tooltipsMatchBackground,
               onChanged: (value) => notifier.updateField(
                   (prev) => prev.copyWith(tooltipsMatchBackground: value)),
-              activeColor: colorScheme.primary,
-              activeTrackColor: colorScheme.primary.withOpacity(0.5),
+              activeColor: colorScheme.primaryContainer,
+              activeTrackColor: colorScheme.primaryContainer.withOpacity(0.5),
             ),
             onTap: () {},
           ),
@@ -329,8 +329,8 @@ class ThemeSettingsScreen extends ConsumerWidget {
               value: settings.useTextTheme,
               onChanged: (value) => notifier
                   .updateField((prev) => prev.copyWith(useTextTheme: value)),
-              activeColor: colorScheme.primary,
-              activeTrackColor: colorScheme.primary.withOpacity(0.5),
+              activeColor: colorScheme.primaryContainer,
+              activeTrackColor: colorScheme.primaryContainer.withOpacity(0.5),
             ),
             onTap: () {},
           ),
@@ -406,7 +406,7 @@ class SettingsSection extends StatelessWidget {
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w700,
-            color: colorScheme.primary,
+            color: colorScheme.primaryContainer,
           ),
         ),
         initiallyExpanded: title == 'Theme',
@@ -433,8 +433,8 @@ class SettingsSection extends StatelessWidget {
           SliderTheme(
             data: SliderThemeData(
               trackHeight: 2,
-              thumbColor: colorScheme.primary,
-              activeTrackColor: colorScheme.primary,
+              thumbColor: colorScheme.primaryContainer,
+              activeTrackColor: colorScheme.primaryContainer,
               inactiveTrackColor: colorScheme.surfaceContainerHighest,
             ),
             child: Slider(
@@ -560,13 +560,14 @@ class _SimpleColorSchemeCard extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? colorScheme.primary : Colors.transparent,
+            color:
+                isSelected ? colorScheme.primaryContainer : Colors.transparent,
             width: 2,
           ),
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                      color: colorScheme.primary.withOpacity(0.2),
+                      color: colorScheme.primaryContainer.withOpacity(0.2),
                       blurRadius: 6)
                 ]
               : null,
@@ -581,7 +582,7 @@ class _SimpleColorSchemeCard extends StatelessWidget {
                   width: 20,
                   height: 20,
                   decoration: BoxDecoration(
-                    color: schemeData.primary,
+                    color: schemeData.primaryContainer,
                     shape: BoxShape.circle,
                   ),
                 ),

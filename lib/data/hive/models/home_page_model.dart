@@ -52,7 +52,7 @@ class HomePageModel {
 
         return list
             .whereType<Map>()
-            .map((item) => Media.fromJson(convertToStringKeys(item as Map)))
+            .map((item) => Media.fromJson(convertToStringKeys(item)))
             .toList();
       } catch (e, st) {
         print("⚠️ Failed to parse $label: $e");

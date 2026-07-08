@@ -1,6 +1,3 @@
-// ignore_for_file: public_member_api_docs, sort_constructors_first
-
-
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -14,6 +11,8 @@ class SubtitleStyle {
   final double shadowBlur;
   final String? fontFamily;
   final int position;
+  final bool boldText;
+  final bool forceUppercase;
 
   SubtitleStyle({
     required this.fontSize,
@@ -24,6 +23,8 @@ class SubtitleStyle {
     this.shadowBlur = 2.0,
     this.fontFamily,
     this.position = 2,
+    required this.boldText,
+    required this.forceUppercase,
   });
 
   SubtitleStyle copyWith({
@@ -35,6 +36,8 @@ class SubtitleStyle {
     double? shadowBlur,
     String? fontFamily,
     int? position,
+    bool? boldText,
+    bool? forceUppercase,
   }) {
     return SubtitleStyle(
       fontSize: fontSize ?? this.fontSize,
@@ -45,6 +48,8 @@ class SubtitleStyle {
       shadowBlur: shadowBlur ?? this.shadowBlur,
       fontFamily: fontFamily ?? this.fontFamily,
       position: position ?? this.position,
+      boldText: boldText ?? this.boldText,
+      forceUppercase: forceUppercase ?? this.forceUppercase,
     );
   }
 
@@ -58,6 +63,8 @@ class SubtitleStyle {
       'shadowBlur': shadowBlur,
       'fontFamily': fontFamily,
       'position': position,
+      'boldText': boldText,
+      'forceUppercase': forceUppercase,
     };
   }
 
@@ -71,6 +78,8 @@ class SubtitleStyle {
       shadowBlur: map['shadowBlur'] as double,
       fontFamily: map['fontFamily'] != null ? map['fontFamily'] as String : null,
       position: map['position'] as int,
+      boldText: map['boldText'] as bool,
+      forceUppercase: map['forceUppercase'] as bool,
     );
   }
 
@@ -80,7 +89,7 @@ class SubtitleStyle {
 
   @override
   String toString() {
-    return 'SubtitleStyle(fontSize: $fontSize, textColor: $textColor, backgroundOpacity: $backgroundOpacity, hasShadow: $hasShadow, shadowOpacity: $shadowOpacity, shadowBlur: $shadowBlur, fontFamily: $fontFamily, position: $position)';
+    return 'SubtitleStyle(fontSize: $fontSize, textColor: $textColor, backgroundOpacity: $backgroundOpacity, hasShadow: $hasShadow, shadowOpacity: $shadowOpacity, shadowBlur: $shadowBlur, fontFamily: $fontFamily, position: $position, boldText: $boldText, forceUppercase: $forceUppercase)';
   }
 
   @override
@@ -95,7 +104,9 @@ class SubtitleStyle {
       other.shadowOpacity == shadowOpacity &&
       other.shadowBlur == shadowBlur &&
       other.fontFamily == fontFamily &&
-      other.position == position;
+      other.position == position &&
+      other.boldText == boldText &&
+      other.forceUppercase == forceUppercase;
   }
 
   @override
@@ -107,6 +118,8 @@ class SubtitleStyle {
       shadowOpacity.hashCode ^
       shadowBlur.hashCode ^
       fontFamily.hashCode ^
-      position.hashCode;
+      position.hashCode ^
+      boldText.hashCode ^
+      forceUppercase.hashCode;
   }
 }

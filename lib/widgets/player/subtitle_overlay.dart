@@ -5,36 +5,51 @@ class SubtitleOverlay extends StatelessWidget {
   final String subtitle;
   final SubtitleStyle subtitleStyle;
 
-  const SubtitleOverlay(
-      {super.key, required this.subtitle, required this.subtitleStyle});
+  const SubtitleOverlay({
+    super.key,
+    required this.subtitle,
+    required this.subtitleStyle,
+  });
 
   @override
   Widget build(BuildContext context) {
     if (subtitle.isEmpty) return const SizedBox.shrink();
 
-    final theme = Theme.of(context);
-
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.black.withOpacity(subtitleStyle.backgroundOpacity),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Text(
-        subtitle,
-        textAlign: TextAlign.center,
-        style: theme.textTheme.titleMedium?.copyWith(
-          color: subtitleStyle.textColor,
-          fontSize: subtitleStyle.fontSize,
-          shadows: [
-            if (subtitleStyle.hasShadow)
-              Shadow(
-                color: Colors.black.withOpacity(0.8),
-                offset: const Offset(0.5, 0.5),
-                blurRadius: 2,
-              ),
-          ],
+    return Align(
+      alignment: subtitleStyle.position == 0
+          ? Alignment.topCenter
+          : subtitleStyle.position == 1
+              ? Alignment.center
+              : Alignment.bottomCenter,
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        padding: EdgeInsets.all(subtitleStyle.backgroundOpacity > 0 ? 8 : 4),
+        decoration: BoxDecoration(
+          color: Colors.black.withOpacity(subtitleStyle.backgroundOpacity),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Text(
+          subtitleStyle.forceUppercase ? subtitle.toUpperCase() : subtitle,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: subtitleStyle.fontSize,
+            color: subtitleStyle.textColor,
+            fontWeight:
+                subtitleStyle.boldText ? FontWeight.bold : FontWeight.normal,
+            fontFamily: subtitleStyle.fontFamily != 'Default'
+                ? subtitleStyle.fontFamily
+                : null,
+            shadows: subtitleStyle.hasShadow
+                ? [
+                    Shadow(
+                      color:
+                          Colors.black.withOpacity(subtitleStyle.shadowOpacity),
+                      offset: const Offset(1, 1),
+                      blurRadius: subtitleStyle.shadowBlur,
+                    ),
+                  ]
+                : null,
+          ),
         ),
       ),
     );

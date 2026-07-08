@@ -186,7 +186,7 @@ class _ContinueWatchingContent extends ConsumerWidget {
               child: Icon(
                 Iconsax.video_slash,
                 size: 64,
-                color: colorScheme.primary.withOpacity(0.7),
+                color: colorScheme.primaryContainer.withOpacity(0.7),
               ),
             ),
             const SizedBox(height: 24),
@@ -233,7 +233,7 @@ class _ContinueWatchingContent extends ConsumerWidget {
       onRefresh: () async {
         await Future.delayed(const Duration(seconds: 1));
       },
-      color: colorScheme.primary,
+      color: colorScheme.primaryContainer,
       child: CustomScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         slivers: [
@@ -359,7 +359,7 @@ class _WatchStats extends StatelessWidget {
             children: [
               Icon(
                 Iconsax.chart_success,
-                color: colorScheme.primary,
+                color: colorScheme.primaryContainer,
                 size: 18,
               ),
               const SizedBox(width: 8),
@@ -500,12 +500,12 @@ class _AnimeSeriesCard extends StatelessWidget {
                   child: Container(
                     padding: const EdgeInsets.all(4),
                     decoration: BoxDecoration(
-                      color: colorScheme.primary,
+                      color: colorScheme.primaryContainer,
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
                       Iconsax.tick_circle,
-                      color: colorScheme.onPrimary,
+                      color: colorScheme.onPrimaryContainer,
                       size: 12,
                     ),
                   ),
@@ -683,7 +683,7 @@ class _EpisodeCard extends StatelessWidget {
               if (episode.isCompleted)
                 Icon(
                   Iconsax.tick_circle,
-                  color: colorScheme.primary,
+                  color: colorScheme.primaryContainer,
                   size: 20,
                 ),
             ],
@@ -730,7 +730,8 @@ class _ProgressIndicator extends StatelessWidget {
         child: LinearProgressIndicator(
           value: progress,
           backgroundColor: colorScheme.surfaceContainerHighest,
-          valueColor: AlwaysStoppedAnimation<Color>(colorScheme.primary),
+          valueColor:
+              AlwaysStoppedAnimation<Color>(colorScheme.primaryContainer),
         ),
       ),
     );

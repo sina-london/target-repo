@@ -114,7 +114,7 @@ class DefaultCard extends StatelessWidget {
             Container(
               decoration: BoxDecoration(
                 border: Border.all(
-                  color: theme.colorScheme.primary.withOpacity(0.5),
+                  color: theme.colorScheme.primaryContainer.withOpacity(0.5),
                   width: 2,
                 ),
                 borderRadius: (theme.cardTheme.shape as RoundedRectangleBorder?)

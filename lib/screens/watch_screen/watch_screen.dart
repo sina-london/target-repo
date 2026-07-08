@@ -1,6 +1,7 @@
 import 'dart:async';
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 import 'package:shonenx/core/models/anilist/anilist_media_list.dart'
@@ -45,8 +46,9 @@ class _WatchScreenState extends ConsumerState<WatchScreen>
   @override
   void initState() {
     super.initState();
-
+    // Setup orientation
     _setupOrientation();
+    // Initialize animation controller
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 300),
       vsync: this,
@@ -58,10 +60,8 @@ class _WatchScreenState extends ConsumerState<WatchScreen>
 
   Future<void> _setupOrientation() async {
     if (!mounted) return;
-    await SystemChrome.setPreferredOrientations([
-      DeviceOrientation.landscapeLeft,
-      DeviceOrientation.landscapeRight,
-    ]);
+    await UIHelper.forceLandscape();
+    await UIHelper.enableImmersiveMode();
   }
 
   Future<void> _initializeAsync() async {
@@ -135,8 +135,9 @@ class _WatchScreenState extends ConsumerState<WatchScreen>
 
   Future<void> _resetOrientationAndUI() async {
     if (!mounted) return;
-    await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-    await windowManager.setFullScreen(false);
+    if (!kIsWeb && !Platform.isAndroid && !Platform.isIOS) {
+      await windowManager.setFullScreen(false);
+    }
     await UIHelper.enableAutoRotate();
     await UIHelper.exitImmersiveMode();
   }

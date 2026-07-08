@@ -45,6 +45,11 @@ class _LoadingScreenState extends ConsumerState<LoadingScreen>
     '"Never give up!" - Naruto',
     '"The future is now!" - One Piece',
     '"Dreams come true!" - Fairy Tail',
+    '"The only limit is the one you set yourself." - My Hero Academia',
+    '"Sometimes you have to do what you fear most." - Attack on Titan',
+    '"Strive to be the best version of yourself!" - Demon Slayer',
+    '"In our darkest hour, we find the strength to shine." - Bleach',
+    '"Fight for what is right, no matter the cost." - Fullmetal Alchemist',
   ];
 
   @override
@@ -308,7 +313,7 @@ class _LoadingScreenState extends ConsumerState<LoadingScreen>
         _buildAccentCircle(
           top: -size.width * 0.15,
           right: -size.width * 0.15,
-          color: colorScheme.primary,
+          color: colorScheme.primaryContainer,
           size: size.width * 0.4,
         ),
         _buildAccentCircle(
@@ -390,14 +395,14 @@ class _LoadingScreenState extends ConsumerState<LoadingScreen>
         return Transform.scale(
           scale: _pulseAnimation.value,
           child: Container(
-            width: 140,
-            height: 140,
+            width: 120,
+            height: 120,
             decoration: BoxDecoration(
               color: colorScheme.surface,
               borderRadius: BorderRadius.circular(32),
               boxShadow: [
                 BoxShadow(
-                  color: colorScheme.primary.withOpacity(0.15),
+                  color: colorScheme.primaryContainer.withOpacity(0.15),
                   blurRadius: 30,
                   spreadRadius: 5,
                   offset: const Offset(0, 8),
@@ -420,7 +425,7 @@ class _LoadingScreenState extends ConsumerState<LoadingScreen>
                     return Icon(
                       Icons.play_circle_filled,
                       size: 90,
-                      color: colorScheme.primary,
+                      color: colorScheme.primaryContainer,
                     );
                   },
                 ),
@@ -467,7 +472,7 @@ class _LoadingScreenState extends ConsumerState<LoadingScreen>
     return Text(
       _quotes[_currentQuoteIndex],
       style: TextStyle(
-        color: colorScheme.primary.withOpacity(0.8),
+        color: colorScheme.onSurface.withOpacity(0.8),
         fontSize: 14,
         fontStyle: FontStyle.italic,
         letterSpacing: 0.3,
@@ -524,8 +529,8 @@ class _LoadingScreenState extends ConsumerState<LoadingScreen>
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      colorScheme.primary,
-                      colorScheme.primary.withOpacity(0.8),
+                      colorScheme.primaryContainer,
+                      colorScheme.primaryContainer.withOpacity(0.8),
                     ],
                   ),
                   borderRadius: BorderRadius.circular(3),
