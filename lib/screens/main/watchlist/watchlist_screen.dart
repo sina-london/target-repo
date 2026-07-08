@@ -32,12 +32,10 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
 
       final recentWatchlist = _watchlistBox.get('recentlyWatched');
       final favouriteWatchlist = _watchlistBox.get('favorites');
-      if (recentWatchlist != null && favouriteWatchlist != null) {
-        setState(() {
-          _recentlyWatched = recentWatchlist.recentlyWatched ?? [];
-          _favorites =favouriteWatchlist.favorites ?? [];
-        });
-      }
+      setState(() {
+        _recentlyWatched = recentWatchlist?.recentlyWatched ?? [];
+        _favorites = favouriteWatchlist?.favorites ?? [];
+      });
     } catch (e) {
       debugPrint('Error loading watchlist: $e');
     } finally {
@@ -80,7 +78,7 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
               // const SizedBox(height: 24),
               _buildSectionTitle("Favorites"),
               const SizedBox(height: 8),
-               _isLoading
+              _isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : _favorites.isEmpty
                       ? const Center(
@@ -98,11 +96,13 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          title,
-          style: Theme.of(context).textTheme.titleLarge
-        ),
-        IconButton(onPressed: (){}, icon: Icon(Icons.navigate_next, size: 35,))
+        Text(title, style: Theme.of(context).textTheme.titleLarge),
+        IconButton(
+            onPressed: () {},
+            icon: Icon(
+              Icons.navigate_next,
+              size: 35,
+            ))
       ],
     );
   }
@@ -158,7 +158,6 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
                   ),
-
                 ),
               ],
             ),
