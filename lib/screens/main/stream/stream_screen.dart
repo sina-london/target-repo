@@ -40,6 +40,7 @@ class _StreamScreenState extends State<StreamScreen> {
   final _serversCache = <String, EpisodeServersModel>{};
   final _linksCache = <String, EpisodeStreamingLinksModel>{};
   late final WatchlistBox _watchlistBox;
+  late ContinueWatchingItem? _continueWatchingItem;
 
   BetterPlayerController? _playerController;
   String _selectedServer = defaultServer;
@@ -61,57 +62,12 @@ class _StreamScreenState extends State<StreamScreen> {
     _watchlistBox = WatchlistBox();
     await _watchlistBox.init();
 
-    final continueWatching = _watchlistBox.getContinueWatchingById(widget.id);
-    if (continueWatching?.episodeId == widget.episodeId) {
-      if (!mounted) return;
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(15),
-          ),
-          title: Text(
-            'Continue Watching',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-          ),
-          content: Text(
-            'Continue where you left off?',
-            style: Theme.of(context).textTheme.bodyLarge,
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text(
-                'Cancel',
-                style: TextStyle(color: Colors.grey),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                _currentPosition = continueWatching!.timestamp;
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.primary,
-                foregroundColor: Theme.of(context).colorScheme.onSurface,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: const Text('Continue'),
-            ),
-          ],
-        ),
-      );
-    }
-
     await _loadInitialData();
   }
 
   Future<void> _loadInitialData() async {
     try {
+      _continueWatchingItem = _watchlistBox.getContinueWatchingById(widget.id);
       await Future.wait([
         _fetchEpisodeServers(widget.episodeId),
         _fetchStreamingLinks(widget.episodeId),
@@ -179,9 +135,13 @@ class _StreamScreenState extends State<StreamScreen> {
     try {
       _playerController?.dispose();
       _playerController = null;
-
+      final parts = _currentPosition.split(':');
       final controller = BetterPlayerController(
         BetterPlayerConfiguration(
+          startAt: Duration(
+            minutes: int.parse(parts[1]),
+            seconds: double.parse(parts[2]).floor(),
+          ),
           autoPlay: true,
           fit: BoxFit.contain,
           deviceOrientationsOnFullScreen: const [
@@ -242,25 +202,75 @@ class _StreamScreenState extends State<StreamScreen> {
         ),
       );
 
-      controller.addEventsListener(_onPlayerEvent);
+      await _watchlistBox.addToRecentlyWatched(
+        RecentlyWatchedItem(
+            name: widget.name, poster: widget.poster, id: widget.id),
+      );
 
-      if (_currentPosition != '0:00:00.000000') {
-        final parts = _currentPosition.split(':');
-        if (parts.length >= 3) {
-          final duration = Duration(
-            hours: int.parse(parts[0]),
-            minutes: int.parse(parts[1]),
-            seconds: double.parse(parts[2]).floor(),
-            milliseconds: ((double.parse(parts[2]) % 1) * 1000).round(),
-          );
-          await controller.seekTo(duration);
-        }
-      }
+      controller.addEventsListener(_onPlayerEvent);
 
       setState(() => _playerController = controller);
     } finally {
-      _playerController?.pause();
-      if (mounted) setState(() => _isPlayerInitializing = false);
+      if (mounted) {
+        if (_continueWatchingItem?.episodeId == widget.episodeId) {
+          showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(15),
+              ),
+              title: Text(
+                'Continue Watching',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+              ),
+              content: Text(
+                'Continue where you left off?',
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text(
+                    'Cancel',
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    Navigator.of(context).pop();
+                    _currentPosition = _continueWatchingItem!.timestamp;
+                    if (_playerController != null &&
+                        _currentPosition != '0:00:00.000000') {
+                      final parts = _currentPosition.split(':');
+                      if (parts.length >= 3) {
+                        final duration = Duration(
+                          hours: int.parse(parts[0]),
+                          minutes: int.parse(parts[1]),
+                          seconds: double.parse(parts[2]).floor(),
+                          milliseconds:
+                              ((double.parse(parts[2]) % 1) * 1000).round(),
+                        );
+                        await _playerController!.seekTo(duration);
+                      }
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Theme.of(context).colorScheme.primary,
+                    foregroundColor: Theme.of(context).colorScheme.onSurface,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: const Text('Continue'),
+                ),
+              ],
+            ),
+          );
+        }
+        setState(() => _isPlayerInitializing = false);
+      }
     }
   }
 
