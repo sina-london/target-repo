@@ -62,7 +62,6 @@ class _DetailsScreenState extends State<DetailsScreen> {
       } catch (e) {
         continueWatchingItem =
             null; // Handle the case when no matching item is found
-        print('Item not found: $e');
       }
     }
   }
@@ -252,7 +251,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
     ThemeData themeData = Theme.of(context);
     return Scaffold(
       extendBody: true,
-      backgroundColor: themeData.colorScheme.primary,
+      backgroundColor: themeData.appBarTheme.backgroundColor,
       body: FutureBuilder<AnimeInfo?>(
         future: fetchData(),
         builder: (context, snapshot) {
@@ -268,7 +267,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
                 expandedHeight: screenHeight * 0.6,
                 leading: IconButton(
                   onPressed: () => Navigator.pop(context),
-                  icon: const Icon(Icons.navigate_before, size: 40),
+                  icon: Icon(Icons.navigate_before, size: 40, color: Theme.of(context).colorScheme.secondary,),
                 ),
                 flexibleSpace: FlexibleSpaceBar(
                   background: _buildHeaderSection(),
@@ -288,7 +287,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
                   decoration: BoxDecoration(
-                    color: themeData.cardColor,
+                    color: themeData.colorScheme.primary.withOpacity(0.5),
                     borderRadius: const BorderRadius.only(
                       topLeft: Radius.circular(50),
                       topRight: Radius.circular(50),
@@ -325,13 +324,12 @@ class _DetailsScreenState extends State<DetailsScreen> {
                         title: Text(
                           "EP : ${continueWatchingItem!.episode}",
                           style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                             ),
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                         subtitle: Text(
                           continueWatchingItem!.name,
-                          style: TextStyle(
-                              ),
+                          style: TextStyle(),
                           maxLines: 1,
                         ),
                         trailing: IconButton(
@@ -339,6 +337,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
                                 context,
                                 MaterialPageRoute(
                                     builder: (context) => StreamScreen(
+                                        name: continueWatchingItem!.name,
                                         title: widget.title,
                                         id: widget.id,
                                         episodeId:

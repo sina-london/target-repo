@@ -13,6 +13,7 @@ class StreamScreen extends StatefulWidget {
   final String episodeId;
   final String poster;
   final int episode;
+  final String name;
 
   const StreamScreen({
     super.key,
@@ -21,6 +22,7 @@ class StreamScreen extends StatefulWidget {
     required this.episodeId,
     required this.poster,
     required this.episode,
+    required this.name
   });
 
   @override
@@ -228,7 +230,7 @@ class _StreamScreenState extends State<StreamScreen> {
 
     final newItem = ContinueWatchingItem(
       id: widget.id,
-      name: widget.title,
+      name: widget.name,
       poster: widget.poster,
       episode: widget.episode,
       episodeId: widget.episodeId,

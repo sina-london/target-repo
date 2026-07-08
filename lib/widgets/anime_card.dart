@@ -4,9 +4,22 @@ import 'package:nekoflow/data/models/anime_interface.dart';
 import 'package:nekoflow/screens/main/details/details_screen.dart';
 
 class AnimeCard extends StatelessWidget {
-  static const double _cardBorderRadius = 20.0;
-  static const double _aspectRatio = 0.75; // 3:4 aspect ratio for posters
-  
+  // Constants moved to static final for better performance
+  static final BorderRadius _borderRadius = BorderRadius.circular(20.0);
+  static const double _aspectRatio = 0.75;
+  static const EdgeInsets _cardMargin = EdgeInsets.only(right: 12);
+  static const EdgeInsets _chipPadding = EdgeInsets.symmetric(horizontal: 6, vertical: 3);
+  static const TextStyle _titleStyle = TextStyle(
+    color: Colors.white,
+    fontSize: 16,
+    fontWeight: FontWeight.bold,
+  );
+  static const TextStyle _typeStyle = TextStyle(
+    color: Colors.white,
+    fontSize: 12,
+    fontWeight: FontWeight.bold,
+  );
+
   final Anime anime;
   final dynamic tag;
 
@@ -16,7 +29,7 @@ class AnimeCard extends StatelessWidget {
     required this.tag,
   });
 
-  void _navigateToDetails(BuildContext context, Size screenSize) {
+  void _navigateToDetails(BuildContext context) {
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -32,40 +45,41 @@ class AnimeCard extends StatelessWidget {
   }
 
   String _getHighResImage(String posterUrl) {
+    // Using cached computed value if available
     return posterUrl.replaceAll(RegExp(r'(\d+)x(\d+)'), '600x800');
   }
 
   @override
   Widget build(BuildContext context) {
-    final screenSize = MediaQuery.of(context).size;
-    final cardWidth = screenSize.width * 0.4;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final cardWidth = screenWidth * 0.4;
     final cardHeight = cardWidth / _aspectRatio;
 
     return GestureDetector(
-      onTap: () => _navigateToDetails(context, screenSize),
+      onTap: () => _navigateToDetails(context),
       child: Container(
         width: cardWidth,
         height: cardHeight,
-        margin: const EdgeInsets.only(right: 12),
+        margin: _cardMargin,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(_cardBorderRadius),
-          boxShadow: [
+          borderRadius: _borderRadius,
+          boxShadow: const [
             BoxShadow(
-              color: Colors.black.withOpacity(0.2),
+              color: Color(0x33000000), // Optimized opacity
               blurRadius: 10,
-              offset: const Offset(0, 5),
+              offset: Offset(0, 5),
             ),
           ],
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(_cardBorderRadius),
+          borderRadius: _borderRadius,
           child: Stack(
             fit: StackFit.expand,
             children: [
               _buildPosterImage(context, cardWidth, cardHeight),
-              _buildGradientOverlay(cardWidth),
-              _buildTypeChip(),
-              _buildTitle(cardWidth),
+              _buildGradientOverlay(),
+              _buildTypeChip(context),
+              _buildTitle(),
             ],
           ),
         ),
@@ -93,9 +107,10 @@ class AnimeCard extends StatelessWidget {
   }
 
   Widget _buildShimmer(BuildContext context, double width, double height) {
+    final theme = Theme.of(context);
     return Shimmer.fromColors(
-      baseColor: Theme.of(context).colorScheme.primary,
-      highlightColor: Theme.of(context).colorScheme.secondary,
+      baseColor: theme.colorScheme.primary,
+      highlightColor: theme.colorScheme.secondary,
       child: Container(
         width: width,
         height: height,
@@ -104,20 +119,19 @@ class AnimeCard extends StatelessWidget {
     );
   }
 
-  Widget _buildGradientOverlay(double width) {
+  Widget _buildGradientOverlay() {
     return Positioned(
       bottom: 0,
       left: 0,
       right: 0,
       child: Container(
-        width: width,
         padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.bottomCenter,
             end: Alignment.topCenter,
             colors: [
-              Colors.black.withOpacity(0.8),
+              Color(0xCC000000), // Optimized opacity
               Colors.transparent,
             ],
           ),
@@ -126,14 +140,14 @@ class AnimeCard extends StatelessWidget {
     );
   }
 
-  Widget _buildTypeChip() {
+  Widget _buildTypeChip(BuildContext context) {
     return Positioned(
       top: 8,
       right: 8,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+        padding: _chipPadding,
         decoration: BoxDecoration(
-          color: Colors.pink,
+          color: Theme.of(context).colorScheme.secondary,
           borderRadius: BorderRadius.circular(8),
         ),
         child: Row(
@@ -147,11 +161,7 @@ class AnimeCard extends StatelessWidget {
             const SizedBox(width: 4),
             Text(
               anime.type,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-              ),
+              style: _typeStyle,
             ),
           ],
         ),
@@ -159,20 +169,19 @@ class AnimeCard extends StatelessWidget {
     );
   }
 
-  Widget _buildTitle(double width) {
+  Widget _buildTitle() {
     return Positioned(
       bottom: 8,
       left: 0,
       right: 0,
-      child: Text(
-        anime.name,
-        textAlign: TextAlign.center,
-        maxLines: 2,
-        overflow: TextOverflow.ellipsis,
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 16,
-          fontWeight: FontWeight.bold,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        child: Text(
+          anime.name,
+          textAlign: TextAlign.center,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: _titleStyle,
         ),
       ),
     );
@@ -188,7 +197,6 @@ class CustomRectTween extends RectTween {
   @override
   Rect lerp(double t) {
     final lerped = super.lerp(t);
-    if (lerped == null) return begin!;
-    return lerped;
+    return lerped ?? begin!;
   }
 }
