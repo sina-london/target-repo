@@ -5,7 +5,7 @@ import 'package:shonenx/core/sources/anime/anime_provider.dart';
 import 'package:shonenx/providers/watch_providers.dart';
 import 'package:shonenx/utils/formatter.dart';
 import 'package:shonenx/widgets/player/seek_bar.dart';
-import 'package:shonenx/widgets/ui/modern_settings_panel.dart';
+import 'package:shonenx/widgets/ui/settings_sheet.dart';
 import 'package:shonenx/widgets/ui/shonenx_dropdown.dart';
 
 /// Ultra-modern bottom controls with dynamic glass morphism and micro-interactions
@@ -112,8 +112,8 @@ class _BottomControlsState extends ConsumerState<BottomControls>
             ),
           ),
           padding: EdgeInsets.symmetric(
-            horizontal: isCompact ? 14 : 20,
-            vertical: isCompact ? 12 : 16,
+            horizontal: isCompact ? 5 : 10,
+            vertical: isCompact ? 5 : 10,
           ),
           child: Row(
             children: [
@@ -131,45 +131,64 @@ class _BottomControlsState extends ConsumerState<BottomControls>
 
   Widget _buildTimeSection(BuildContext context, bool isCompact, bool isDark) {
     final theme = Theme.of(context);
+    const fixedTextWidth = 60.0; // Fixed width for position and duration text
+
     return Row(
       children: [
-        Consumer(
-          builder: (context, ref, child) {
-            return Text(
-              formatDuration(widget.position),
-              style: theme.textTheme.labelLarge?.copyWith(
-                color: theme.colorScheme.onSurface,
-                fontWeight: FontWeight.w500,
-              ),
-            );
-          },
+        SizedBox(
+          width: fixedTextWidth,
+          child: Consumer(
+            builder: (context, ref, child) {
+              final position = widget.position.inSeconds >= 0 &&
+                      widget.position <= widget.duration
+                  ? widget.position
+                  : Duration.zero;
+              return Text(
+                formatDuration(position),
+                style: theme.textTheme.labelLarge?.copyWith(
+                  color: theme.colorScheme.onSurface,
+                  fontWeight: FontWeight.w500,
+                ),
+                textAlign: TextAlign.center,
+              );
+            },
+          ),
         ),
-        const SizedBox(width: 10),
+        const SizedBox(width: 8),
         Expanded(
-          child: Consumer(builder: (context, ref, child) {
-            return SeekBar(
-              position: widget.position,
-              duration: widget.duration,
-              onSeek: (value) async {
-                widget.onChangeSource();
-                await ref.read(playerProvider).seek(value);
-              },
-              theme: theme,
-            );
-          }),
+          child: Consumer(
+            builder: (context, ref, child) {
+              return SeekBar(
+                position: widget.position,
+                duration: widget.duration,
+                onSeek: (value) async {
+                  widget.onChangeSource();
+                  await ref.read(playerProvider).seek(value);
+                },
+                theme: theme,
+              );
+            },
+          ),
         ),
-        const SizedBox(width: 10),
-        Consumer(
-          builder: (context, ref, child) {
-            return Text(
-              formatDuration(widget.duration),
-              style: theme.textTheme.labelLarge?.copyWith(
-                color: theme.colorScheme.onSurface,
-                fontWeight: FontWeight.w500,
-              ),
-            );
-          },
-        )
+        const SizedBox(width: 8),
+        SizedBox(
+          width: fixedTextWidth,
+          child: Consumer(
+            builder: (context, ref, child) {
+              final duration = widget.duration.inSeconds > 0
+                  ? widget.duration
+                  : Duration.zero;
+              return Text(
+                formatDuration(duration),
+                style: theme.textTheme.labelLarge?.copyWith(
+                  color: theme.colorScheme.onSurface,
+                  fontWeight: FontWeight.w500,
+                ),
+                textAlign: TextAlign.center,
+              );
+            },
+          ),
+        ),
       ],
     );
   }
@@ -335,12 +354,12 @@ class _BottomControlsState extends ConsumerState<BottomControls>
     }
 
     // Show the settings panel using the reusable component
-    ModernSettingsPanel.showAsModalBottomSheet(
+    SettingsSheet.showAsModalBottomSheet(
       context: context,
-      title: 'Video Settings',
+      title: 'Provider Settings',
       titleIcon: Iconsax.setting_4,
       settingsRows: settingsRows,
-      subtitle: subtitle,
+      // subtitle: subtitle,
     );
   }
 

@@ -4,9 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:shonenx/providers/watch_providers.dart';
-import 'package:shonenx/widgets/ui/subtitle_customization_panel.dart';
+import 'package:shonenx/screens/settings/source/provider_screen.dart';
+import 'package:shonenx/widgets/ui/subtitle_customization_sheet.dart';
 
-/// Ultra-modern top controls with dynamic glass morphism and micro-interactions
+/// Ultra- top controls with dynamic glass morphism and micro-interactions
 class TopControls extends ConsumerStatefulWidget {
   final WatchState watchState;
   final VoidCallback onPanelToggle;
@@ -106,8 +107,8 @@ class _TopControlsState extends ConsumerState<TopControls>
             ),
           ),
           padding: EdgeInsets.symmetric(
-            horizontal: isCompact ? 16 : 20,
-            vertical: isCompact ? 12 : 16,
+            horizontal: isCompact ? 5 : 10,
+            vertical: isCompact ? 5 : 10,
           ),
           child: Row(
             children: [
@@ -239,7 +240,22 @@ class _TopControlsState extends ConsumerState<TopControls>
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _buildModernButton(
+          _buildButton(
+            context,
+            icon: Iconsax.cloud,
+            isEnabled: true,
+            onPressed: () =>
+                showProviderSettingsBottomSheet(context, (isChanged) async {
+              if (isChanged) {
+                widget.onPanelToggle();
+                await ref.read(watchProvider.notifier).refreshEpisodes();
+              }
+            }),
+            isCompact: isCompact,
+            isDark: isDark,
+          ),
+          SizedBox(width: isCompact ? 8 : 12),
+          _buildButton(
             context,
             icon: Iconsax.video,
             isEnabled: widget.watchState.qualityOptions.isNotEmpty,
@@ -249,20 +265,19 @@ class _TopControlsState extends ConsumerState<TopControls>
             isDark: isDark,
           ),
           SizedBox(width: isCompact ? 8 : 12),
-          _buildModernButton(
+          _buildButton(
             context,
             icon: Iconsax.subtitle,
             isEnabled: widget.watchState.subtitles.isNotEmpty,
             onPressed: widget.onSubtitleTap,
-            onHold: () =>
-                ModernSubtitleCustomizationPanel.showAsModalBottomSheet(
-                    context: context),
+            onHold: () => SubtitleCustomizationSheet.showAsModalBottomSheet(
+                context: context),
             badgeCount: widget.watchState.subtitles.length,
             isCompact: isCompact,
             isDark: isDark,
           ),
           SizedBox(width: isCompact ? 8 : 12),
-          _buildModernButton(
+          _buildButton(
             context,
             icon: Iconsax.maximize_4,
             isEnabled: true,
@@ -271,7 +286,7 @@ class _TopControlsState extends ConsumerState<TopControls>
             isDark: isDark,
           ),
           SizedBox(width: isCompact ? 8 : 12),
-          _buildModernButton(
+          _buildButton(
             context,
             icon: Iconsax.menu_1,
             isEnabled: true,
@@ -285,7 +300,7 @@ class _TopControlsState extends ConsumerState<TopControls>
     );
   }
 
-  Widget _buildModernButton(
+  Widget _buildButton(
     BuildContext context, {
     required IconData icon,
     required bool isEnabled,

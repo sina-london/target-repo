@@ -7,6 +7,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:media_kit_video/media_kit_video.dart' as media_kit_video;
+import 'package:shonenx/core/utils/app_logger.dart';
+import 'package:shonenx/widgets/ui/subtitle_customization_sheet.dart';
 import 'package:window_manager/window_manager.dart';
 
 import 'package:shonenx/core/registery/anime_source_registery_provider.dart';
@@ -21,7 +23,7 @@ import 'package:shonenx/widgets/player/bottom_controls.dart';
 import 'package:shonenx/widgets/player/center_controls.dart';
 import 'package:shonenx/widgets/player/subtitle_overlay.dart';
 import 'package:shonenx/widgets/player/top_controls.dart';
-import 'package:shonenx/widgets/ui/modern_settings_panel.dart';
+import 'package:shonenx/widgets/ui/settings_sheet.dart';
 import 'package:shonenx/widgets/ui/shonenx_dropdown.dart';
 
 // Intents for keyboard shortcuts
@@ -63,28 +65,10 @@ class _CustomControlsState extends ConsumerState<CustomControls> {
   bool _controlsVisible = true;
   Timer? _hideControlsTimer;
   bool _isFullscreen = (Platform.isAndroid || Platform.isIOS) ? true : false;
-  late GestureHandler _gestureHandler;
-  late OverlayManager _overlayManager;
 
   @override
   void initState() {
     super.initState();
-
-    _overlayManager = OverlayManager();
-
-    _gestureHandler = GestureHandler(
-      resetTimer: _resetHideTimer,
-      showOverlay: (context, {required bool isBrightness}) {
-        if (!mounted) return;
-        _overlayManager.showAdjustmentOverlay(
-          context,
-          isBrightness: isBrightness,
-          value: isBrightness
-              ? _gestureHandler.brightnessValue
-              : _gestureHandler.volumeValue,
-        );
-      },
-    );
 
     developer.log('CustomControls initialized', name: 'CustomControls');
 
@@ -97,7 +81,6 @@ class _CustomControlsState extends ConsumerState<CustomControls> {
         : await windowManager.isFullScreen();
 
     await UIHelper.forceLandscape();
-    _gestureHandler.initialize();
 
     if (mounted) {
       setState(() {
@@ -113,7 +96,6 @@ class _CustomControlsState extends ConsumerState<CustomControls> {
   @override
   void dispose() {
     _hideControlsTimer?.cancel();
-    _overlayManager.dispose();
 
     Future.wait([
       widget.state.widget.controller.player.pause(),
@@ -225,6 +207,10 @@ class _CustomControlsState extends ConsumerState<CustomControls> {
             color: Colors.transparent,
             child: GestureDetector(
               behavior: HitTestBehavior.opaque,
+              onVerticalDragUpdate: (details) {
+                final dragStartY = details.localPosition.dy;
+                AppLogger.d(dragStartY);
+              },
               onTap: () {
                 if (_controlsVisible) {
                   _hideControls();
@@ -233,13 +219,12 @@ class _CustomControlsState extends ConsumerState<CustomControls> {
                 }
               },
               child: SafeArea(
+                top: false,
+                left: false,
+                right: false,
+                bottom: true,
                 child: Stack(
                   children: [
-                    Listener(
-                      onPointerDown: (event) {
-                      },
-                      child: Container(color: Colors.transparent),
-                    ),
                     // Subtitle overlay
                     _buildSubtitleOverlay(playerState, playerSettings),
                     // Controls overlay
@@ -293,7 +278,7 @@ class _CustomControlsState extends ConsumerState<CustomControls> {
           duration: const Duration(milliseconds: 300),
           child: SubtitleOverlay(
             subtitleStyle: playerSettings.toSubtitleStyle(),
-            subtitle: playerState.subtitle.firstOrNull ?? '',
+            subtitle: playerState.subtitle.firstOrNull ?? 'null',
           ),
         ),
       ),
@@ -361,40 +346,117 @@ class _CustomControlsState extends ConsumerState<CustomControls> {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        if (isNearEnd && hasNextEpisode)
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              Container(
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primaryContainer.withOpacity(0.7),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: theme.colorScheme.primaryContainer.withOpacity(0.3),
-                    width: 1,
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            ElevatedButton.icon(
+                onPressed: () {
+                  playerNotifier
+                      .seek(playerState.position - const Duration(seconds: 10));
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: theme.colorScheme.secondaryContainer,
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 16, vertical: 8), // Adjust padding
+                  minimumSize: const Size(100, 40), // Adjust button size
+                ),
+                label: Text('-10s',
+                    style: theme.textTheme.labelLarge?.copyWith(
+                      color: theme.colorScheme.onSecondaryContainer,
+                    )),
+                icon: Icon(
+                  Icons.skip_previous,
+                  color: theme.colorScheme.onSecondaryContainer,
+                )),
+            const SizedBox(width: 8),
+            ElevatedButton.icon(
+                onPressed: () {
+                  playerNotifier
+                      .seek(playerState.position + const Duration(seconds: 10));
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: theme.colorScheme.secondaryContainer,
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 16, vertical: 8), // Adjust padding
+                  minimumSize: const Size(100, 40), // Adjust button size
+                ),
+                label: Text('+10s',
+                    style: theme.textTheme.labelLarge?.copyWith(
+                      color: theme.colorScheme.onSecondaryContainer,
+                    )),
+                icon: Icon(
+                  Icons.skip_next,
+                  color: theme.colorScheme.onSecondaryContainer,
+                )),
+            const SizedBox(width: 8),
+            if (isNearEnd && hasNextEpisode)
+              GestureDetector(
+                onTap: watchState.selectedEpisodeIdx != null &&
+                        (watchState.selectedEpisodeIdx! + 1) <
+                            watchState.episodes.length
+                    ? () async {
+                        final nextIndex = watchState.selectedEpisodeIdx! + 1;
+                        await ref
+                            .read(watchProvider.notifier)
+                            .changeEpisode(nextIndex);
+                        _resetHideTimer();
+                      }
+                    : null, // Disable tap if no next episode
+                child: Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isSmallScreen ? 12.0 : 16.0,
+                    vertical: isSmallScreen ? 6.0 : 8.0,
+                  ),
+                  margin: EdgeInsets.only(right: 8),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primaryContainer.withOpacity(0.85),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: theme.colorScheme.primary.withOpacity(0.5),
+                      width: 1.5,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: theme.colorScheme.shadow.withOpacity(0.2),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons
+                            .skip_next, // Replaced Iconsax.next5 with Material icon
+                        size: isSmallScreen ? 16 : 18,
+                        color: theme.colorScheme.onPrimaryContainer,
+                      ),
+                      const SizedBox(width: 8),
+                      SizedBox(
+                        width: 80, // Fixed width for consistent text display
+                        child: Text(
+                          watchState.selectedEpisodeIdx != null &&
+                                  (watchState.selectedEpisodeIdx! + 1) <
+                                      watchState.episodes.length
+                              ? 'Next: EP ${watchState.episodes[watchState.selectedEpisodeIdx! + 1].number}'
+                              : 'Next: --',
+                          style: theme.textTheme.labelMedium?.copyWith(
+                            color: theme.colorScheme.onPrimaryContainer,
+                            fontWeight: FontWeight.w600,
+                            fontSize: isSmallScreen ? 12 : 14,
+                          ),
+                          textAlign: TextAlign.left,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Iconsax.next5,
-                      size: isSmallScreen ? 16 : 18,
-                      color: theme.colorScheme.onPrimaryContainer,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Next: EP ${watchState.episodes[(watchState.selectedEpisodeIdx ?? 0) + 1].number}',
-                      style: theme.textTheme.labelMedium?.copyWith(
-                        color: theme.colorScheme.onPrimaryContainer,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
+              )
+          ],
+        ),
+        const SizedBox(height: 8),
         Column(
           children: [
             // Padding(
@@ -472,21 +534,7 @@ class _CustomControlsState extends ConsumerState<CustomControls> {
   void _showQualitySelector(
       BuildContext context, WidgetRef ref, WatchState watchState) {
     if (watchState.qualityOptions.isEmpty || !mounted) return;
-    // _showSelector(
-    //   context: context,
-    //   title: 'Quality',
-    //   items: watchState.qualityOptions,
-    //   selectedItemIdx: watchState.selectedQualityIdx,
-    //   itemBuilder: (item) => item['quality'],
-    //   onTap: (index) async {
-    //     await ref.read(watchProvider.notifier).changeQuality(
-    //           qualityIdx: index,
-    //           lastPosition: ref.read(playerStateProvider).position,
-    //         );
-    //     _resetHideTimer();
-    //   },
-    // );
-    ModernSettingsPanel.showAsModalBottomSheet(
+    SettingsSheet.showAsModalBottomSheet(
       context: context,
       title: 'Quality',
       settingsRows: [
@@ -520,7 +568,7 @@ class _CustomControlsState extends ConsumerState<CustomControls> {
   void _showSubtitleSelector(
       BuildContext context, WidgetRef ref, WatchState watchState) {
     if (watchState.subtitles.isEmpty || !mounted) return;
-    ModernSettingsPanel.showAsModalBottomSheet(
+    SettingsSheet.showAsModalBottomSheet(
       context: context,
       title: 'Subtitles',
       settingsRows: [

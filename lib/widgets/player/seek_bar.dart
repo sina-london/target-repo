@@ -21,53 +21,58 @@ class SeekBar extends StatefulWidget {
 }
 
 class _SeekBarState extends State<SeekBar> {
-  double _currentPosition = 0;
+  late double _currentPosition;
+  bool _isDragging = false;
 
   @override
   void initState() {
     super.initState();
-    _currentPosition = widget.position.inSeconds.toDouble();
+    _currentPosition = _validatePosition(widget.position.inSeconds.toDouble());
   }
 
-  // @override
-  // void didUpdateWidget(SeekBar oldWidget) {
-  //   super.didUpdateWidget(oldWidget);
-  //   // Update the current position if the widget's position changes
-  //   if (oldWidget.position != widget.position) {
-  //     setState(() {
-  //       _currentPosition = widget.position.inSeconds.toDouble();
-  //     });
-  //   }
-  // }
-
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    // Update the current position if the widget's position changes
-    if (widget.position != widget.duration) {
+  void didUpdateWidget(SeekBar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Only update position if not dragging and position has changed
+    if (!_isDragging && oldWidget.position != widget.position) {
       setState(() {
-        _currentPosition = widget.position.inSeconds.toDouble();
+        _currentPosition =
+            _validatePosition(widget.position.inSeconds.toDouble());
       });
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final maxDuration = widget.duration.inSeconds > 0
+  // Validate position to ensure it's within bounds
+  double _validatePosition(double position) {
+    final maxDuration = _getValidDuration();
+    return position.clamp(0.0, maxDuration);
+  }
+
+  // Get valid duration with minimum value
+  double _getValidDuration() {
+    return widget.duration.inSeconds > 0
         ? widget.duration.inSeconds.toDouble()
         : 1.0;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final maxDuration = _getValidDuration();
+
+    // Ensure position doesn't exceed duration
+    if (_currentPosition > maxDuration) {
+      _currentPosition = maxDuration;
+    }
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        // Calculate a responsive height based on screen size
         final screenHeight = MediaQuery.of(context).size.height;
         final isLandscape =
             MediaQuery.of(context).orientation == Orientation.landscape;
         final sliderHeight =
             isLandscape ? screenHeight * 0.1 : screenHeight * 0.05;
-        final handlerHeight = sliderHeight * 0.4; // Responsive handler height
-        final handlerWidth =
-            constraints.maxWidth * 0.007; // Responsive handler width
+        final handlerHeight = sliderHeight * 0.4;
+        final handlerWidth = constraints.maxWidth * 0.007;
 
         return FlutterSlider(
           values: [_currentPosition],
@@ -82,18 +87,21 @@ class _SeekBarState extends State<SeekBar> {
           ),
           trackBar: FlutterSliderTrackBar(
             activeTrackBar: BoxDecoration(
-                color: widget.theme.colorScheme.primaryContainer,
-                borderRadius: BorderRadius.circular(5),
-                border: Border.all(
-                    color: widget.theme.colorScheme.onPrimaryContainer
-                        .withOpacity(0.8))),
+              color: widget.theme.colorScheme.primaryContainer,
+              borderRadius: BorderRadius.circular(5),
+              border: Border.all(
+                color: widget.theme.colorScheme.onPrimaryContainer
+                    .withOpacity(0.8),
+              ),
+            ),
             inactiveTrackBar: BoxDecoration(
               color:
                   widget.theme.colorScheme.onPrimaryContainer.withOpacity(0.2),
               borderRadius: BorderRadius.circular(5),
               border: Border.all(
-                  color: widget.theme.colorScheme.onPrimaryContainer
-                      .withOpacity(0.3)),
+                color: widget.theme.colorScheme.onPrimaryContainer
+                    .withOpacity(0.3),
+              ),
             ),
             activeTrackBarHeight: 8,
             inactiveTrackBarHeight: 8,
@@ -121,8 +129,10 @@ class _SeekBarState extends State<SeekBar> {
           ),
           handlerHeight: handlerHeight,
           handlerWidth: handlerWidth,
+          touchSize: handlerHeight * 1.5, // Increase touch target size
           onDragging: (handlerIndex, lowerValue, upperValue) {
             setState(() {
+              _isDragging = true;
               _currentPosition = lowerValue as double;
             });
           },
@@ -130,9 +140,18 @@ class _SeekBarState extends State<SeekBar> {
             final newPosition = Duration(seconds: lowerValue.toInt());
             widget.onSeek(newPosition);
             setState(() {
-              _currentPosition = newPosition.inSeconds.toDouble();
+              _isDragging = false;
+              _currentPosition = _validatePosition(lowerValue.toDouble());
             });
           },
+          // Add error handling for invalid values
+          onDragStarted: (handlerIndex, lowerValue, upperValue) {
+            setState(() {
+              _isDragging = true;
+            });
+          },
+          // Prevent slider from jumping when disabled
+          disabled: maxDuration <= 1.0,
         );
       },
     );
