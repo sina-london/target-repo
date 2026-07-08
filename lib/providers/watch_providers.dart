@@ -129,13 +129,15 @@ class WatchStateNotifier extends StateNotifier<WatchState> {
   }
 
   /// Updates the selected category (e.g., sub/dub).
-  void updateCategory(String category) {
+  void updateCategory(String? category) {
+    if (category == null) return;
     AppLogger.d('Updating category to $category');
     state = state.copyWith(selectedCategory: category, error: null);
   }
 
   /// Updates the selected server.
-  void updateServer(String server) {
+  void updateServer(String? server) {
+    if (server == null) return;
     AppLogger.d('Updating server to $server');
     state = state.copyWith(selectedServer: server, error: null);
   }
@@ -161,6 +163,8 @@ class WatchStateNotifier extends StateNotifier<WatchState> {
   Future<void> fetchEpisodes({
     required dynamic animeId,
     int episodeIdx = 0,
+    Duration startAt = Duration.zero,
+    bool withPlay = true,
   }) async {
     AppLogger.d('Fetching episodes for animeId: $animeId');
     try {
@@ -180,7 +184,8 @@ class WatchStateNotifier extends StateNotifier<WatchState> {
         loadingMessage: null,
       );
       if (episodes.isNotEmpty) {
-        await fetchStreamData(episodeIdx: episodeIdx);
+        await fetchStreamData(
+            episodeIdx: episodeIdx, withPlay: withPlay, startAt: startAt);
       } else {
         _handleError('No episodes found for animeId: $animeId');
       }
@@ -194,6 +199,7 @@ class WatchStateNotifier extends StateNotifier<WatchState> {
   Future<void> fetchStreamData({
     required int episodeIdx,
     bool withPlay = true,
+    Duration startAt = Duration.zero,
   }) async {
     if (!_isValidEpisodeIndex(episodeIdx)) {
       _handleError('Invalid episode index: $episodeIdx');
@@ -238,7 +244,8 @@ class WatchStateNotifier extends StateNotifier<WatchState> {
               : null;
 
       if (qualityUrl != null) {
-        await updateVideoSource(sourceUrl: qualityUrl, withPlay: withPlay);
+        await updateVideoSource(
+            sourceUrl: qualityUrl, startAt: startAt, withPlay: withPlay);
       } else {
         _handleError('No playable sources found for episode: ${episode.id}');
       }
@@ -334,7 +341,8 @@ class WatchStateNotifier extends StateNotifier<WatchState> {
   }
 
   /// Changes the server and refetches stream data.
-  Future<void> changeServer(String server) async {
+  Future<void> changeServer(String? server) async {
+    if (server == null) return;
     AppLogger.d('Changing server to $server');
     try {
       state = state.copyWith(selectedServer: server, error: null);

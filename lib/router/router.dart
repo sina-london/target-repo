@@ -23,6 +23,7 @@ import 'package:shonenx/screens/settings/settings_screen.dart';
 import 'package:shonenx/screens/settings/source/provider_screen.dart';
 import 'package:shonenx/screens/watch_screen/watch_screen.dart';
 import 'package:shonenx/screens/watchlist_screen.dart';
+import 'package:shonenx/utils/updater.dart';
 import 'package:shonenx/widgets/ui/layouts/settings_layout.dart';
 
 // Navigation item configuration
@@ -212,10 +213,22 @@ List<GoRoute> _buildSettingsSubRoutes(List<_SettingsRouteConfig> configs) {
 }
 
 // AppRouterScreen
-class AppRouterScreen extends StatelessWidget {
+class AppRouterScreen extends StatefulWidget {
   final StatefulNavigationShell navigationShell;
 
   const AppRouterScreen({super.key, required this.navigationShell});
+
+  @override
+  State<AppRouterScreen> createState() => _AppRouterScreenState();
+}
+
+class _AppRouterScreenState extends State<AppRouterScreen> {
+  
+  @override
+  initState() {
+    super.initState();
+    checkForUpdates(context);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -240,7 +253,7 @@ class AppRouterScreen extends StatelessWidget {
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(15),
-                child: navigationShell,
+                child: widget.navigationShell,
               ),
             ),
             Positioned(
@@ -280,7 +293,7 @@ class AppRouterScreen extends StatelessWidget {
         children: navItems.asMap().entries.map((entry) {
           final index = entry.key;
           final item = entry.value;
-          final isSelected = navigationShell.currentIndex == index;
+          final isSelected = widget.navigationShell.currentIndex == index;
           return Expanded(
             child: Container(
               decoration: BoxDecoration(
@@ -301,7 +314,7 @@ class AppRouterScreen extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 15),
               margin: const EdgeInsets.all(5),
               child: InkWell(
-                onTap: () => navigationShell.goBranch(index),
+                onTap: () => widget.navigationShell.goBranch(index),
                 child: Center(
                   child: Icon(
                     item.icon,
@@ -340,10 +353,10 @@ class AppRouterScreen extends StatelessWidget {
               children: navItems.asMap().entries.map((entry) {
                 final index = entry.key;
                 final item = entry.value;
-                final isSelected = navigationShell.currentIndex == index;
+                final isSelected = widget.navigationShell.currentIndex == index;
                 return Expanded(
                   child: InkWell(
-                    onTap: () => navigationShell.goBranch(index),
+                    onTap: () => widget.navigationShell.goBranch(index),
                     child: Container(
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(100),

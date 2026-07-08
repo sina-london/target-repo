@@ -12,6 +12,12 @@ import 'package:shonenx/widgets/ui/shonenx_grid.dart';
 // Provider for search query
 final searchQueryProvider = StateProvider<String>((ref) => '');
 
+// Provider for multi-select mode
+final multiSelectModeProvider = StateProvider<bool>((ref) => false);
+
+// Provider for selected items (stores episode keys or anime IDs)
+final selectedItemsProvider = StateProvider<Set<String>>((ref) => {});
+
 class ContinueWatchingScreen extends StatelessWidget {
   const ContinueWatchingScreen({super.key});
 
@@ -19,119 +25,273 @@ class ContinueWatchingScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    return Scaffold(
-      appBar: AppBar(
-        titleSpacing: 0,
-        title: Consumer(
-          builder: (context, ref, child) {
-            final isSearching = ref.watch(searchQueryProvider) != '';
-            return isSearching
-                ? TextField(
-                    autofocus: true,
-                    decoration: InputDecoration(
-                      hintText: 'Search anime...',
-                      border: InputBorder.none,
-                      hintStyle: TextStyle(color: colorScheme.onSurfaceVariant),
-                      suffixIcon: ref.watch(searchQueryProvider).isNotEmpty
-                          ? IconButton(
-                              icon: Icon(Iconsax.close_circle,
-                                  color: colorScheme.onSurfaceVariant),
-                              onPressed: () {
-                                ref.read(searchQueryProvider.notifier).state =
-                                    '';
-                              },
-                            )
-                          : null,
-                    ),
-                    style: TextStyle(color: colorScheme.onSurface),
-                    onChanged: (value) {
-                      ref.read(searchQueryProvider.notifier).state = value;
-                    },
-                  )
-                : Text(
-                    "Continue Watching",
+    return Consumer(
+      builder: (context, ref, child) {
+        final multiSelectMode = ref.watch(multiSelectModeProvider);
+        final selectedItems = ref.watch(selectedItemsProvider);
+        final isSearching = ref.watch(searchQueryProvider) != '';
+
+        return Scaffold(
+          appBar: AppBar(
+            titleSpacing: 0,
+            title: multiSelectMode
+                ? Text(
+                    '${selectedItems.length} selected',
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
-                      fontSize: 20,
+                      fontSize: 18,
                     ),
-                    overflow: TextOverflow.ellipsis,
-                  );
+                  )
+                : isSearching
+                    ? TextField(
+                        autofocus: true,
+                        decoration: InputDecoration(
+                          hintText: 'Search anime...',
+                          border: InputBorder.none,
+                          hintStyle:
+                              TextStyle(color: colorScheme.onSurfaceVariant),
+                          suffixIcon: ref.watch(searchQueryProvider).isNotEmpty
+                              ? IconButton(
+                                  icon: Icon(Iconsax.close_circle,
+                                      color: colorScheme.onSurfaceVariant),
+                                  onPressed: () {
+                                    ref
+                                        .read(searchQueryProvider.notifier)
+                                        .state = '';
+                                  },
+                                )
+                              : null,
+                        ),
+                        style: TextStyle(color: colorScheme.onSurface),
+                        onChanged: (value) {
+                          ref.read(searchQueryProvider.notifier).state = value;
+                        },
+                      )
+                    : const Text(
+                        "Continue Watching",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 20,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+            centerTitle: false,
+            elevation: 0,
+            backgroundColor: colorScheme.surface,
+            leading: IconButton(
+              icon: Icon(multiSelectMode
+                  ? Iconsax.close_circle
+                  : Iconsax.arrow_left_2),
+              onPressed: () {
+                if (multiSelectMode) {
+                  // Exit multi-select mode
+                  ref.read(multiSelectModeProvider.notifier).state = false;
+                  ref.read(selectedItemsProvider.notifier).state = {};
+                } else {
+                  context.pop();
+                }
+              },
+            ),
+            actions: multiSelectMode
+                ? [
+                    // Select All button
+                    IconButton(
+                      onPressed: () => _selectAll(ref),
+                      icon: const Icon(Iconsax.tick_square),
+                      tooltip: 'Select All',
+                    ),
+                    // Delete button
+                    IconButton(
+                      onPressed: selectedItems.isNotEmpty
+                          ? () => _showDeleteDialog(context, ref)
+                          : null,
+                      icon: Icon(
+                        Iconsax.trash,
+                        color: selectedItems.isNotEmpty
+                            ? colorScheme.error
+                            : colorScheme.onSurfaceVariant.withOpacity(0.5),
+                      ),
+                      tooltip: 'Delete Selected',
+                    ),
+                  ]
+                : [
+                    IconButton(
+                      onPressed: () {
+                        ref.read(searchQueryProvider.notifier).state =
+                            isSearching ? '' : ' ';
+                      },
+                      icon: Icon(isSearching
+                          ? Iconsax.close_circle
+                          : Iconsax.search_normal),
+                      tooltip: isSearching ? 'Cancel' : 'Search',
+                    ),
+                    PopupMenuButton<AnimeFilter>(
+                      icon: const Icon(Iconsax.filter),
+                      tooltip: 'Filter',
+                      onSelected: (AnimeFilter filter) {
+                        ref.read(animeFilterProvider.notifier).state = filter;
+                      },
+                      itemBuilder: (BuildContext context) =>
+                          <PopupMenuEntry<AnimeFilter>>[
+                        const PopupMenuItem<AnimeFilter>(
+                          value: AnimeFilter.all,
+                          child: Text('All Anime'),
+                        ),
+                        const PopupMenuItem<AnimeFilter>(
+                          value: AnimeFilter.completed,
+                          child: Text('Completed'),
+                        ),
+                        const PopupMenuItem<AnimeFilter>(
+                          value: AnimeFilter.inProgress,
+                          child: Text('In Progress'),
+                        ),
+                        const PopupMenuItem<AnimeFilter>(
+                          value: AnimeFilter.recentlyUpdated,
+                          child: Text('Recently Updated'),
+                        ),
+                      ],
+                    ),
+                    IconButton(
+                      onPressed: () {
+                        final viewMode = ref.read(viewModeProvider);
+                        ref.read(viewModeProvider.notifier).state =
+                            viewMode == ViewMode.grouped
+                                ? ViewMode.ungrouped
+                                : ViewMode.grouped;
+                      },
+                      icon: Icon(
+                        ref.watch(viewModeProvider) == ViewMode.grouped
+                            ? Iconsax.element_3
+                            : Iconsax.element_4,
+                      ),
+                      tooltip: ref.watch(viewModeProvider) == ViewMode.grouped
+                          ? 'Ungroup'
+                          : 'Group',
+                    ),
+                    // Multi-select mode button
+                    IconButton(
+                      onPressed: () {
+                        ref.read(multiSelectModeProvider.notifier).state = true;
+                      },
+                      icon: const Icon(Iconsax.edit_2),
+                      tooltip: 'Select Items',
+                    ),
+                  ],
+          ),
+          body: _ContinueWatchingContent(),
+        );
+      },
+    );
+  }
+
+  void _selectAll(WidgetRef ref) {
+    final filter = ref.read(animeFilterProvider);
+    final viewMode = ref.read(viewModeProvider);
+    final searchQuery = ref.read(searchQueryProvider).toLowerCase();
+
+    if (viewMode == ViewMode.grouped) {
+      final entries = ref
+          .read(animeWatchProgressProvider.notifier)
+          .getFilteredEntries(filter);
+      final filteredEntries = searchQuery.isEmpty
+          ? entries
+          : entries
+              .where((entry) =>
+                  entry.animeTitle.toLowerCase().contains(searchQuery))
+              .toList();
+
+      final allEpisodeKeys = <String>{};
+      for (var entry in filteredEntries) {
+        for (var episode in entry.episodesProgress.entries) {
+          allEpisodeKeys.add('${entry.animeId}_${episode.key}');
+        }
+      }
+      ref.read(selectedItemsProvider.notifier).state = allEpisodeKeys;
+    } else {
+      final episodes = ref
+          .read(animeWatchProgressProvider.notifier)
+          .getFilteredEpisodes(filter);
+      final filteredEpisodes = searchQuery.isEmpty
+          ? episodes
+          : episodes
+              .where((e) =>
+                  e.anime.animeTitle.toLowerCase().contains(searchQuery) ||
+                  e.episode.episodeNumber
+                      .toString()
+                      .toLowerCase()
+                      .contains(searchQuery))
+              .toList();
+
+      final allEpisodeKeys = filteredEpisodes
+          .map((e) => '${e.anime.animeId}_${e.episode.episodeNumber}')
+          .toSet();
+      ref.read(selectedItemsProvider.notifier).state = allEpisodeKeys;
+    }
+  }
+
+  void _showDeleteDialog(BuildContext context, WidgetRef ref) {
+    final selectedCount = ref.read(selectedItemsProvider).length;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Delete Watch Progress'),
+          content: Text(
+            'Are you sure you want to delete $selectedCount selected episode${selectedCount > 1 ? 's' : ''}? This action cannot be undone.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _deleteSelectedItems(ref);
+              },
+              style: FilledButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.error,
+              ),
+              child: const Text('Delete'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _deleteSelectedItems(WidgetRef ref) {
+    final selectedItems = ref.read(selectedItemsProvider);
+    final watchProgressNotifier = ref.read(animeWatchProgressProvider.notifier);
+
+    for (final itemKey in selectedItems) {
+      final parts = itemKey.split('_');
+      if (parts.length >= 2) {
+        final animeId = parts[0];
+        final episodeKey = parts.sublist(1).join('_');
+
+        // Remove the episode progress
+        watchProgressNotifier.removeEpisodeProgress(
+            int.parse(animeId), int.parse(episodeKey));
+      }
+    }
+
+    // Exit multi-select mode
+    ref.read(multiSelectModeProvider.notifier).state = false;
+    ref.read(selectedItemsProvider.notifier).state = {};
+
+    // Show snackbar
+    ScaffoldMessenger.of(ref.context).showSnackBar(
+      SnackBar(
+        content: Text('Deleted ${selectedItems.length} episodes'),
+        action: SnackBarAction(
+          label: 'Undo',
+          onPressed: () {
+            // TODO: Implement undo functionality if needed
           },
         ),
-        centerTitle: false,
-        elevation: 0,
-        backgroundColor: colorScheme.surface,
-        leading: IconButton(
-          icon: const Icon(Iconsax.arrow_left_2),
-          onPressed: () => context.pop(),
-        ),
-        actions: [
-          Consumer(
-            builder: (context, ref, child) {
-              final isSearching = ref.watch(searchQueryProvider) != '';
-              return IconButton(
-                onPressed: () {
-                  ref.read(searchQueryProvider.notifier).state =
-                      isSearching ? '' : ' ';
-                },
-                icon: Icon(
-                    isSearching ? Iconsax.close_circle : Iconsax.search_normal),
-                tooltip: isSearching ? 'Cancel' : 'Search',
-              );
-            },
-          ),
-          Consumer(
-            builder: (context, ref, child) {
-              return PopupMenuButton<AnimeFilter>(
-                icon: const Icon(Iconsax.filter),
-                tooltip: 'Filter',
-                onSelected: (AnimeFilter filter) {
-                  ref.read(animeFilterProvider.notifier).state = filter;
-                },
-                itemBuilder: (BuildContext context) =>
-                    <PopupMenuEntry<AnimeFilter>>[
-                  const PopupMenuItem<AnimeFilter>(
-                    value: AnimeFilter.all,
-                    child: Text('All Anime'),
-                  ),
-                  const PopupMenuItem<AnimeFilter>(
-                    value: AnimeFilter.completed,
-                    child: Text('Completed'),
-                  ),
-                  const PopupMenuItem<AnimeFilter>(
-                    value: AnimeFilter.inProgress,
-                    child: Text('In Progress'),
-                  ),
-                  const PopupMenuItem<AnimeFilter>(
-                    value: AnimeFilter.recentlyUpdated,
-                    child: Text('Recently Updated'),
-                  ),
-                ],
-              );
-            },
-          ),
-          Consumer(
-            builder: (context, ref, child) {
-              final viewMode = ref.watch(viewModeProvider);
-              return IconButton(
-                onPressed: () {
-                  ref.read(viewModeProvider.notifier).state =
-                      viewMode == ViewMode.grouped
-                          ? ViewMode.ungrouped
-                          : ViewMode.grouped;
-                },
-                icon: Icon(
-                  viewMode == ViewMode.grouped
-                      ? Iconsax.element_3
-                      : Iconsax.element_4,
-                ),
-                tooltip: viewMode == ViewMode.grouped ? 'Ungroup' : 'Group',
-              );
-            },
-          ),
-        ],
       ),
-      body: _ContinueWatchingContent(),
     );
   }
 }
@@ -144,6 +304,7 @@ class _ContinueWatchingContent extends ConsumerWidget {
     final filter = ref.watch(animeFilterProvider);
     final viewMode = ref.watch(viewModeProvider);
     final searchQuery = ref.watch(searchQueryProvider).toLowerCase();
+    final multiSelectMode = ref.watch(multiSelectModeProvider);
 
     // Get data based on view mode
     final entries = ref
@@ -237,30 +398,39 @@ class _ContinueWatchingContent extends ConsumerWidget {
       child: CustomScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         slivers: [
-          // Stats section
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(10.0),
-              child: _WatchStats(
-                  entries: viewMode == ViewMode.grouped
-                      ? filteredEntries
-                      : filteredEpisodes.map((e) => e.anime).toSet().toList()),
+          // Stats section (hidden in multi-select mode)
+          if (!multiSelectMode)
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.all(10.0),
+                child: _WatchStats(
+                    entries: viewMode == ViewMode.grouped
+                        ? filteredEntries
+                        : filteredEpisodes
+                            .map((e) => e.anime)
+                            .toSet()
+                            .toList()),
+              ),
             ),
-          ),
 
-          const SliverToBoxAdapter(child: SizedBox(height: 16)),
+          if (!multiSelectMode)
+            const SliverToBoxAdapter(child: SizedBox(height: 16)),
 
           // Section header
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(10, 8, 4, 12),
               child: Text(
-                viewMode == ViewMode.grouped
-                    ? 'Your Anime Progress'
-                    : 'Recent Episodes',
+                multiSelectMode
+                    ? 'Select episodes to delete'
+                    : viewMode == ViewMode.grouped
+                        ? 'Your Anime Progress'
+                        : 'Recent Episodes',
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: colorScheme.onSurface,
+                  color: multiSelectMode
+                      ? colorScheme.primary
+                      : colorScheme.onSurface,
                 ),
               ),
             ),
@@ -274,7 +444,10 @@ class _ContinueWatchingContent extends ConsumerWidget {
                   final entry = filteredEntries[index];
                   return Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                    child: _AnimeSeriesCard(entry: entry),
+                    child: _AnimeSeriesCard(
+                      entry: entry,
+                      multiSelectMode: multiSelectMode,
+                    ),
                   );
                 },
                 childCount: filteredEntries.length,
@@ -291,6 +464,7 @@ class _ContinueWatchingContent extends ConsumerWidget {
                     child: _EpisodeCard(
                       anime: episodeData.anime,
                       episode: episodeData.episode,
+                      multiSelectMode: multiSelectMode,
                     ),
                   );
                 },
@@ -452,13 +626,17 @@ class _StatItem extends StatelessWidget {
   }
 }
 
-class _AnimeSeriesCard extends StatelessWidget {
+class _AnimeSeriesCard extends ConsumerWidget {
   final dynamic entry;
+  final bool multiSelectMode;
 
-  const _AnimeSeriesCard({required this.entry});
+  const _AnimeSeriesCard({
+    required this.entry,
+    required this.multiSelectMode,
+  });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
@@ -493,7 +671,9 @@ class _AnimeSeriesCard extends StatelessWidget {
                   ),
                 ),
               ),
-              if (entry.episodesProgress.entries.length == entry.totalEpisodes)
+              if (entry.episodesProgress.entries.length ==
+                      entry.totalEpisodes &&
+                  !multiSelectMode)
                 Positioned(
                   right: 0,
                   top: 0,
@@ -550,6 +730,10 @@ class _AnimeSeriesCard extends StatelessWidget {
       ),
       content: ShonenXGridView(
         items: entry.episodesProgress.entries.map<Widget>((episode) {
+          final episodeKey = '${entry.animeId}_${episode.key}';
+          final selectedItems = ref.watch(selectedItemsProvider);
+          final isSelected = selectedItems.contains(episodeKey);
+
           return SizedBox(
             width: 330,
             height: 180,
@@ -557,9 +741,25 @@ class _AnimeSeriesCard extends StatelessWidget {
               anime: entry,
               episode: episode.value,
               index: episode.key,
+              isSelected: isSelected,
+              multiSelectMode: multiSelectMode,
               onTap: () {
-                context.push(
-                    '/watch/${entry.animeId}/${episode.value.episodeNumber}');
+                if (multiSelectMode) {
+                  final selectedItemsNotifier =
+                      ref.read(selectedItemsProvider.notifier);
+                  final currentSelected = Set<String>.from(selectedItems);
+
+                  if (isSelected) {
+                    currentSelected.remove(episodeKey);
+                  } else {
+                    currentSelected.add(episodeKey);
+                  }
+
+                  selectedItemsNotifier.state = currentSelected;
+                } else {
+                  context.push(
+                      '/watch/${entry.animeId}?episode=${episode.value.episodeNumber}&startAt=${episode.value.progressInSeconds}');
+                }
               },
             ),
           );
@@ -599,31 +799,78 @@ class _AnimeSeriesCard extends StatelessWidget {
   }
 }
 
-class _EpisodeCard extends StatelessWidget {
+class _EpisodeCard extends ConsumerWidget {
   final AnimeWatchProgressEntry anime;
   final EpisodeProgress episode;
+  final bool multiSelectMode;
 
-  const _EpisodeCard({required this.anime, required this.episode});
+  const _EpisodeCard({
+    required this.anime,
+    required this.episode,
+    required this.multiSelectMode,
+  });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final episodeKey = '${anime.animeId}_${episode.episodeNumber}';
+    final selectedItems = ref.watch(selectedItemsProvider);
+    final isSelected = selectedItems.contains(episodeKey);
 
     return Card(
-      elevation: 2,
+      elevation: multiSelectMode && isSelected ? 8 : 2,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: colorScheme.outlineVariant, width: 1),
+        side: BorderSide(
+          color: multiSelectMode && isSelected
+              ? colorScheme.primary
+              : colorScheme.outlineVariant,
+          width: multiSelectMode && isSelected ? 2 : 1,
+        ),
       ),
+      color: multiSelectMode && isSelected
+          ? colorScheme.primaryContainer.withOpacity(0.1)
+          : null,
       child: InkWell(
         onTap: () {
-          context.push('/watch/${anime.animeId}/${episode.episodeNumber}');
+          if (multiSelectMode) {
+            final selectedItemsNotifier =
+                ref.read(selectedItemsProvider.notifier);
+            final currentSelected = Set<String>.from(selectedItems);
+
+            if (isSelected) {
+              currentSelected.remove(episodeKey);
+            } else {
+              currentSelected.add(episodeKey);
+            }
+
+            selectedItemsNotifier.state = currentSelected;
+          } else {
+            context.push('/watch/${anime.animeId}/${episode.episodeNumber}');
+          }
         },
+        onLongPress: multiSelectMode
+            ? null
+            : () {
+                // Enter multi-select mode and select this item
+                ref.read(multiSelectModeProvider.notifier).state = true;
+                ref.read(selectedItemsProvider.notifier).state = {episodeKey};
+              },
         child: Padding(
           padding: const EdgeInsets.all(8.0),
           child: Row(
             children: [
+              if (multiSelectMode)
+                Padding(
+                  padding: const EdgeInsets.only(right: 8.0),
+                  child: Icon(
+                    isSelected ? Iconsax.tick_circle : Iconsax.radio,
+                    color: isSelected
+                        ? colorScheme.primary
+                        : colorScheme.onSurfaceVariant,
+                  ),
+                ),
               ClipRRect(
                 borderRadius: BorderRadius.circular(8),
                 child: CachedNetworkImage(
@@ -680,7 +927,7 @@ class _EpisodeCard extends StatelessWidget {
                   ],
                 ),
               ),
-              if (episode.isCompleted)
+              if (episode.isCompleted && !multiSelectMode)
                 Icon(
                   Iconsax.tick_circle,
                   color: colorScheme.primaryContainer,

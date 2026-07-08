@@ -64,7 +64,7 @@ class UIHelper {
   /// Enable immersive mode (hide system UI)
   static Future<void> enableImmersiveMode() async {
     if (Platform.isAndroid || Platform.isIOS) {
-      await SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersive);
+      await SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
     }
   }
 

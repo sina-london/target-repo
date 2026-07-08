@@ -31,15 +31,8 @@ class CenterControls extends StatelessWidget {
           duration: const Duration(milliseconds: 200),
           curve: Curves.easeInOut,
           decoration: BoxDecoration(
-            color: theme.colorScheme.primaryContainer.withOpacity(0.9),
+            color: theme.colorScheme.primaryContainer,
             shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: theme.colorScheme.shadow.withOpacity(0.3),
-                blurRadius: 10,
-                spreadRadius: 2,
-              ),
-            ],
           ),
           child: Material(
             color: Colors.transparent,

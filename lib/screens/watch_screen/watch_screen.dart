@@ -124,6 +124,7 @@ class _WatchScreenState extends ConsumerState<WatchScreen>
       await notifier.fetchEpisodes(
         animeId: widget.animeId,
         episodeIdx: (widget.episode ?? 1) - 1,
+        startAt: widget.startAt,
       );
     } catch (e) {
       AppLogger.e('Error fetching initial episodes: $e');
