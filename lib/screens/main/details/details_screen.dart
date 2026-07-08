@@ -197,6 +197,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
   }
 
   Widget _buildDetailsSection({bool isLoading = false}) {
+    ThemeData _themeContext = Theme.of(context);
     if (isLoading) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -210,7 +211,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
           const SizedBox(height: 16),
           Text(
             'Details',
-            style: Theme.of(context).textTheme.headlineMedium,
+            style: _themeContext.textTheme.headlineMedium,
           ),
           const SizedBox(height: 8),
           Shimmer.fromColors(
@@ -272,7 +273,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
         const SizedBox(height: 16),
         Text(
           'Details',
-          style: Theme.of(context).textTheme.headlineMedium,
+          style: _themeContext.textTheme.headlineMedium,
         ),
         const SizedBox(height: 8),
         ValueListenableBuilder(
@@ -285,13 +286,13 @@ class _DetailsScreenState extends State<DetailsScreen> {
               duration: const Duration(milliseconds: 300),
               firstChild: Text(
                 info?.anime?.info?.description ?? 'Description not available',
-                style: Theme.of(context).textTheme.bodyMedium,
+                style: _themeContext.textTheme.bodyMedium,
                 maxLines: 3,
                 overflow: TextOverflow.ellipsis,
               ),
               secondChild: Text(
                 info?.anime?.info?.description ?? 'Description not available',
-                style: Theme.of(context).textTheme.bodyMedium,
+                style: _themeContext.textTheme.bodyMedium,
               ),
             );
           },
@@ -302,7 +303,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
           child: ValueListenableBuilder<bool>(
             valueListenable: _isDescriptionExpanded,
             builder: (context, isExpanded, child) {
-              return Text(isExpanded ? 'Show Less' : 'Show More', style: Theme.of(context).textTheme.labelMedium,);
+              return Text(isExpanded ? 'Show Less' : 'Show More', style: _themeContext.textTheme.labelMedium,);
             },
           ),
         ),
