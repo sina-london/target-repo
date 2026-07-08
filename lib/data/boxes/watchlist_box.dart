@@ -122,7 +122,6 @@ class WatchlistBox {
 
   ContinueWatchingItem? getContinueWatchingById(String id) {
     try {
-      print(_watchlistModel?.continueWatching);
       return _watchlistModel?.continueWatching?.firstWhere(
         (item) => item.id == id,
       );
