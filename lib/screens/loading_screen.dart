@@ -2,13 +2,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-import 'package:shonenx/core/registery/anime_source_registery_provider.dart';
 import 'package:shonenx/core/utils/app_logger.dart';
-import 'package:shonenx/data/hive/providers/home_page_provider.dart';
-import 'package:shonenx/data/hive/providers/ui_provider.dart';
+import 'package:shonenx/providers/initialization_provider.dart';
 
-/// Enhanced loading screen with better error handling, debugging capabilities, and anime quotes.
 class LoadingScreen extends ConsumerStatefulWidget {
   const LoadingScreen({super.key});
 
@@ -18,25 +14,15 @@ class LoadingScreen extends ConsumerStatefulWidget {
 
 class _LoadingScreenState extends ConsumerState<LoadingScreen>
     with TickerProviderStateMixin {
+  // Animation controllers
   late final AnimationController _progressController;
   late final AnimationController _pulseController;
-  late final AnimationController _fadeController;
   late final Animation<double> _pulseAnimation;
-  late final Animation<double> _fadeAnimation;
-
-  String _currentStatus = 'Initializing...';
-  bool _hasError = false;
-  String? _errorMessage;
-  // ignore: unused_field
-  double _manualProgress = 0.0;
-
-  // Simple quote system
+  // Quote rotation.
   int _currentQuoteIndex = 0;
   Timer? _quoteTimer;
 
-  // Timeout timer to prevent infinite loading
-  Timer? _timeoutTimer;
-  static const Duration _initializationTimeout = Duration(seconds: 30);
+  bool _hasError = false;
 
   // Simple anime quotes
   static const List<String> _quotes = [
@@ -55,44 +41,30 @@ class _LoadingScreenState extends ConsumerState<LoadingScreen>
   @override
   void initState() {
     super.initState();
-    AppLogger.d('Initializing Enhanced LoadingScreen with Anime Quotes');
+    AppLogger.d('Initializing LoadingScreen UI');
 
     _initializeAnimations();
     _startQuoteRotation();
-    _startTimeoutTimer();
 
-    // Initialize app after first frame with error handling
+    // Trigger the initialization process. Use `read` as it only needs to be called once.
+    // Use a post-frame callback to ensure the widget is fully built.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _initializeAppSafely();
+      ref.read(initializationProvider.notifier).initialize();
     });
   }
 
   void _initializeAnimations() {
-    // Pulse animation for logo
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 2000),
-    );
+    )..repeat(reverse: true);
     _pulseAnimation = Tween<double>(begin: 1.0, end: 1.08).animate(
-      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
-    );
-    _pulseController.repeat(reverse: true);
+        CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut));
 
-    // Progress animation
     _progressController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 8),
     );
-
-    // Fade animation for status changes
-    _fadeController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 300),
-    );
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _fadeController, curve: Curves.easeInOut),
-    );
-    _fadeController.forward();
   }
 
   void _startQuoteRotation() {
@@ -105,184 +77,51 @@ class _LoadingScreenState extends ConsumerState<LoadingScreen>
     });
   }
 
-  void _startTimeoutTimer() {
-    _timeoutTimer = Timer(_initializationTimeout, () {
-      if (mounted && !_hasError) {
-        AppLogger.e(
-            'Initialization timeout after ${_initializationTimeout.inSeconds} seconds');
-        _handleError('Initialization timed out. Please restart the app.');
-      }
-    });
-  }
-
   @override
   void dispose() {
-    AppLogger.d('Disposing Enhanced LoadingScreen');
-    _timeoutTimer?.cancel();
+    AppLogger.d('Disposing LoadingScreen');
     _quoteTimer?.cancel();
     _pulseController.dispose();
     _progressController.dispose();
-    _fadeController.dispose();
     super.dispose();
-  }
-
-  /// Safely initializes the app with comprehensive error handling.
-  Future<void> _initializeAppSafely() async {
-    try {
-      await _initializeApp();
-    } catch (e, stackTrace) {
-      AppLogger.e('Critical initialization error: $e', e, stackTrace);
-      _handleError('Failed to initialize app: ${e.toString()}');
-    }
-  }
-
-  /// Main initialization logic with detailed progress tracking.
-  Future<void> _initializeApp() async {
-    AppLogger.d('Starting comprehensive app initialization');
-
-    try {
-      // Step 1: Initialize basic services
-      _updateStatus('Setting up core services...', 0.1);
-      await Future.delayed(
-          const Duration(milliseconds: 500)); // Allow UI to update
-
-      // Step 2: Initialize anime registry
-      _updateStatus('Loading anime sources...', 0.3);
-      final animeRegistryNotifier =
-          ref.read(animeSourceRegistryProvider.notifier);
-      await animeRegistryNotifier.initialize(null);
-
-      // Verify registry initialization
-      final registryState = ref.read(animeSourceRegistryProvider);
-      if (!registryState.registry.isInitialized) {
-        throw Exception(
-            'Anime source registry failed to initialize: ${registryState.error ?? 'Unknown error'}');
-      }
-      AppLogger.d('✅ Anime source registry initialized successfully');
-
-      // Step 3: Initialize homepage
-      _updateStatus('Preparing homepage...', 0.6);
-      final homepageNotifier = ref.read(homepageProvider.notifier);
-      await homepageNotifier.initialize();
-      AppLogger.d('✅ Homepage initialized successfully');
-
-      // Step 4: Apply UI settings
-      _updateStatus('Applying UI settings...', 0.8);
-      await _applyUISettings();
-
-      // Step 5: Final preparations
-      _updateStatus('Finalizing setup...', 0.95);
-      await Future.delayed(
-          const Duration(milliseconds: 800)); // Allow animations to complete
-
-      // Step 6: Complete and navigate
-      _updateStatus('Ready!', 1.0);
-      await Future.delayed(const Duration(milliseconds: 500));
-
-      await _navigateToDefaultRoute();
-    } catch (e, stackTrace) {
-      AppLogger.e('Initialization step failed: $e', e, stackTrace);
-      rethrow; // Re-throw to be caught by the outer try-catch
-    }
-  }
-
-  /// Applies UI settings with error handling.
-  Future<void> _applyUISettings() async {
-    try {
-      final uiSettings = ref.read(uiSettingsProvider);
-      if (uiSettings.immersiveMode) {
-        AppLogger.d('Enabling immersive mode');
-        await SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersive);
-      }
-      AppLogger.d('✅ UI settings applied successfully');
-    } catch (e) {
-      AppLogger.w('Failed to apply UI settings: $e');
-      // Don't throw - UI settings failure shouldn't prevent app launch
-    }
-  }
-
-  /// Navigates to the default route with validation.
-  Future<void> _navigateToDefaultRoute() async {
-    if (!mounted) {
-      AppLogger.w('LoadingScreen unmounted before navigation');
-      return;
-    }
-
-    try {
-      final uiSettings = ref.read(uiSettingsProvider);
-      final route = _getValidRoute(uiSettings.defaultTab);
-
-      AppLogger.d('Navigating to default route: $route');
-      _timeoutTimer?.cancel(); // Cancel timeout as we're about to navigate
-
-      // Use pushReplacement to ensure we don't keep the loading screen in history
-      context.pushReplacement(route);
-    } catch (e) {
-      AppLogger.e('Navigation failed: $e');
-      // Fallback to home route
-      context.pushReplacement('/');
-    }
-  }
-
-  /// Validates and returns a safe route.
-  String _getValidRoute(String? defaultTab) {
-    const validRoutes = {
-      'Home': '/',
-      'Watchlist': '/watchlist',
-      'Browse': '/browse',
-    };
-
-    return validRoutes[defaultTab] ?? '/';
-  }
-
-  /// Updates the loading status and progress.
-  void _updateStatus(String status, double progress) {
-    if (!mounted) return;
-
-    setState(() {
-      _currentStatus = status;
-      _manualProgress = progress;
-    });
-
-    // Animate progress controller to match manual progress
-    _progressController.animateTo(
-      progress,
-      duration: const Duration(milliseconds: 500),
-      curve: Curves.easeOutCubic,
-    );
-
-    AppLogger.d('Loading status: $status (${(progress * 100).toInt()}%)');
-  }
-
-  /// Handles errors by updating the UI and providing user feedback.
-  void _handleError(String message) {
-    if (!mounted) return;
-
-    setState(() {
-      _hasError = true;
-      _errorMessage = message;
-      _currentStatus = 'Error occurred';
-    });
-
-    _progressController.stop();
-    _quoteTimer?.cancel(); // Stop quote rotation on error
-    AppLogger.e('Loading error: $message');
   }
 
   @override
   Widget build(BuildContext context) {
+    // Watch the provider to get the current state
+    final initState = ref.watch(initializationProvider);
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final size = MediaQuery.of(context).size;
 
+    // Animate the progress bar to the current progress from the provider
+    _progressController.animateTo(
+      initState.progress,
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.easeOutCubic,
+    );
+
+    // Stop quotes on error
+    if (initState.hasError && _quoteTimer?.isActive == true) {
+      _quoteTimer?.cancel();
+    }
+
     return Scaffold(
       backgroundColor: colorScheme.surface,
-      body: _buildContent(colorScheme, size, theme),
+      body: Stack(
+        children: [
+          _buildContent(colorScheme, size, theme, initState.status,
+              initState.error.toString()),
+          if (initState.hasError)
+            _buildErrorOverlay(colorScheme, theme, initState.error.toString()),
+        ],
+      ),
     );
   }
 
   /// Builds the main content with enhanced visual design.
-  Widget _buildContent(ColorScheme colorScheme, Size size, ThemeData theme) {
+  Widget _buildContent(ColorScheme colorScheme, Size size, ThemeData theme,
+      InitializationStatus status, String message) {
     return Container(
       width: double.infinity,
       height: double.infinity,
@@ -299,8 +138,8 @@ class _LoadingScreenState extends ConsumerState<LoadingScreen>
       child: Stack(
         children: [
           _buildBackgroundElements(colorScheme, size),
-          _buildMainContent(colorScheme, size, theme),
-          if (_hasError) _buildErrorOverlay(colorScheme, theme),
+          _buildMainContent(colorScheme, size, theme, status),
+          if (_hasError) _buildErrorOverlay(colorScheme, theme, message),
         ],
       ),
     );
@@ -364,8 +203,8 @@ class _LoadingScreenState extends ConsumerState<LoadingScreen>
   }
 
   /// Builds the centered content with enhanced animations.
-  Widget _buildMainContent(
-      ColorScheme colorScheme, Size size, ThemeData theme) {
+  Widget _buildMainContent(ColorScheme colorScheme, Size size, ThemeData theme,
+      InitializationStatus status) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 32),
@@ -378,7 +217,7 @@ class _LoadingScreenState extends ConsumerState<LoadingScreen>
             const SizedBox(height: 24),
             _buildSimpleQuote(colorScheme),
             const SizedBox(height: 48),
-            _buildProgressSection(colorScheme, size),
+            _buildProgressSection(colorScheme, size, status),
             const SizedBox(height: 32),
             _buildDebugInfo(colorScheme),
           ],
@@ -481,28 +320,34 @@ class _LoadingScreenState extends ConsumerState<LoadingScreen>
     );
   }
 
-  /// Enhanced progress section with status updates.
-  Widget _buildProgressSection(ColorScheme colorScheme, Size size) {
+  Widget _buildProgressSection(
+      ColorScheme colorScheme, Size size, InitializationStatus status) {
+    final initState =
+        ref.watch(initializationProvider); // Get state for error check
     return SizedBox(
       width: size.width * 0.7,
       child: Column(
         children: [
           _buildProgressBar(colorScheme, size),
           const SizedBox(height: 20),
-          FadeTransition(
-            opacity: _fadeAnimation,
-            child: Text(
-              _currentStatus,
-              style: TextStyle(
-                color: _hasError
-                    ? colorScheme.error
-                    : colorScheme.onSurface.withOpacity(0.8),
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                letterSpacing: 0.3,
-              ),
-              textAlign: TextAlign.center,
+          Text(
+            status == InitializationStatus.loadingHomepage
+                ? 'Fetching anime data...'
+                : status == InitializationStatus.applyingSettings
+                    ? 'Applying settings...'
+                    : status == InitializationStatus.success
+                        ? 'Ready!'
+                        : 'Initializing...',
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: initState.hasError
+                  ? colorScheme.error
+                  : colorScheme.onSurface.withOpacity(0.8),
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
             ),
+            textAlign: TextAlign.center,
           ),
         ],
       ),
@@ -562,7 +407,8 @@ class _LoadingScreenState extends ConsumerState<LoadingScreen>
   }
 
   /// Error overlay with retry option.
-  Widget _buildErrorOverlay(ColorScheme colorScheme, ThemeData theme) {
+  Widget _buildErrorOverlay(
+      ColorScheme colorScheme, ThemeData theme, String errorMessage) {
     return Container(
       color: Colors.black.withOpacity(0.8),
       child: Center(
@@ -584,7 +430,7 @@ class _LoadingScreenState extends ConsumerState<LoadingScreen>
               ),
               const SizedBox(height: 16),
               Text(
-                'Initialization Failed',
+                errorMessage,
                 style: theme.textTheme.headlineSmall?.copyWith(
                   color: colorScheme.error,
                   fontWeight: FontWeight.bold,
@@ -592,7 +438,7 @@ class _LoadingScreenState extends ConsumerState<LoadingScreen>
               ),
               const SizedBox(height: 12),
               Text(
-                _errorMessage ?? 'An unexpected error occurred',
+                errorMessage,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: colorScheme.onSurface.withOpacity(0.8),
                 ),
@@ -611,13 +457,10 @@ class _LoadingScreenState extends ConsumerState<LoadingScreen>
                     onPressed: () {
                       setState(() {
                         _hasError = false;
-                        _errorMessage = null;
-                        _currentStatus = 'Retrying...';
                         _currentQuoteIndex = 0;
                       });
                       _progressController.reset();
                       _startQuoteRotation();
-                      _initializeAppSafely();
                     },
                     child: const Text('Retry'),
                   ),
