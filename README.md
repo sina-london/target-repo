@@ -1,107 +1,174 @@
-
-# ShonenX - Anime Streaming App
-
 <div align="center">
-    <img src="https://i.postimg.cc/Fzm49sZc/Picsart-24-10-29-10-03-15-133.png" alt="ShonenX Logo" width="300"/>
+  <img src="https://i.postimg.cc/Fzm49sZc/Picsart-24-10-29-10-03-15-133.png" alt="ShonenX Logo" width="120"/>
+  
+  # ShonenX
+  
+  [![Flutter Version](https://img.shields.io/badge/Flutter-≥3.3.4-blue.svg)](https://flutter.dev/)
+  [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+  [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/Darkx-dev/ShonenX/pulls)
+
+  A modern, feature-rich anime streaming application built with Flutter
 </div>
 
-## Overview
+## ✨ Features
 
-**ShonenX** is a simple and sleek anime streaming app designed for anime enthusiasts. Built with Flutter, this app provides a user-friendly interface to explore and stream your favorite anime series and movies seamlessly.
+- 🎯 **Intuitive Interface** - Clean and user-friendly design for seamless navigation
+- 📺 **High-Quality Streaming** - Multiple quality options from 320p to 1080p
+- 🌓 **Theme Customization** - Toggle between light and dark themes
+- 📱 **Adaptive Layout** - Configurable player orientation for optimal viewing
+- 🔍 **Search** - Find anime by title
+- 📌 **Watchlist** - Keep track of your favorite shows
 
-### Features
+## 📸 Screenshots
 
-- **Browse Genres**: Discover anime by genres.
-- **Stream Anime**: Watch your favorite shows with a smooth playback experience.
-- **Quality Selector**: Choose between various streaming qualities (320p - 1080p).
-- **Theme Toggle**: Switch between light and dark themes for a personalized viewing experience.
-- **Player Orientation Selector**: Select default orientation for optimal viewing.
+<div align="center">
+<table>
+  <tr>
+    <td><img src="screenshots/home_screen.png" width="200" alt="Home Screen"/></td>
+    <td><img src="screenshots/search_screen" width="200" alt="Search Screen"/></td>
+    <td><img src="screenshots/watchlist_screen" width="200" alt="Watchlist Screen"/></td>
+    <td><img src="screenshots/details_screen" width="200" alt="Details Screen"/></td>
+  </tr>
+  <tr>
+    <td><img src="screenshots/stream_screen" width="200" alt="Stream Screen"/></td>
+    <td><img src="screenshots/settings_screen" width="200" alt="Settings Screen"/></td>
+    <td><img src="screenshots/theme_screen" width="200" alt="Theme Screen"/></td>
+    <td><img src="screenshots/about_screen" width="200" alt="About Screen"/></td>
+  </tr>
+</table>
+</div>
 
-### Screenshots
+## 🛠️ Tech Stack
 
-Here are some screenshots of the app:
-
-| Screen                | Screenshot                                                 |
-|-----------------------|-----------------------------------------------------------|
-| Home Screen           | <img src="screenshots/home_screen.png" width="200" />   |
-| Genre Selection       | <img src="screenshots/genre_selection.png" width="200" />|
-| Details Screen        | <img src="screenshots/details_screen.png" width="200" /> |
-| Settings Screen       | <img src="screenshots/settings_screen.png" width="200" /> |
-| Stream Screen         | <img src="screenshots/stream_screen.png" width="200" />  |
-| Browse Screen      | <img src="screenshots/browse_screen.png" width="200" /> |
-
-*Make sure to place your screenshot images in a folder named `screenshots` in your project directory, and replace the paths above with the actual image names.*
-
-### Tech Stack
-
-- **Framework**: Flutter
+### Core
+- **Framework**: Flutter (≥3.3.4)
 - **Language**: Dart
-- **Packages**:
-  - [flutter_launcher_icons](https://pub.dev/packages/flutter_launcher_icons)
-  - [google_fonts](https://pub.dev/packages/google_fonts)
-  - [http](https://pub.dev/packages/http)
-  - [video_player](https://pub.dev/packages/video_player)
+- **State Management**: Hive flutter
+- **Database**: Hive
 
-## Getting Started
+### Key Dependencies
+```yaml
+dependencies:
+  better_player: ^0.0.84
+  crystal_navigation_bar: ^1.0.1
+  flutter:
+    sdk: flutter
+  flutter_launcher_icons: ^0.14.1
+  google_fonts: ^6.2.1
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+  http: ^1.2.2
+  hugeicons: ^0.0.7
+  shimmer: ^3.0.0
+  url_launcher: ^6.3.1
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+  hive_generator: ^2.0.1
+  build_runner: ^2.4.13
+```
+
+## 🚀 Getting Started
 
 ### Prerequisites
 
-Ensure you have the following installed:
-
-- Flutter SDK (>=3.3.4 <4.0.0)
+- Flutter SDK (≥3.3.4)
 - Dart SDK
-- An IDE (e.g., Visual Studio Code, Android Studio)
+- Android Studio / VS Code
+- Git
 
 ### Installation
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/Darkx-dev/ShonenX.git
-   ```
-2. Navigate to the project directory:
-   ```bash
-   cd ShonenX
-   ```
-3. Install dependencies:
-   ```bash
-   flutter pub get
-   ```
-4. Run the app:
-   ```bash
-   flutter run
-   ```
+1. **Clone the repository**
+```bash
+git clone https://github.com/Darkx-dev/ShonenX.git
+cd ShonenX
+```
+
+2. **Install dependencies**
+```bash
+flutter pub get
+```
+
+3. **Run the app**
+```bash
+flutter run
+```
 
 ### Configuration
+1. **Build Configuration**
+   - Modify `android/app/build.gradle` for Android settings
+   - Update `ios/Runner.xcworkspace` for iOS settings
 
-- You can customize the app by modifying the `pubspec.yaml` file. Update the dependencies or add new packages as needed.
+## 🎯 Usage Guide
 
-## Usage
+### First-time Setup
+1. Launch the app
+2. Choose your preferred theme
 
-- Open the app and browse through different genres.
-- Select an anime to view its details and start streaming.
-- Use the settings to adjust video quality and toggle themes.
+### Watching Anime
+1. Select an anime
+2. Choose episode and quality settings
+3. Enjoy streaming!
 
-## Contributing
+### Managing Watchlist
+- Tap the favorite icon to add/remove shows
+- Access your watchlist from the bottom navigator
+- Auto add to recent/continue
+- More features coming soon with development
 
-Contributions are welcome! If you would like to contribute, please follow these steps:
+## 🤝 Contributing
 
-1. Fork the repository.
-2. Create a new branch (`git checkout -b feature/YourFeature`).
-3. Make your changes and commit them (`git commit -m 'Add some feature'`).
-4. Push to the branch (`git push origin feature/YourFeature`).
-5. Create a new Pull Request.
+We welcome contributions! Here's how you can help:
 
-## License
+1. **Fork the Repository**
+   ```bash
+   git clone https://github.com/your-username/ShonenX.git
+   ```
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+2. **Create a Branch**
+   ```bash
+   git checkout -b feature/YourFeature
+   ```
 
-## Acknowledgments
+3. **Make Changes**
+   - Write clean, documented code
+   - Follow the project's coding style
+   - Add tests if applicable
 
-- Special thanks to the Flutter community for their amazing resources and support.
-- Any additional acknowledgments can be added here.
+4. **Submit a Pull Request**
+   - Describe your changes in detail
+   - Link any related issues
 
-## Contact
+### Development Guidelines
+- Follow Flutter's style guide
+- Write meaningful commit messages
+- Update documentation as needed
+- Add comments for complex logic
 
-For any inquiries, please contact:
-- **Roshan Kumar** (GitHub: [Darkx-dev](https://github.com/Darkx-dev))
-- Email: [darkx.dev.23@gmail.com](mailto:darkx.dev.23@gmail.com)
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- Flutter team for the amazing framework
+- [Aniwatch API](https://github.com/ghoshRitesh12/aniwatch-api) for anime data
+
+## 📞 Contact & Support
+
+- **Developer**: Roshan Kumar
+- **GitHub**: [@Darkx-dev](https://github.com/Darkx-dev)
+- **Email**: [darkx.dev.23@gmail.com](mailto:darkx.dev.23@gmail.com)
+
+### Reporting Issues
+- Use the GitHub issue tracker
+- Include steps to reproduce
+- Attach relevant screenshots/logs
+
+---
+
+<div align="center">
+  Made with ❤️ by <a href="https://github.com/Darkx-dev">Darkx-dev</a>
+</div>
