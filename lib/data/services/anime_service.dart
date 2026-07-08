@@ -54,8 +54,9 @@ class AnimeService {
         url, (json) => EpisodeStreamingLinksModel.fromJson(json));
   }
 
-  Future<GenreDetailModel> fetchGenreAnime(String genreName) async {
-    final url = '$baseUrl/genre/$genreName';
+  Future<GenreDetailModel> fetchGenreAnime(String genreName,
+      {required int page}) async {
+    final url = '$baseUrl/genre/$genreName?page=$page';
     return _get(url, (json) => GenreDetailModel.fromJson(json));
   }
 
