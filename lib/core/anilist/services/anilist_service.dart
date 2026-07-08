@@ -56,8 +56,8 @@ class AnilistService {
           : await client.query(options as QueryOptions);
 
       if (result.hasException) {
-        AppLogger.e('GraphQL Error in $operationName',
-            result.exception, StackTrace.current);
+        AppLogger.e('GraphQL Error in $operationName', result.exception,
+            StackTrace.current);
         throw AnilistServiceException(
             'GraphQL operation failed', result.exception);
       }
@@ -75,11 +75,12 @@ class AnilistService {
       media?.map((json) => Media.fromJson(json)).toList() ?? [];
 
   /// Search for anime by title
-  Future<List<Media>> searchAnime(String title) async {
+  Future<List<Media>> searchAnime(String title,
+      {int page = 1, int perPage = 10}) async {
     final data = await _executeGraphQLOperation<Map<String, dynamic>>(
       accessToken: null,
       query: AnilistQueries.searchAnimeQuery,
-      variables: {'search': title},
+      variables: {'search': title, 'page': page, 'perPage': perPage},
       operationName: 'SearchAnime',
     );
     return _parseMediaList(data?['Page']?['media']);
@@ -208,7 +209,8 @@ class AnilistService {
     required String? accessToken,
   }) async {
     if (userId == null || accessToken == null || accessToken.isEmpty) {
-      AppLogger.w('Invalid input: userId or accessToken is null/empty for GetFavorites');
+      AppLogger.w(
+          'Invalid input: userId or accessToken is null/empty for GetFavorites');
       return null;
     }
 
@@ -364,7 +366,8 @@ class AnilistService {
   String validateMediaListStatus(String status) {
     final upperStatus = status.toUpperCase();
     if (!_validStatuses.contains(upperStatus)) {
-      AppLogger.w('Invalid MediaListStatus: $status. Valid values: $_validStatuses');
+      AppLogger.w(
+          'Invalid MediaListStatus: $status. Valid values: $_validStatuses');
       return 'INVALID';
     }
     return upperStatus;

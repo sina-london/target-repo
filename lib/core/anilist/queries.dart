@@ -32,8 +32,8 @@ class AnilistQueries {
 
   // Query: Search anime by title
   static const String searchAnimeQuery = '''
-    query (\$search: String) {
-      Page(page: 1, perPage: 10) {
+    query (\$search: String, \$page: Int, \$perPage: Int) {
+      Page(page: \$page, perPage: \$perPage) {
         media(search: \$search, type: ANIME) {
           $mediaFields
         }

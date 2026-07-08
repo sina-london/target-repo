@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 
 class ShonenXGridView extends StatelessWidget {
+  final ScrollController? controller;
   final List<Widget> items;
   final int crossAxisCount;
+  final ScrollPhysics physics;
   final double mainAxisSpacing;
   final double crossAxisSpacing;
   final double childAspectRatio;
@@ -10,7 +12,9 @@ class ShonenXGridView extends StatelessWidget {
 
   const ShonenXGridView({
     super.key,
+    this.controller,
     required this.items,
+    this.physics = const NeverScrollableScrollPhysics(),
     this.crossAxisCount = 2,
     this.mainAxisSpacing = 8.0,
     this.crossAxisSpacing = 8.0,
@@ -23,8 +27,10 @@ class ShonenXGridView extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         return GridView.builder(
-          shrinkWrap: true, // Ensure grid fits within accordion content
-          physics: const NeverScrollableScrollPhysics(), // Disable scrolling
+          controller: controller,
+          shrinkWrap:
+              physics == const NeverScrollableScrollPhysics() ? true : false,
+          physics: physics,
           padding: padding,
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: crossAxisCount,

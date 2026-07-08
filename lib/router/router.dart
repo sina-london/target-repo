@@ -36,8 +36,7 @@ class NavItem {
 
 final List<NavItem> navItems = [
   NavItem(path: '/', icon: Iconsax.home, screen: const HomeScreen()),
-  NavItem(
-      path: '/browse', icon: Iconsax.discover_1, screen: const BrowseScreen()),
+  NavItem(path: '/browse', icon: Iconsax.discover_1, screen: BrowseScreen()),
   NavItem(
       path: '/watchlist',
       icon: Iconsax.bookmark,
