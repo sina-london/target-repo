@@ -61,6 +61,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildHeaderSection() {
+    ThemeData themeData =
+        Theme.of(context); // Use the ThemeManager to get the theme data
     return SizedBox(
       height: MediaQuery.of(context).size.height * 0.3,
       child: Center(
@@ -69,13 +71,14 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             Text(
               "Hello ${widget.userName}, What's on your mind today?",
-              style: Theme.of(context).textTheme.headlineLarge,
+              style: themeData.textTheme.headlineLarge?.copyWith(fontWeight: FontWeight.bold), // Use the theme data
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 10),
             Text(
               "Find your favourite anime and \nwatch it right away",
-              style: Theme.of(context).textTheme.titleSmall,
+              style: TextStyle(
+                  color: themeData.colorScheme.secondary), // Use the theme data
               textAlign: TextAlign.center,
             ),
           ],
@@ -86,9 +89,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildShimmerLoading() {
     final screenSize = MediaQuery.of(context).size;
+    ThemeData themeData =
+        Theme.of(context); // Use the ThemeManager to get the theme data
     return Shimmer.fromColors(
-      baseColor: Theme.of(context).colorScheme.surface.withOpacity(0.5),
-      highlightColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
+      baseColor:
+          themeData.colorScheme.surface.withOpacity(0.5), // Use the theme data
+      highlightColor: themeData.colorScheme.onSurface
+          .withOpacity(0.2), // Use the theme data
       child: SizedBox(
         height: screenSize.height * 0.25,
         child: ListView.builder(
@@ -99,7 +106,7 @@ class _HomeScreenState extends State<HomeScreen> {
             width: screenSize.width * 0.4,
             margin: const EdgeInsets.only(right: 12),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface,
+              color: themeData.colorScheme.surface, // Use the theme data
               borderRadius: BorderRadius.circular(20),
             ),
           ),
@@ -113,10 +120,13 @@ class _HomeScreenState extends State<HomeScreen> {
     required List<Anime> animeList,
     required String tag,
   }) {
+    ThemeData themeData =
+        Theme.of(context); // Use the ThemeManager to get the theme data
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionTitle(title),
+        _buildSectionTitle(
+            title, themeData), // Pass the theme data to the section title
         const SizedBox(height: 10),
         _isLoading
             ? _buildShimmerLoading()
@@ -130,10 +140,10 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildSectionTitle(String title) {
+  Widget _buildSectionTitle(String title, ThemeData themeData) {
     return Text(
       title,
-      style: Theme.of(context).textTheme.titleLarge
+      style: themeData.textTheme.headlineMedium, // Use the theme data
     );
   }
 

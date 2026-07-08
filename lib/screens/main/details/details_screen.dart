@@ -30,7 +30,8 @@ class DetailsScreen extends StatefulWidget {
 class _DetailsScreenState extends State<DetailsScreen> {
   final ValueNotifier<bool> _isDescriptionExpanded = ValueNotifier(false);
   late final AnimeService _animeService = AnimeService();
-  late final Box<WatchlistModel> _watchlistBox = Hive.box<WatchlistModel>('user_watchlist');
+  late final Box<WatchlistModel> _watchlistBox =
+      Hive.box<WatchlistModel>('user_watchlist');
   final ScrollController _scrollController = ScrollController();
   AnimeData? info;
   String? error;
@@ -71,7 +72,8 @@ class _DetailsScreenState extends State<DetailsScreen> {
                     errorBuilder: (_, __, ___) => Container(
                       height: 400,
                       color: Colors.grey[300],
-                      child: Icon(Icons.error, size: 50, color: Colors.grey[600]),
+                      child:
+                          Icon(Icons.error, size: 50, color: Colors.grey[600]),
                     ),
                   ),
                 ),
@@ -105,20 +107,22 @@ class _DetailsScreenState extends State<DetailsScreen> {
   }
 
   Widget _buildQuickInfoItem(IconData icon, String label, String? value) {
+    ThemeData themeData = Theme.of(context);
     return Expanded(
       child: Column(
         children: [
           Icon(icon),
           const SizedBox(height: 4),
-          Text(label, style: Theme.of(context).textTheme.labelMedium),
+          Text(label, style: themeData.textTheme.labelMedium),
           const SizedBox(height: 2),
           value == null
               ? Shimmer.fromColors(
                   baseColor: Colors.grey[800]!,
                   highlightColor: Colors.grey[600]!,
                   child: Container(
+                    margin: EdgeInsets.only(top: 3),
                     width: 50,
-                    height: 15,
+                    height: 12,
                     decoration: BoxDecoration(
                       color: Colors.grey[800],
                       borderRadius: BorderRadius.circular(5),
@@ -127,7 +131,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
                 )
               : Text(
                   value.isEmpty ? 'N/A' : value,
-                  style: Theme.of(context).textTheme.titleSmall,
+                  style: themeData.textTheme.labelMedium,
                   textAlign: TextAlign.center,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
@@ -138,45 +142,61 @@ class _DetailsScreenState extends State<DetailsScreen> {
   }
 
   Widget _buildDetailsSection({bool isLoading = false}) {
+    ThemeData themeData = Theme.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
-            _buildQuickInfoItem(Icons.timelapse, "Duration", isLoading ? null : info?.anime?.moreInfo?.duration),
-            _buildQuickInfoItem(Icons.translate, "Japanese", isLoading ? null : info?.anime?.moreInfo?.japanese),
+            _buildQuickInfoItem(Icons.timelapse, "Duration",
+                isLoading ? null : info?.anime?.moreInfo?.duration),
+            _buildQuickInfoItem(Icons.translate, "Japanese",
+                isLoading ? null : info?.anime?.moreInfo?.japanese),
           ],
         ),
         const SizedBox(height: 16),
         Text(
           'Details',
-          style: Theme.of(context).textTheme.headlineMedium,
+          style: themeData.textTheme.headlineMedium,
         ),
         const SizedBox(height: 8),
         ValueListenableBuilder<bool>(
           valueListenable: _isDescriptionExpanded,
           builder: (_, isExpanded, __) {
             return AnimatedCrossFade(
-              crossFadeState: isExpanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+              crossFadeState: isExpanded
+                  ? CrossFadeState.showSecond
+                  : CrossFadeState.showFirst,
               duration: const Duration(milliseconds: 300),
               firstChild: Text(
                 info?.anime?.info?.description ?? 'Description not available',
-                style: Theme.of(context).textTheme.bodyMedium,
+                style: themeData.textTheme.bodyLarge,
                 maxLines: 3,
                 overflow: TextOverflow.ellipsis,
               ),
               secondChild: Text(
                 info?.anime?.info?.description ?? 'Description not available',
-                style: Theme.of(context).textTheme.bodyMedium,
+                style: themeData.textTheme.bodyLarge,
               ),
             );
           },
         ),
         TextButton(
-          onPressed: () => _isDescriptionExpanded.value = !_isDescriptionExpanded.value,
+          onPressed: () =>
+              _isDescriptionExpanded.value = !_isDescriptionExpanded.value,
           child: ValueListenableBuilder<bool>(
             valueListenable: _isDescriptionExpanded,
-            builder: (_, isExpanded, __) => Text(isExpanded ? 'Show Less' : 'Show More'),
+            builder: (_, isExpanded, __) => Row(
+              children: [
+                Text(isExpanded ? 'Show Less' : 'Show More',
+                    style: themeData.textTheme.bodyMedium),
+                Icon(
+                  Icons.arrow_drop_down,
+                  size: 25,
+                  color: themeData.iconTheme.color,
+                )
+              ],
+            ),
           ),
         ),
         const SizedBox(height: 10),
@@ -206,18 +226,21 @@ class _DetailsScreenState extends State<DetailsScreen> {
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
+    ThemeData themeData = Theme.of(context);
     return Scaffold(
-      backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
+      backgroundColor: themeData.colorScheme.primary,
       body: FutureBuilder<AnimeInfo?>(
         future: fetchData(),
         builder: (context, snapshot) {
-          final bool isLoading = snapshot.connectionState == ConnectionState.waiting;
+          final bool isLoading =
+              snapshot.connectionState == ConnectionState.waiting;
           info = snapshot.data?.data;
 
           return CustomScrollView(
             controller: _scrollController,
             slivers: [
               SliverAppBar(
+                backgroundColor: Colors.transparent,
                 expandedHeight: screenHeight * 0.6,
                 leading: IconButton(
                   onPressed: () => Navigator.pop(context),
@@ -238,9 +261,10 @@ class _DetailsScreenState extends State<DetailsScreen> {
               ),
               SliverToBoxAdapter(
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).cardColor,
+                    color: themeData.cardColor,
                     borderRadius: const BorderRadius.only(
                       topLeft: Radius.circular(50),
                       topRight: Radius.circular(50),

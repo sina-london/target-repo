@@ -11,109 +11,164 @@ class ThemeScreen extends StatefulWidget {
 }
 
 class _ThemeScreenState extends State<ThemeScreen> {
-  ThemeType? _selectedTheme;
-  late Box<SettingsModel> settingsBox;
-
-  final List<Map<String, dynamic>> _themeOptions = [
-    {'icon': Icons.sunny, 'label': 'Light'},
-    {'icon': Icons.dark_mode, 'label': 'Dark'},
-    {'icon': Icons.brightness_auto, 'label': 'Auto'},
-  ];
+  ThemeType _selectedTheme = ThemeType.dark;
+  late Box<SettingsModel> _settingsBox;
 
   @override
   void initState() {
     super.initState();
-    // Open the settings Hive box and set the initial theme based on the saved value
-    settingsBox = Hive.box<SettingsModel>('user_settings');
-    _selectedTheme = settingsBox
-            .get('theme',
-                defaultValue: SettingsModel(theme: ThemeType.greenForest))
-            ?.theme ??
-        ThemeType.greenForest;
+    _settingsBox = Hive.box<SettingsModel>('user_settings');
+    _loadInitialTheme();
   }
 
-  // Update theme in Hive and set the selected theme
-  void _updateTheme(String themeLabel) {
-    // setState(() {
-    //   _selectedTheme = themeLabel;
-    // });
-    // settingsBox.put('theme', SettingsModel(theme: themeLabel.toLowerCase()));
+  void _loadInitialTheme() {
+    final themeName = _settingsBox.get('theme')?.theme ?? ThemeType.dark.name;
+    setState(() {
+      _selectedTheme = ThemeManager.getThemeType(themeName) ?? ThemeType.dark;
+    });
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      extendBody: true,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        leading: IconButton(
-          onPressed: () => Navigator.pop(context),
-          icon: Icon(
-            Icons.navigate_before,
-            size: 35,
-            color: Theme.of(context).iconTheme.color,
+  Future<void> _updateTheme(ThemeType theme) async {
+    setState(() {
+      _selectedTheme = theme;
+    });
+    await _settingsBox.put(
+      'theme',
+      SettingsModel(theme: theme.name),
+    );
+  }
+
+  Widget _buildThemeCard(ThemeType themeType) {
+    final theme = ThemeManager.getTheme(themeType);
+    final isSelected = themeType == _selectedTheme;
+    final textColor = _getTextColor(theme.scaffoldBackgroundColor);
+
+    return GestureDetector(
+      onTap: () => _updateTheme(themeType),
+      child: Container(
+        margin: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: theme.scaffoldBackgroundColor,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected ? theme.colorScheme.primary : Colors.transparent,
+            width: 2,
           ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
-        iconTheme: Theme.of(context).iconTheme,
-        title: Text("Theme", style: Theme.of(context).textTheme.headlineLarge),
-        toolbarHeight: 200,
-        // centerTitle: true,
-      ),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 15.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Text(
-              "Choose Theme",
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            // Theme Preview Elements
+            _buildColorStrip(theme.colorScheme.primary),
+            const SizedBox(height: 8),
+            _buildColorStrip(theme.colorScheme.secondary),
+            const SizedBox(height: 12),
+            Text(
+              _formatThemeName(themeType.name),
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                color: textColor,
+              ),
+              textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 20),
-            // Theme mode options as buttons
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: _themeOptions.map((option) {
-                bool isSelected = option['label'] == 'Auto';
-                return GestureDetector(
-                  onTap: () => _updateTheme(option['label']),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 10),
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? Theme.of(context).primaryColor.withOpacity(0.2)
-                          : Colors.transparent,
-                      borderRadius: BorderRadius.circular(15),
-                      border: Border.all(
-                        color: isSelected ? Theme.of(context).primaryColor : Colors.grey,
-                        width: isSelected ? 2 : 1,
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(option['icon'] as IconData,
-                            color:
-                                isSelected ? Theme.of(context).primaryColor : Theme.of(context).iconTheme.color),
-                        const SizedBox(width: 8),
-                        Text(
-                          option['label'],
-                          style: Theme.of(context).textTheme.labelMedium?.copyWith(fontSize: 16),
-                        ),
-                        if (isSelected)
-                          Padding(
-                            padding: EdgeInsets.only(left: 5),
-                            child: Icon(Icons.check,
-                                color: Theme.of(context).iconTheme.color, size: 20),
-                          ),
-                      ],
-                    ),
-                  ),
-                );
-              }).toList(),
-            ),
+            if (isSelected)
+              Icon(
+                Icons.check_circle,
+                color: theme.colorScheme.primary,
+                size: 20,
+              ),
           ],
         ),
       ),
     );
   }
+
+  Widget _buildColorStrip(Color color) {
+    return Container(
+      height: 8,
+      width: double.infinity,
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(4),
+      ),
+    );
+  }
+
+  String _formatThemeName(String name) {
+    return name.replaceAllMapped(RegExp(r'([A-Z])'), (match) {
+      return ' ${match.group(1)}';
+    }).capitalize();
+  }
+
+  Color _getTextColor(Color backgroundColor) {
+    return ThemeData.estimateBrightnessForColor(backgroundColor) == Brightness.light
+        ? Colors.black
+        : Colors.white;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final themeData = ThemeManager.getTheme(_selectedTheme);
+
+    return Theme(
+      data: themeData,
+      child: Scaffold(
+        extendBody: true,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          leading: IconButton(
+            onPressed: () => Navigator.pop(context),
+            icon: Icon(
+              Icons.navigate_before,
+              size: 35,
+              color: themeData.appBarTheme.foregroundColor,
+            ),
+          ),
+          title: Text(
+            "Theme",
+            style: themeData.textTheme.headlineLarge?.copyWith(
+              fontSize: 35,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          forceMaterialTransparency: true,
+        ),
+        body: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: GridView.builder(
+                  itemCount: ThemeType.values.length,
+                  padding: const EdgeInsets.only(bottom: 16),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    childAspectRatio: 1.2,
+                    crossAxisSpacing: 8,
+                    mainAxisSpacing: 8,
+                  ),
+                  itemBuilder: (context, index) {
+                    return _buildThemeCard(ThemeType.values[index]);
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+extension StringCasingExtension on String {
+  String capitalize() => this.isNotEmpty ? '${this[0].toUpperCase()}${substring(1).toLowerCase()}' : '';
 }

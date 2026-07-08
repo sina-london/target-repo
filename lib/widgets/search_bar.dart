@@ -34,7 +34,7 @@ class Searchbar extends StatelessWidget {
                 FocusScope.of(context).unfocus(); // Unfocus after submitting
                 onSearch();
               },
-              style: themeContext.textTheme.bodyMedium?.copyWith(fontSize: 18),
+              style: themeContext.textTheme.bodyLarge,
               decoration: const InputDecoration(
                 hintText: "Search Anime...",
                 border: InputBorder.none,

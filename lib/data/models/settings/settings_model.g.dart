@@ -18,7 +18,7 @@ class SettingsModelAdapter extends TypeAdapter<SettingsModel> {
     };
     return SettingsModel(
       defaultQuality: fields[0] as String?,
-      theme: fields[1] as ThemeType?,
+      theme: fields[1] as String?,
       defaultOrientation: fields[2] as String?,
       layoutMode: fields[3] as String?,
       isLabelEnabled: fields[4] as bool?,
