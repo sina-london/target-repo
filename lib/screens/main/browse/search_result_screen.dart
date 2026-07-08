@@ -263,71 +263,74 @@ class _SearchResultScreenState extends State<SearchResultScreen> {
   @override
   Widget build(BuildContext context) {
     ThemeData themeData = Theme.of(context);
-    return Scaffold(
-      extendBody: true,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        leading: IconButton(
-          onPressed: () => Navigator.pop(context),
-          icon: const Icon(
-            Icons.navigate_before,
-            size: 30,
+    return SafeArea(
+      maintainBottomViewPadding: true,
+      child: Scaffold(
+        extendBody: true,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          leading: IconButton(
+            onPressed: () => Navigator.pop(context),
+            icon: const Icon(
+              Icons.navigate_before,
+              size: 30,
+            ),
           ),
+          title: Text(
+            "Search Results for \"${widget.searchModel.searchQuery}\"",
+            style: themeData.textTheme.bodyLarge?.copyWith(
+              fontWeight: FontWeight.bold,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          actions: [
+            // Layout toggle button
+            IconButton(
+              icon: Icon(_isGridLayout ? Icons.view_list : Icons.grid_view),
+              onPressed: _toggleLayout,
+              tooltip:
+                  _isGridLayout ? 'Switch to List View' : 'Switch to Grid View',
+            ),
+          ],
+          titleSpacing: 0,
+          forceMaterialTransparency: true,
         ),
-        title: Text(
-          "Search Results for \"${widget.searchModel.searchQuery}\"",
-          style: themeData.textTheme.bodyLarge?.copyWith(
-            fontWeight: FontWeight.bold,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-        actions: [
-          // Layout toggle button
-          IconButton(
-            icon: Icon(_isGridLayout ? Icons.view_list : Icons.grid_view),
-            onPressed: _toggleLayout,
-            tooltip:
-                _isGridLayout ? 'Switch to List View' : 'Switch to Grid View',
-          ),
-        ],
-        titleSpacing: 0,
-        forceMaterialTransparency: true,
-      ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Total results and pagination info
-          Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-            child: Text(
-              'Total Results: ${_animeResults.length} | Page $_currentPage of $_totalPages',
-              style: themeData.textTheme.bodyMedium?.copyWith(
-                color: Colors.grey[700],
+        body: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Total results and pagination info
+            Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              child: Text(
+                'Total Results: ${_animeResults.length} | Page $_currentPage of $_totalPages',
+                style: themeData.textTheme.bodyMedium?.copyWith(
+                  color: Colors.grey[700],
+                ),
               ),
             ),
-          ),
-
-          // Conditional rendering based on layout
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: _isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : _isGridLayout
-                      ? _buildGridView(themeData)
-                      : _buildListView(themeData),
+      
+            // Conditional rendering based on layout
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: _isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : _isGridLayout
+                        ? _buildGridView(themeData)
+                        : _buildListView(themeData),
+              ),
             ),
-          ),
-
-          // Add some bottom padding
-          const SizedBox(height: 16),
-        ],
+      
+            // Add some bottom padding
+            const SizedBox(height: 16),
+          ],
+        ),
+        bottomNavigationBar: // Pagination Widget
+            _totalPages < 0 || _totalPages > 1
+                ? _buildAdvancedPagination()
+                : null,
       ),
-      bottomNavigationBar: // Pagination Widget
-          _totalPages < 0 || _totalPages > 1
-              ? _buildAdvancedPagination()
-              : null,
     );
   }
 

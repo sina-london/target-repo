@@ -343,91 +343,94 @@ class _DetailsScreenState extends State<DetailsScreen> {
     return DismissiblePage(
       onDismissed: () => Navigator.of(context).pop(),
       direction: DismissiblePageDismissDirection.horizontal,
-      child: Scaffold(
-        extendBody: true,
-        backgroundColor: themeData.colorScheme.primary,
-        body: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                themeData.colorScheme.primary,
-                themeData.colorScheme.secondary,
-                themeData.colorScheme.tertiary, // End color
-              ],
-              begin: Alignment.bottomLeft,
-              end: Alignment.topRight,
+      child: SafeArea(
+        maintainBottomViewPadding: true,
+        child: Scaffold(
+          extendBody: true,
+          backgroundColor: themeData.colorScheme.primary,
+          body: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  themeData.colorScheme.primary,
+                  themeData.colorScheme.secondary,
+                  themeData.colorScheme.tertiary, // End color
+                ],
+                begin: Alignment.bottomLeft,
+                end: Alignment.topRight,
+              ),
+            ),
+            child: FutureBuilder<AnimeInfo?>(
+              future: fetchData(),
+              builder: (context, snapshot) {
+                final bool isLoading =
+                    snapshot.connectionState == ConnectionState.waiting;
+                info = snapshot.data?.data;
+        
+                return CustomScrollView(
+                  controller: _scrollController,
+                  slivers: [
+                    SliverAppBar(
+                      backgroundColor: Colors.transparent,
+                      expandedHeight: screenHeight * 0.6,
+                      flexibleSpace: FlexibleSpaceBar(
+                        background: _buildHeaderSection(),
+                      ),
+                      actions: [
+                        FavoriteButton(
+                          animeId: widget.id,
+                          title: widget.name,
+                          image: widget.image,
+                          type: widget.type,
+                        ),
+                        const SizedBox(width: 10),
+                      ],
+                    ),
+                    SliverToBoxAdapter(
+                      child: Container(
+                        padding: const EdgeInsets.only(
+                          left: 15,
+                          right: 15,
+                          top: 10,
+                        ),
+                        decoration: BoxDecoration(
+                          color: themeData.scaffoldBackgroundColor,
+                          borderRadius: const BorderRadius.only(
+                            topLeft: Radius.circular(50),
+                            topRight: Radius.circular(50),
+                          ),
+                        ),
+                        child: _buildDetailsSection(isLoading: isLoading),
+                      ),
+                    ),
+                  ],
+                );
+              },
             ),
           ),
-          child: FutureBuilder<AnimeInfo?>(
-            future: fetchData(),
-            builder: (context, snapshot) {
-              final bool isLoading =
-                  snapshot.connectionState == ConnectionState.waiting;
-              info = snapshot.data?.data;
-
-              return CustomScrollView(
-                controller: _scrollController,
-                slivers: [
-                  SliverAppBar(
-                    backgroundColor: Colors.transparent,
-                    expandedHeight: screenHeight * 0.6,
-                    flexibleSpace: FlexibleSpaceBar(
-                      background: _buildHeaderSection(),
-                    ),
-                    actions: [
-                      FavoriteButton(
-                        animeId: widget.id,
-                        title: widget.name,
-                        image: widget.image,
-                        type: widget.type,
-                      ),
-                      const SizedBox(width: 10),
-                    ],
-                  ),
-                  SliverToBoxAdapter(
-                    child: Container(
-                      padding: const EdgeInsets.only(
-                        left: 15,
-                        right: 15,
-                        top: 10,
-                      ),
-                      decoration: BoxDecoration(
-                        color: themeData.scaffoldBackgroundColor,
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(50),
-                          topRight: Radius.circular(50),
-                        ),
-                      ),
-                      child: _buildDetailsSection(isLoading: isLoading),
-                    ),
-                  ),
-                ],
+          bottomNavigationBar: ValueListenableBuilder<Box<WatchlistModel>>(
+            valueListenable: _watchlistBox!.listenable(),
+            builder: (context, box, _) {
+              // Get the continue watching item
+              continueWatchingItem =
+                  _watchlistBox.getContinueWatchingById(widget.id);
+        
+              if (continueWatchingItem == null || _episodes.value.length < 2) {
+                return const SizedBox.shrink();
+              }
+        
+              return BottomPlayerBar(
+                episodes: _episodes.value,
+                item: continueWatchingItem!,
+                title: continueWatchingItem!.title,
+                id: widget.id,
+                image: widget.image,
+                type: widget.type,
+                nextEpisodeId: _nextEpisodeId,
+                nextEpisodeTitle: _nextEpisodeTitle,
               );
             },
           ),
-        ),
-        bottomNavigationBar: ValueListenableBuilder<Box<WatchlistModel>>(
-          valueListenable: _watchlistBox!.listenable(),
-          builder: (context, box, _) {
-            // Get the continue watching item
-            continueWatchingItem =
-                _watchlistBox.getContinueWatchingById(widget.id);
-
-            if (continueWatchingItem == null || _episodes.value.length < 2) {
-              return const SizedBox.shrink();
-            }
-
-            return BottomPlayerBar(
-              episodes: _episodes.value,
-              item: continueWatchingItem!,
-              title: continueWatchingItem!.title,
-              id: widget.id,
-              image: widget.image,
-              type: widget.type,
-              nextEpisodeId: _nextEpisodeId,
-              nextEpisodeTitle: _nextEpisodeTitle,
-            );
-          },
         ),
       ),
     );

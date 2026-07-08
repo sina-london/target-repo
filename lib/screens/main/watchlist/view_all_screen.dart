@@ -143,106 +143,109 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: _isMultiselectMode
-            ? Text(
-                '${_selectedIds.length} Selected',
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
+    return SafeArea(
+      maintainBottomViewPadding: true,
+      child: Scaffold(
+        appBar: AppBar(
+          title: _isMultiselectMode
+              ? Text(
+                  '${_selectedIds.length} Selected',
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                )
+              : Text(
+                  widget.title,
+                  style: theme.textTheme.headlineLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+          leading: _isMultiselectMode
+              ? IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: _exitMultiselectMode,
+                )
+              : IconButton(
+                  icon: const Icon(Icons.arrow_back),
+                  onPressed: () => Navigator.pop(context),
+                ),
+          actions: [
+            if (_isMultiselectMode)
+              IconButton(
+                icon: const Icon(Icons.delete),
+                onPressed: _showDeleteConfirmationDialog,
+              ),
+          ],
+        ),
+        body: widget.items.isEmpty
+            ? Center(
+                child: Text(
+                  "No items found in ${widget.title}",
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    color: theme.colorScheme.onSurface.withOpacity(0.7),
+                  ),
+                  textAlign: TextAlign.center,
                 ),
               )
-            : Text(
-                widget.title,
-                style: theme.textTheme.headlineLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-        leading: _isMultiselectMode
-            ? IconButton(
-                icon: const Icon(Icons.close),
-                onPressed: _exitMultiselectMode,
-              )
-            : IconButton(
-                icon: const Icon(Icons.arrow_back),
-                onPressed: () => Navigator.pop(context),
-              ),
-        actions: [
-          if (_isMultiselectMode)
-            IconButton(
-              icon: const Icon(Icons.delete),
-              onPressed: _showDeleteConfirmationDialog,
-            ),
-        ],
-      ),
-      body: widget.items.isEmpty
-          ? Center(
-              child: Text(
-                "No items found in ${widget.title}",
-                style: theme.textTheme.bodyLarge?.copyWith(
-                  color: theme.colorScheme.onSurface.withOpacity(0.7),
-                ),
-                textAlign: TextAlign.center,
-              ),
-            )
-          : Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: GridView.builder(
-                physics: const BouncingScrollPhysics(),
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3,mainAxisExtent: 180, mainAxisSpacing: 15, crossAxisSpacing: 10),
-                // gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                //   maxCrossAxisExtent: 200,
-                //   mainAxisExtent: 260,
-                //   mainAxisSpacing: 20,
-                //   crossAxisSpacing: 15,
-                // ),
-                itemCount: widget.items.length,
-                itemBuilder: (context, index) {
-                  final item = widget.items[index];
-                  final isSelected = _selectedIds.contains(item.id);
-
-                  return GestureDetector(
-                    onLongPress: () => _onLongPress(item),
-                    onTap: () => _onCardTap(item),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(20),
-                        border: _isMultiselectMode && isSelected
-                            ? Border.all(
-                                color: theme.colorScheme.primary,
-                                width: 3,
-                              )
-                            : null,
-                      ),
-                      child: Stack(
-                        fit: StackFit.expand,
-                        children: [
-                          AnimeCard(
-                            anime: item,
-                            tag: 'view_all',
-                          ),
-                          if (_isMultiselectMode && isSelected)
-                            Positioned.fill(
-                              child: Container(
-                                color:
-                                    theme.colorScheme.primary.withOpacity(0.3),
-                                child: Center(
-                                  child: HugeIcon(
-                                    icon: HugeIcons.strokeRoundedTick02,
-                                    size: 40,
-                                    color: Theme.of(context).colorScheme.onSurface,
+            : Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: GridView.builder(
+                  physics: const BouncingScrollPhysics(),
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3,mainAxisExtent: 180, mainAxisSpacing: 15, crossAxisSpacing: 10),
+                  // gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                  //   maxCrossAxisExtent: 200,
+                  //   mainAxisExtent: 260,
+                  //   mainAxisSpacing: 20,
+                  //   crossAxisSpacing: 15,
+                  // ),
+                  itemCount: widget.items.length,
+                  itemBuilder: (context, index) {
+                    final item = widget.items[index];
+                    final isSelected = _selectedIds.contains(item.id);
+      
+                    return GestureDetector(
+                      onLongPress: () => _onLongPress(item),
+                      onTap: () => _onCardTap(item),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(20),
+                          border: _isMultiselectMode && isSelected
+                              ? Border.all(
+                                  color: theme.colorScheme.primary,
+                                  width: 3,
+                                )
+                              : null,
+                        ),
+                        child: Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            AnimeCard(
+                              anime: item,
+                              tag: 'view_all',
+                            ),
+                            if (_isMultiselectMode && isSelected)
+                              Positioned.fill(
+                                child: Container(
+                                  color:
+                                      theme.colorScheme.primary.withOpacity(0.3),
+                                  child: Center(
+                                    child: HugeIcon(
+                                      icon: HugeIcons.strokeRoundedTick02,
+                                      size: 40,
+                                      color: Theme.of(context).colorScheme.onSurface,
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                  );
-                },
+                    );
+                  },
+                ),
               ),
-            ),
+      ),
     );
   }
 }
