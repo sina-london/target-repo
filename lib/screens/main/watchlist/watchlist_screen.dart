@@ -14,6 +14,7 @@ class WatchlistScreen extends StatefulWidget {
 class _WatchlistScreenState extends State<WatchlistScreen> {
   late Box<WatchlistModel> _watchlistBox;
   List<RecentlyWatchedItem> _recentlyWatched = [];
+  List<AnimeItem> _favorites = [];
   bool _isLoading = true;
 
   @override
@@ -29,10 +30,12 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
         _isLoading = true;
       });
 
-      final watchlist = _watchlistBox.get("recentlyWatched");
-      if (watchlist != null) {
+      final recentWatchlist = _watchlistBox.get('recentlyWatched');
+      final favouriteWatchlist = _watchlistBox.get('favorites');
+      if (recentWatchlist != null && favouriteWatchlist != null) {
         setState(() {
-          _recentlyWatched = watchlist.recentlyWatched ?? [];
+          _recentlyWatched = recentWatchlist.recentlyWatched ?? [];
+          _favorites =favouriteWatchlist.favorites ?? [];
         });
       }
     } catch (e) {
@@ -47,7 +50,9 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBody: true,
       appBar: AppBar(
+        forceMaterialTransparency: true,
         title: const Text(
           "Watchlist",
           style: TextStyle(fontSize: 30),
@@ -69,13 +74,19 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
                         )
                       : _buildAnimeList(_recentlyWatched),
               const SizedBox(height: 24),
-              _buildSectionTitle("Continue Watching"),
-              const SizedBox(height: 8),
-              _buildHorizontalList([]),
-              const SizedBox(height: 24),
+              // _buildSectionTitle("Continue Watching"),
+              // const SizedBox(height: 8),
+              // _buildHorizontalList([]),
+              // const SizedBox(height: 24),
               _buildSectionTitle("Favorites"),
               const SizedBox(height: 8),
-              _buildHorizontalList([]),
+               _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : _recentlyWatched.isEmpty
+                      ? const Center(
+                          child: Text('No recently watched anime'),
+                        )
+                      : _buildAnimeList(_favorites),
             ],
           ),
         ),
@@ -84,16 +95,22 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
   }
 
   Widget _buildSectionTitle(String title) {
-    return Text(
-      title,
-      style: const TextStyle(
-        fontSize: 22,
-        fontWeight: FontWeight.bold,
-      ),
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        IconButton(onPressed: (){}, icon: Icon(Icons.navigate_next, size: 35,))
+      ],
     );
   }
 
-  Widget _buildAnimeList(List<RecentlyWatchedItem> items) {
+  Widget _buildAnimeList(List<BaseAnimeCard> items) {
     return SizedBox(
       height: 220,
       child: ListView.builder(
@@ -144,6 +161,7 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
                   ),
+
                 ),
               ],
             ),

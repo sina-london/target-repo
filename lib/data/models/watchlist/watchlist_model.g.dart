@@ -149,19 +149,22 @@ class AnimeItemAdapter extends TypeAdapter<AnimeItem> {
       name: fields[0] as String,
       poster: fields[1] as String,
       id: fields[2] as String,
+      type: fields[3] as String,
     );
   }
 
   @override
   void write(BinaryWriter writer, AnimeItem obj) {
     writer
-      ..writeByte(3)
+      ..writeByte(4)
       ..writeByte(0)
       ..write(obj.name)
       ..writeByte(1)
       ..write(obj.poster)
       ..writeByte(2)
-      ..write(obj.id);
+      ..write(obj.id)
+      ..writeByte(3)
+      ..write(obj.type);
   }
 
   @override
