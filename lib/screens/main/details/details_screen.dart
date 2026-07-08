@@ -70,26 +70,28 @@ class _DetailsScreenState extends State<DetailsScreen> {
     return Padding(
       padding: const EdgeInsets.only(top: 85.0),
       child: Stack(
+        alignment: Alignment.bottomCenter,
         children: [
           ShaderMask(
             shaderCallback: (rect) => LinearGradient(
               begin: Alignment.bottomCenter,
-              end: Alignment.topCenter,
+              end: Alignment.center,
               colors: [
-                const Color.fromARGB(255, 44, 41, 41),
-                Colors.black.withOpacity(0.2),
-                const Color.fromARGB(0, 178, 30, 30),
+                Theme.of(context).colorScheme.primary,
+                Theme.of(context).colorScheme.primary.withOpacity(0.15),
               ],
             ).createShader(rect),
             blendMode: BlendMode.srcATop,
             child: Hero(
               tag: 'poster-${widget.id}-${widget.tag}',
-              child: Center(
+              child: Container(
+                margin: EdgeInsets.only(bottom: 60),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(20),
                   child: Image.network(
                     widget.image,
                     fit: BoxFit.cover,
+                    height: MediaQuery.of(context).size.width,
                     errorBuilder: (_, __, ___) => Container(
                       height: 400,
                       color: Colors.grey[300],
@@ -110,15 +112,8 @@ class _DetailsScreenState extends State<DetailsScreen> {
               child: Text(
                 widget.title,
                 style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                  color: Colors.white,
-                  shadows: [
-                    BoxShadow(
-                      color: Theme.of(context).shadowColor,
-                      offset: Offset(1, 2),
-                      blurRadius: 10,
-                    )
-                  ],
-                ),
+                      fontWeight: FontWeight.bold,
+                    ),
               ),
             ),
           ),
@@ -176,10 +171,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
           ],
         ),
         const SizedBox(height: 16),
-        Text(
-          'Details',
-          style: themeData.textTheme.headlineMedium,
-        ),
+        Text('Details', style: themeData.textTheme.headlineMedium),
         const SizedBox(height: 8),
         ValueListenableBuilder<bool>(
           valueListenable: _isDescriptionExpanded,
@@ -251,7 +243,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
     ThemeData themeData = Theme.of(context);
     return Scaffold(
       extendBody: true,
-      backgroundColor: themeData.appBarTheme.backgroundColor,
+      backgroundColor: themeData.colorScheme.primary,
       body: FutureBuilder<AnimeInfo?>(
         future: fetchData(),
         builder: (context, snapshot) {
@@ -267,7 +259,10 @@ class _DetailsScreenState extends State<DetailsScreen> {
                 expandedHeight: screenHeight * 0.6,
                 leading: IconButton(
                   onPressed: () => Navigator.pop(context),
-                  icon: Icon(Icons.navigate_before, size: 40, color: Theme.of(context).colorScheme.secondary,),
+                  icon: Icon(
+                    Icons.navigate_before,
+                    size: 40,
+                  ),
                 ),
                 flexibleSpace: FlexibleSpaceBar(
                   background: _buildHeaderSection(),
@@ -287,7 +282,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
                   decoration: BoxDecoration(
-                    color: themeData.colorScheme.primary.withOpacity(0.5),
+                    color: themeData.scaffoldBackgroundColor,
                     borderRadius: const BorderRadius.only(
                       topLeft: Radius.circular(50),
                       topRight: Radius.circular(50),
