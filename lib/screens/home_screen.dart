@@ -148,11 +148,21 @@ class _HomeContent extends StatelessWidget {
               animes: homePage?.trendingAnime,
               uiSettings: uiSettings,
             ),
+            // _HorizontalAnimeSection(
+            //   title: 'Top Rated',
+            //   animes: homePage?.recentlyUpdated,
+            //   uiSettings: uiSettings,
+            // ),
             _HorizontalAnimeSection(
-              title: 'Recently Updated',
-              animes: homePage?.recentlyUpdated,
+              title: 'Most Favorite',
+              animes: homePage?.mostFavoriteAnime,
               uiSettings: uiSettings,
             ),
+            // _HorizontalAnimeSection(
+            //   title: 'Most Watched',
+            //   animes: homePage?.mostWatchedAnime,
+            //   uiSettings: uiSettings,
+            // ),
           ],
           if (uiSettings.layoutStyle == 'vertical') ...[
             _VerticalAnimeSection(
@@ -165,11 +175,21 @@ class _HomeContent extends StatelessWidget {
               animes: homePage?.trendingAnime,
               uiSettings: uiSettings,
             ),
+            // _VerticalAnimeSection(
+            //   title: 'Top Rated',
+            //   animes: homePage?.recentlyUpdated,
+            //   uiSettings: uiSettings,
+            // ),
             _VerticalAnimeSection(
-              title: 'Recently Updated',
-              animes: homePage?.recentlyUpdated,
+              title: 'Most Favorite',
+              animes: homePage?.mostFavoriteAnime,
               uiSettings: uiSettings,
             ),
+            // _VerticalAnimeSection(
+            //   title: 'Most Watched',
+            //   animes: homePage?.mostWatchedAnime,
+            //   uiSettings: uiSettings,
+            // ),
           ],
           const SliverToBoxAdapter(child: SizedBox(height: 100)),
         ],
