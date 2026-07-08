@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:nekoflow/routes/app_router.dart';  // Import your custom AppRouter
+import 'package:nekoflow/routes/app_router.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -11,34 +11,37 @@ class OnboardingScreen extends StatefulWidget {
 class _OnboardingScreenState extends State<OnboardingScreen> {
   PageController _pageController = PageController();
   int _currentPage = 0;
+  String _userName = '';
+  final _nameController = TextEditingController();
 
   // List of onboarding steps
   final List<Map<String, String>> onboardingData = [
     {
-      "title": "ShonenX!",
-      "description": "The ultimate anime streaming experience.",
-      "image":
-          "https://camo.githubusercontent.com/eb14bb0a22e968d92f9e873e0b9d40f6cb48d1572a875d0e4e5a8465eb379648/68747470733a2f2f692e706f7374696d672e63632f467a6d3439735a632f506963736172742d32342d31302d32392d31302d30332d31352d3133332e706e67",
+      "title": "Welcome to ShonenX!",
+      "description": "Dive into the ultimate anime streaming experience.",
+      "image": "lib/assets/images/onboarding/logo.png",
     },
     {
       "title": "Track Your Progress",
       "description": "Keep tabs on your favorite shows and episodes.",
-      "image": "https://wallpapercave.com/wp/wp10388221.jpg",
+      "image": "lib/assets/images/onboarding/luffy.png",
     },
   ];
 
   // Method to go to the next page
   void _nextPage() {
-    if (_currentPage < onboardingData.length - 1) {
+    if (_currentPage < onboardingData.length) {
       _pageController.nextPage(
-        duration: Duration(milliseconds: 300),
+        duration: const Duration(milliseconds: 300),
         curve: Curves.easeIn,
       );
     } else {
-      // After the last page, navigate to the AppRouter (Home screen)
+      // After the last page, navigate to the AppRouter (Home screen) with the user's name
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const AppRouter()),
+        MaterialPageRoute(
+          builder: (context) => AppRouter(userName: _userName ),
+        ),
       );
     }
   }
@@ -47,7 +50,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   void _previousPage() {
     if (_currentPage > 0) {
       _pageController.previousPage(
-        duration: Duration(milliseconds: 300),
+        duration: const Duration(milliseconds: 300),
         curve: Curves.easeIn,
       );
     }
@@ -57,21 +60,31 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       extendBody: true,
-      backgroundColor: Colors.black, // Dark background for an anime look
+      backgroundColor: Colors.black,
       body: PageView.builder(
         controller: _pageController,
         onPageChanged: (index) {
-          setState(() {
+          setState((){
             _currentPage = index;
           });
         },
-        itemCount: onboardingData.length,
+        itemCount: onboardingData.length + 1, // Add 1 for the name input page
         itemBuilder: (context, index) {
-          return OnboardingPage(
-            title: onboardingData[index]['title']!,
-            description: onboardingData[index]['description']!,
-            image: onboardingData[index]['image']!,
-          );
+          if (index < onboardingData.length) {
+            return OnboardingPage(
+              title: onboardingData[index]['title']!,
+              description: onboardingData[index]['description']!,
+              image: onboardingData[index]['image']!,
+            );
+          } else {
+            return NameInputPage(
+              onUserNameChanged: (value) {
+                setState(() {
+                  _userName = value;
+                });
+              },
+            );
+          }
         },
       ),
       bottomNavigationBar: BottomAppBar(
@@ -81,14 +94,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           children: [
             _currentPage > 0
                 ? IconButton(
-                    icon: Icon(Icons.navigate_before, size: 40),
+                    icon: const Icon(Icons.arrow_back, size: 40, color: Colors.white),
                     onPressed: _previousPage,
                   )
-                : SizedBox(width: 40), // No button if on the first page
+                : const SizedBox(width: 40),
             Row(
-              children: List.generate(onboardingData.length, (index) {
+              children: List.generate(onboardingData.length + 1, (index) {
                 return Container(
-                  margin: EdgeInsets.symmetric(horizontal: 4),
+                  margin: const EdgeInsets.symmetric(horizontal: 4),
                   width: 8,
                   height: 8,
                   decoration: BoxDecoration(
@@ -100,14 +113,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 );
               }),
             ),
-            _currentPage < onboardingData.length - 1
+            _currentPage < onboardingData.length
                 ? IconButton(
-                    icon: Icon(Icons.navigate_next, size: 40),
+                    icon: const Icon(Icons.arrow_forward, size: 40, color: Colors.white),
                     onPressed: _nextPage,
                   )
                 : TextButton(
                     onPressed: _nextPage,
-                    child: Text(
+                    child: const Text(
                       'Get Started',
                       style: TextStyle(fontSize: 18, color: Colors.white),
                     ),
@@ -116,6 +129,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    super.dispose();
   }
 }
 
@@ -133,36 +152,95 @@ class OnboardingPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(24.0),
+      padding: const EdgeInsets.all(32.0),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // Display the image with a nice rounded border
           ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: Image.network(
+            borderRadius: BorderRadius.circular(16),
+            child: Image.asset(
               image,
-              width: 300, // Fixed width
-              height: 200, // Fixed height
-              fit: BoxFit.contain,
+              // width: 300,
+              // height: 200,
+              // fit: BoxFit.contain,
             ),
           ),
-          SizedBox(height: 30),
+          const SizedBox(height: 30),
           Text(
             title,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 26,
               fontWeight: FontWeight.bold,
               color: Colors.white,
               letterSpacing: 1.5,
             ),
           ),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
           Text(
             description,
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 16, color: Colors.white60),
+            style: const TextStyle(fontSize: 16, color: Colors.white60),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class NameInputPage extends StatefulWidget {
+  final ValueChanged<String> onUserNameChanged;
+
+  const NameInputPage({required this.onUserNameChanged});
+
+  @override
+  State<NameInputPage> createState() => _NameInputPageState();
+}
+
+class _NameInputPageState extends State<NameInputPage> {
+  final _nameController = TextEditingController();
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(32.0),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          const SizedBox(height: 30),
+          Text(
+            'Enter your name',
+            style: const TextStyle(
+              fontSize: 26,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+              letterSpacing: 1.5,
+            ),
+          ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: _nameController,
+            onChanged: widget.onUserNameChanged,
+            style: const TextStyle(color: Colors.white),
+            decoration: InputDecoration(
+              hintText: 'Your Name',
+              hintStyle: const TextStyle(color: Colors.white54),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: Colors.white54),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: Colors.white),
+              ),
+            ),
           ),
         ],
       ),

@@ -6,8 +6,8 @@ import 'package:nekoflow/screens/main/settings/settings_screen.dart';
 import 'package:nekoflow/screens/main/watchlist/watchlist_screen.dart';
 
 class AppRouter extends StatefulWidget {
-
-  const AppRouter({super.key});
+  final String userName;
+  const AppRouter({super.key, required this.userName});
 
   @override
   State<AppRouter> createState() => _AppRouterState();
@@ -16,18 +16,18 @@ class AppRouter extends StatefulWidget {
 class _AppRouterState extends State<AppRouter> {
   int _selectedIndex = 1;
 
-  static const _screens = [
-    SettingsScreen(),
-    HomeScreen(),
-    SearchScreen(),
-    WatchlistScreen()
-  ];
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       extendBody: true,
-      body: _screens[_selectedIndex],
+      body: [
+        SettingsScreen(),
+        HomeScreen(
+          userName: widget.userName,
+        ),
+        SearchScreen(),
+        WatchlistScreen()
+      ][_selectedIndex],
       bottomNavigationBar: CrystalNavigationBar(
         backgroundColor: Colors.black.withOpacity(0.2),
         currentIndex: _selectedIndex,
