@@ -2,12 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:nekoflow/data/boxes/settings_box.dart';
-import 'package:nekoflow/data/boxes/watchlist_box.dart';
-import 'package:nekoflow/data/models/onboarding/onboarding_model.dart';
 import 'package:nekoflow/data/models/settings/settings_model.dart';
+import 'package:nekoflow/data/models/user_model.dart';
 import 'package:nekoflow/data/models/watchlist/watchlist_model.dart';
 import 'package:nekoflow/data/theme/theme_manager.dart';
-import 'package:nekoflow/routes/app_router.dart';
+import 'package:nekoflow/screens/onboarding/onboarding_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,13 +18,13 @@ void main() async {
   Hive.registerAdapter(RecentlyWatchedItemAdapter());
   Hive.registerAdapter(ContinueWatchingItemAdapter());
   Hive.registerAdapter(AnimeItemAdapter());
-  Hive.registerAdapter(OnboardingModelAdapter());
+  Hive.registerAdapter(UserModelAdapter());
 
 // Await all boxes to be opened
   await Future.wait([
+    Hive.openBox<UserModel>("user"),
     Hive.openBox<WatchlistModel>("watchlist"),
     Hive.openBox<SettingsModel>("settings"),
-    Hive.openBox<OnboardingModel>("onboarding"),
   ]);
 
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
@@ -77,7 +76,7 @@ class _MainAppState extends State<MainApp> {
           home: Scaffold(
             extendBody: true,
             appBar: AppBar(toolbarHeight: 0),
-            body: AppRouter(userName: 'Guest'),
+            body: OnboardingScreen(),
           ),
         );
       },

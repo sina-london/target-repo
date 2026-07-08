@@ -1,32 +1,35 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'onboarding_model.dart';
+part of 'user_model.dart';
 
 // **************************************************************************
 // TypeAdapterGenerator
 // **************************************************************************
 
-class OnboardingModelAdapter extends TypeAdapter<OnboardingModel> {
+class UserModelAdapter extends TypeAdapter<UserModel> {
   @override
   final int typeId = 5;
 
   @override
-  OnboardingModel read(BinaryReader reader) {
+  UserModel read(BinaryReader reader) {
     final numOfFields = reader.readByte();
     final fields = <int, dynamic>{
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
-    return OnboardingModel(
-      isOnboardingCompleted: fields[0] as bool,
+    return UserModel(
+      name: fields[1] as String?,
+      onboardingStatus: fields[2] as bool,
     );
   }
 
   @override
-  void write(BinaryWriter writer, OnboardingModel obj) {
+  void write(BinaryWriter writer, UserModel obj) {
     writer
+      ..writeByte(2)
       ..writeByte(1)
-      ..writeByte(0)
-      ..write(obj.isOnboardingCompleted);
+      ..write(obj.name)
+      ..writeByte(2)
+      ..write(obj.onboardingStatus);
   }
 
   @override
@@ -35,7 +38,7 @@ class OnboardingModelAdapter extends TypeAdapter<OnboardingModel> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is OnboardingModelAdapter &&
+      other is UserModelAdapter &&
           runtimeType == other.runtimeType &&
           typeId == other.typeId;
 }

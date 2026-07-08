@@ -7,9 +7,9 @@ import 'package:crystal_navigation_bar/crystal_navigation_bar.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 class AppRouter extends StatefulWidget {
-  final String userName;
+  final String name;
 
-  const AppRouter({super.key, required this.userName});
+  const AppRouter({super.key, required this.name});
 
   @override
   State<AppRouter> createState() => _AppRouterState();
@@ -21,7 +21,7 @@ class _AppRouterState extends State<AppRouter> {
   // Preserved state screens
   late final List<Widget> _screens = [
     const SettingsScreen(),
-    HomeScreen(userName: widget.userName),
+    HomeScreen(name: widget.name),
     const Placeholder(), // Placeholder for dynamic SearchScreen
     const WatchlistScreen(),
   ];
