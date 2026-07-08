@@ -53,6 +53,11 @@ class AnimeService {
         url, (json) => EpisodeStreamingLinksModel.fromJson(json));
   }
 
+  // Future<List<String>> fetchGenres() async {
+    // final url =  '$baseUrl/episode/sources?animeEpisodeId=$animeEpisodeId&server=$server&category=$category';
+    // _get(url, fromJson);
+  // }
+
   /// Generic HTTP GET method that handles the response parsing and error handling.
   Future<T> _get<T>(String url, T Function(dynamic json) fromJson) async {
     try {
