@@ -25,15 +25,15 @@
 <table>
   <tr>
     <td><img src="screenshots/home_screen.png" width="200" alt="Home Screen"/></td>
-    <td><img src="screenshots/search_screen" width="200" alt="Search Screen"/></td>
-    <td><img src="screenshots/watchlist_screen" width="200" alt="Watchlist Screen"/></td>
-    <td><img src="screenshots/details_screen" width="200" alt="Details Screen"/></td>
+    <td><img src="screenshots/search_screen.png" width="200" alt="Search Screen"/></td>
+    <td><img src="screenshots/watchlist_screen.png" width="200" alt="Watchlist Screen"/></td>
+    <td><img src="screenshots/details_screen.png" width="200" alt="Details Screen"/></td>
   </tr>
   <tr>
-    <td><img src="screenshots/stream_screen" width="200" alt="Stream Screen"/></td>
-    <td><img src="screenshots/settings_screen" width="200" alt="Settings Screen"/></td>
-    <td><img src="screenshots/theme_screen" width="200" alt="Theme Screen"/></td>
-    <td><img src="screenshots/about_screen" width="200" alt="About Screen"/></td>
+    <td><img src="screenshots/stream_screen.png" width="200" alt="Stream Screen"/></td>
+    <td><img src="screenshots/settings_screen.png" width="200" alt="Settings Screen"/></td>
+    <td><img src="screenshots/theme_screen.png" width="200" alt="Theme Screen"/></td>
+    <td><img src="screenshots/about_screen.png" width="200" alt="About Screen"/></td>
   </tr>
 </table>
 </div>
@@ -84,7 +84,7 @@ dev_dependencies:
 ```bash
 git clone https://github.com/Darkx-dev/ShonenX.git
 cd ShonenX
-``` 
+```
 
 2. **Install dependencies**
 ```bash
