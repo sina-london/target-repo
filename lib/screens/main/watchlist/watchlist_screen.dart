@@ -146,7 +146,7 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
 
   Widget _buildAnimeList(List<BaseAnimeCard> items, String tag) {
     return SizedBox(
-      height: 220,
+      height: 230,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         itemCount: items.length,

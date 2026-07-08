@@ -4,11 +4,12 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:nekoflow/data/boxes/watchlist_box.dart';
+import 'package:nekoflow/data/models/episodes_model.dart';
 import 'package:nekoflow/data/models/info_model.dart';
 import 'package:nekoflow/data/models/watchlist/watchlist_model.dart';
 import 'package:nekoflow/data/services/anime_service.dart';
-import 'package:nekoflow/screens/main/stream/stream_screen.dart';
 import 'package:nekoflow/utils/converter.dart';
+import 'package:nekoflow/widgets/bottom_player_bar.dart';
 import 'package:nekoflow/widgets/episodes_list.dart';
 import 'package:nekoflow/widgets/favorite_button.dart';
 import 'package:shimmer/shimmer.dart';
@@ -35,7 +36,10 @@ class DetailsScreen extends StatefulWidget {
 
 class _DetailsScreenState extends State<DetailsScreen> {
   final ValueNotifier<bool> _isDescriptionExpanded = ValueNotifier(false);
-  late final AnimeService _animeService = AnimeService();
+  final ValueNotifier<List<Episode>> _episodes =
+      ValueNotifier<List<Episode>>([]);
+  final ValueNotifier<bool> _isLoadingEpisodes = ValueNotifier<bool>(true);
+  late final AnimeService _animeService;
   late final WatchlistBox _watchlistBox;
   final ScrollController _scrollController = ScrollController();
   ContinueWatchingItem? continueWatchingItem;
@@ -45,7 +49,23 @@ class _DetailsScreenState extends State<DetailsScreen> {
   @override
   void initState() {
     super.initState();
+    _animeService = AnimeService();
     _initWatchlistBox();
+    _fetchEpisodes();
+  }
+
+  Future<void> _fetchEpisodes() async {
+    try {
+      final episodes = await _animeService.fetchEpisodes(id: widget.id);
+      if (!mounted) return;
+      _episodes.value = episodes;
+    } catch (e) {
+      // Handle error
+    } finally {
+      if (mounted) {
+        _isLoadingEpisodes.value = false;
+      }
+    }
   }
 
   Future<void> _initWatchlistBox() async {
@@ -56,7 +76,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
 
   void _loadContinueWatching() {
     continueWatchingItem = _watchlistBox.getContinueWatchingById(widget.id);
-    debugPrint("DETAIL : $continueWatchingItem");
+    debugPrint("DETAIL : ${continueWatchingItem?.duration}");
     setState(() {});
   }
 
@@ -261,6 +281,8 @@ class _DetailsScreenState extends State<DetailsScreen> {
           name: widget.name,
           poster: info?.anime?.info?.poster ?? widget.image,
           type: info?.anime?.info?.stats?.type ?? 'N/A',
+          episodes: _episodes, // Pass the ValueNotifier directly
+          isLoading: _isLoadingEpisodes, // Pass the ValueNotifier directly
         ),
       ],
     );
@@ -359,150 +381,15 @@ class _DetailsScreenState extends State<DetailsScreen> {
             return const SizedBox.shrink();
           }
 
-          return BottomAppBar(
-            height: 100,
-            color: Colors.transparent,
-            padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(15),
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(50),
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 15, vertical: 10),
-                    color: themeData.colorScheme.tertiary.withOpacity(0.2),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Expanded(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    "Episode : ${continueWatchingItem!.episode}",
-                                    style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 18),
-                                  ),
-                                  Text(
-                                      "${continueWatchingItem!.timestamp.split(':')[1]}:${continueWatchingItem!.timestamp.split(':')[2].split('.')[0]}")
-                                ],
-                              ),
-                              Text(
-                                continueWatchingItem!.title,
-                                maxLines: 1,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w500,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        SizedBox(
-                          width: 20,
-                        ),
-                        GestureDetector(
-                          onTap: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => StreamScreen(
-                                  name: continueWatchingItem!.name,
-                                  title: widget.name,
-                                  id: widget.id,
-                                  episodeId: continueWatchingItem!.episodeId,
-                                  poster: widget.image,
-                                  episode: continueWatchingItem!.episode,
-                                  type: widget.type),
-                            ),
-                          ),
-                          child: Icon(Icons.play_arrow),
-                        ),
-                        // SizedBox(
-                        //   width: 10,
-                        // ),
-                        // GestureDetector(
-                        //     onTap: () => Navigator.push(
-                        //           context,
-                        //           MaterialPageRoute(
-                        //             builder: (context) => StreamScreen(
-                        //                 name: continueWatchingItem!.name,
-                        //                 title: widget.name,
-                        //                 id: widget.id,
-                        //                 episodeId:
-                        //                     continueWatchingItem!.episodeId,
-                        //                 poster: widget.image,
-                        //                 episode: continueWatchingItem!.episode,
-                        //                 type: widget.type),
-                        //           ),
-                        //         ),
-                        //     child: Icon(Icons.navigate_next))
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
+          return BottomPlayerBar(
+            item: continueWatchingItem!,
+            title: continueWatchingItem!.title,
+            id: widget.id,
+            image: widget.image,
+            type: widget.type!,
           );
         },
       ),
     );
   }
 }
-
-
-// ListTile(
-//                       contentPadding: const EdgeInsets.symmetric(
-//                           vertical: 0, horizontal: 15),
-//                       title: Row(
-//                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//                         children: [
-//                           Text(
-//                             "Episode : ${continueWatchingItem!.episode}",
-//                             style: const TextStyle(
-//                               fontWeight: FontWeight.bold,
-//                             ),
-//                           ),
-//                           Text(
-//                             "${continueWatchingItem!.timestamp.split(':')[1]}:${continueWatchingItem!.timestamp.split(':')[2].split('.')[0]}",
-//                             style: themeData.textTheme.labelMedium,
-//                           )
-//                         ],
-//                       ),
-//                       subtitle: Text(
-//                         continueWatchingItem!.title,
-//                         maxLines: 1,
-//                         overflow: TextOverflow.ellipsis,
-//                       ),
-//                       trailing: IconButton(
-//                         onPressed: () => Navigator.push(
-//                           context,
-//                           MaterialPageRoute(
-//                             builder: (context) => StreamScreen(
-//                                 name: continueWatchingItem!.name,
-//                                 title: widget.name,
-//                                 id: widget.id,
-//                                 episodeId: continueWatchingItem!.episodeId,
-//                                 poster: widget.image,
-//                                 episode: continueWatchingItem!.episode,
-//                                 type: widget.type),
-//                           ),
-//                         ),
-//                         icon: IconButton(
-//                           onPressed: () {},
-//                           icon: Icon(
-//                             Icons.play_circle,
-//                             color: themeData.colorScheme.onSurface,
-//                           ),
-//                         ),
-//                       ),
-//                     ),

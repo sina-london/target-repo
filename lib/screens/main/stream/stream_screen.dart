@@ -68,6 +68,7 @@ class _StreamScreenState extends State<StreamScreen> {
     final continueWatchingItem =
         _watchlistBox.getContinueWatchingById(widget.id);
     if (continueWatchingItem != null) {
+      if (continueWatchingItem.episodeId != widget.episodeId) return;
       _currentPosition = continueWatchingItem.timestamp;
     }
   }
@@ -268,6 +269,8 @@ class _StreamScreenState extends State<StreamScreen> {
         episode: widget.episode,
         episodeId: widget.episodeId,
         timestamp: _currentPosition,
+        duration:
+            _playerController!.videoPlayerController!.value.duration.toString(),
         type: widget.type, // Todo: Add appropriate type here
       );
       await _watchlistBox.addToContinueWatching(continueWatchingItem);
