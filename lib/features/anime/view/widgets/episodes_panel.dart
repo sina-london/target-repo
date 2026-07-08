@@ -101,20 +101,16 @@ class _EpisodesPanelState extends ConsumerState<EpisodesPanel> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final episodeData = ref.watch(episodeDataProvider
-        .select((ed) => (ed.episodes, ed.selectedEpisodeIdx)));
+    final episodeData = ref.watch(episodeDataProvider);
     final episodeNotifier = ref.read(episodeDataProvider.notifier);
 
-    final totalEpisodes = episodeData.$1.length;
+    final totalEpisodes = episodeData.episodes.length;
     final ranges = _generateRanges(totalEpisodes);
 
     // Filter episodes based on the selected range
-    final filteredEpisodes = episodeData.$1.where((episode) {
-      final match = RegExp(r'\d+').firstMatch(episode.number.toString());
-      final epNumber = match != null ? int.tryParse(match.group(0)!) : null;
-
-      return epNumber != null &&
-          epNumber >= _currentStart &&
+    final filteredEpisodes = episodeData.episodes.where((episode) {
+      final epNumber = int.tryParse(episode.number.toString()) ?? 0;
+      return epNumber >= _currentStart &&
           epNumber <= (_currentStart + _rangeSize - 1);
     }).toList();
 
@@ -186,11 +182,12 @@ class _EpisodesPanelState extends ConsumerState<EpisodesPanel> {
               itemBuilder: (context, index) {
                 final episode = filteredEpisodes[index];
                 // Get the actual index from the original, unfiltered list
-                final actualIndex = episodeData.$1.indexOf(episode);
-                final isSelected = episodeData.$2 == actualIndex;
+                final actualIndex = episodeData.episodes.indexOf(episode);
+                final isSelected =
+                    episodeData.selectedEpisodeIdx == actualIndex;
 
                 return EpisodeTile(
-                  isFiller: episode.isFiller == true,
+                  isFiller: episode.isFiller ?? false,
                   episodeNumber: episode.number.toString(),
                   episodeTitle: episode.title ?? 'Episode ${episode.number}',
                   isSelected: isSelected,

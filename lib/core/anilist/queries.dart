@@ -130,80 +130,68 @@ class AnilistQueries {
     }
   ''';
 
-  // Query: Update a MediaListEntry for a specific anime (requires userId or auth token)
+  static const String updateAnimeStatusMutation = '''
+    mutation UpdateAnimeStatus(\$mediaId: Int!, \$status: MediaListStatus!) {
+      SaveMediaListEntry(mediaId: \$mediaId, status: \$status) {
+        $mediaFields
+      }
+    }
+  ''';
+
   static const String updateAnimeMediaEntryMutation = '''
-    mutation SaveMediaListEntry(
-      \$mediaId: Int
-      \$status: MediaListStatus
-      \$score: Float
-      \$progress: Int
-      \$startedAt: FuzzyDateInput
-      \$completedAt: FuzzyDateInput
-      \$repeat: Int
-      \$private: Boolean
-      \$notes: String
+  mutation SaveMediaListEntry(
+    \$mediaId: Int
+    \$status: MediaListStatus
+    \$score: Float
+    \$progress: Int
+    \$startedAt: FuzzyDateInput
+    \$completedAt: FuzzyDateInput
+    \$repeat: Int
+    \$private: Boolean
+    \$notes: String
+  ) {
+    SaveMediaListEntry(
+      mediaId: \$mediaId
+      status: \$status
+      score: \$score
+      progress: \$progress
+      startedAt: \$startedAt
+      completedAt: \$completedAt
+      repeat: \$repeat
+      private: \$private
+      notes: \$notes
     ) {
-      SaveMediaListEntry(
-        mediaId: \$mediaId
-        status: \$status
-        score: \$score
-        progress: \$progress
-        startedAt: \$startedAt
-        completedAt: \$completedAt
-        repeat: \$repeat
-        private: \$private
-        notes: \$notes
-      ) {
-        id
-        status
-        score
-        progress
-        repeat
-        private
-        notes
-        startedAt {
-          year
-          month
-          day
-        }
-        completedAt {
-          year
-          month
-          day
-        }
-        updatedAt
+      id
+      status
+      score
+      progress
+      repeat
+      private
+      notes
+      startedAt {
+        year
+        month
+        day
       }
+      completedAt {
+        year
+        month
+        day
+      }
+      updatedAt
     }
+  }
+
   ''';
 
-    // Query: Fetch a MediaListEntry for a specific anime (requires userId or auth token)
-  static const String mediaListEntryByAnimeIdQuery = '''
-    query (\$userId: Int, \$animeId: Int) {
+  /// **Query to get the anime status from the user's list**
+  static const String getAnimeStatusQuery = '''
+    query GetAnimeStatus(\$userId: Int, \$animeId: Int) {
       MediaList(userId: \$userId, mediaId: \$animeId) {
-        id
         status
-        score
-        progress
-        repeat
-        private
-        notes
-        startedAt {
-          year
-          month
-          day
-        }
-        completedAt {
-          year
-          month
-          day
-        }
-        media {
-          $mediaFields
-        }
       }
     }
   ''';
-
 
   // Query: Fetch detailed anime information by ID
   static const String animeDetailsQuery = '''
@@ -238,7 +226,6 @@ class AnilistQueries {
     }
   ''';
 
-  // Query: Fetch most watched anime
   static const String mostWatchedAnimeQuery = '''
   query {
     Page(page: 1, perPage: 15) {
@@ -249,7 +236,7 @@ class AnilistQueries {
   }
 ''';
 
-  // Query: Fetch anime with most favorites
+// Query: Fetch anime with most favorites
   static const String mostFavoritedAnimeQuery = '''
   query {
     Page(page: 1, perPage: 15) {
@@ -367,4 +354,29 @@ class AnilistQueries {
     }
   ''';
 
+  // Query: Check if an anime is favorited
+  static const String isAnimeFavoriteQuery = '''
+    query (\$animeId: Int!) {
+      Media(id: \$animeId) {
+        isFavourite
+      }
+    }
+  ''';
+
+  // Query: Gets all available streaming episodes
+  static const String streamingEpisodes = '''
+    query (\$id: Int) {
+      Media(id: \$id, type: ANIME) {
+        id
+        episodes
+        streamingEpisodes {
+          title
+          thumbnail
+          url
+          site
+        }
+      }
+    }
+
+  ''';
 }

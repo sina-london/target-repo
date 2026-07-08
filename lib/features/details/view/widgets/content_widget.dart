@@ -7,10 +7,14 @@ import 'rankings_widget.dart';
 /// Content widget that composes all the detail sections
 class DetailsContent extends StatelessWidget {
   final Media anime;
+  final bool isFavourite;
+  final VoidCallback onToggleFavorite;
 
   const DetailsContent({
     super.key,
     required this.anime,
+    required this.isFavourite,
+    required this.onToggleFavorite,
   });
 
   @override
@@ -22,7 +26,8 @@ class DetailsContent extends StatelessWidget {
         children: [
           AnimeInfoCard(
             anime: anime,
-            onShare: () {},
+            isFavourite: isFavourite,
+            onToggleFavorite: onToggleFavorite,
           ),
           const SizedBox(height: 24),
           AnimeSynopsis(

@@ -27,11 +27,6 @@ class AniListRepository implements AnimeRepository {
   }
 
   @override
-  Future<List<Media>> toggleFavorite(int animeId) {
-    return service.toggleFavorite(animeId);
-  }
-
-  @override
   Future<List<Media>> getPopularAnime() {
     return service.getPopularAnime();
   }
@@ -88,11 +83,6 @@ class AniListRepository implements AnimeRepository {
       notes: notes,
       private: private,
     );
-  }
-
-  @override
-  Future<MediaListEntry?> getAnimeEntry(int animeId) {
-    return service.getAnimeEntry(animeId);
   }
 
   @override

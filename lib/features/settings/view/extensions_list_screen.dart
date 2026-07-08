@@ -6,8 +6,9 @@ import 'package:isar/isar.dart';
 import 'package:shonenx/core_new/models/manga.dart';
 import 'package:shonenx/core_new/models/source.dart';
 import 'package:shonenx/features/settings/view_model/source_notifier.dart';
-import 'package:shonenx/features/settings/view/widgets/extension_tile.dart';
-import 'package:shonenx/features/settings/view/widgets/settings_section.dart';
+import 'package:shonenx/features/settings/widgets/extension_tile.dart';
+import 'package:shonenx/features/settings/widgets/settings_section.dart';
+import 'package:shonenx/features/settings/widgets/settings_item.dart';
 import 'package:shonenx/main.dart';
 
 final _uninstalledAnimeExtensionsProvider =
@@ -121,7 +122,7 @@ class ExtensionsListScreen extends ConsumerWidget {
   }
 
   // Helper method to create settings item for extension
-  Widget _createExtensionItem(
+  SettingsItem _createExtensionItem(
       Source extension,
       bool isInstalled,
       bool isSelected,
@@ -159,7 +160,7 @@ class ExtensionsListScreen extends ConsumerWidget {
                     final TextEditingController controller =
                         TextEditingController(
                       text:
-                          'https://raw.githubusercontent.com/m2k3a/mangayomi-extensions/refs/heads/main/anime_index.json',
+                          'https://miraienoki.github.io/anymex-extensions/anime_index.json',
                     );
 
                     return AlertDialog(
@@ -170,7 +171,7 @@ class ExtensionsListScreen extends ConsumerWidget {
                           TextField(
                             controller: controller,
                             decoration: const InputDecoration(
-                              hintText: 'https://example.com/anime.json',
+                              hintText: 'https://example.com/repo.json',
                               border: OutlineInputBorder(),
                             ),
                           ),
@@ -206,18 +207,9 @@ class ExtensionsListScreen extends ConsumerWidget {
                           child: const Text('Cancel'),
                         ),
                         ElevatedButton(
-                          onPressed: () async {
+                          onPressed: () {
                             final url = controller.text.trim();
                             if (url.isNotEmpty) {
-                              await ref
-                                  .read(_uninstalledAnimeExtensionsProvider
-                                      .future)
-                                  .then((sources) {
-                                isar.writeTxn(() async {
-                                  isar.sources.deleteAll(
-                                      sources.map((s) => s.id!).toList());
-                                });
-                              });
                               sourceNotifier.setActiveRepo(url, ItemType.anime);
                               sourceNotifier.fetchSources(ItemType.anime);
                               Navigator.pop(context);
@@ -351,7 +343,7 @@ class ExtensionsListScreen extends ConsumerWidget {
                       title:
                           '$languageFlag $languageName (${languageExtensions.length})',
                       titleColor: Theme.of(context).primaryColor,
-                      children: languageExtensions.map((extension) {
+                      items: languageExtensions.map((extension) {
                         final isSelected =
                             sourceState.activeAnimeSource?.id == extension.id;
                         final isInstalled = isInstalledTab ||
