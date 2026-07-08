@@ -1,8 +1,9 @@
 import 'package:hive/hive.dart';
+import 'package:shonenx/data/hive/hive_type_ids.dart';
 
 part 'user_model.g.dart';
 
-@HiveType(typeId: 0)
+@HiveType(typeId: HiveTypeIds.user)
 class UserOffline extends HiveObject {
   @HiveField(0)
   final String name;

@@ -141,6 +141,33 @@ class Media {
           .toList(),
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'title': title?.toJson(),
+      'coverImage': coverImage?.toJson(),
+      'bannerImage': bannerImage,
+      'episodes': episodes,
+      'duration': duration,
+      'format': format,
+      'status': status,
+      'description': description,
+      'genres': genres,
+      'averageScore': averageScore,
+      'popularity': popularity,
+      'trailer': trailer?.toJson(),
+      'studios': studios?.map((s) => s.toJson()).toList(),
+      'streamingEpisodes': streamingEpisodes?.map((s) => s.toJson()).toList(),
+      'isAdult': isAdult,
+      'startDate': startDate?.toJson(),
+      'endDate': endDate?.toJson(),
+      'season': season,
+      'seasonYear': seasonYear,
+      'isFavourite': isFavourite,
+      'rankings': rankings?.map((r) => r.toJson()).toList(),
+    };
+  }
 }
 
 class Title {
@@ -161,6 +188,14 @@ class Title {
       native: json['native'],
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'romaji': romaji,
+      'english': english,
+      'native': native,
+    };
+  }
 }
 
 class CoverImage {
@@ -177,6 +212,13 @@ class CoverImage {
       large: json['large'] ?? '',
       medium: json['medium'] ?? '',
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'large': large,
+      'medium': medium,
+    };
   }
 }
 
@@ -198,6 +240,14 @@ class Trailer {
       thumbnail: json['thumbnail'],
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'site': site,
+      'thumbnail': thumbnail,
+    };
+  }
 }
 
 class Studio {
@@ -214,6 +264,13 @@ class Studio {
       name: json['name'] ?? '',
       isMain: json['isMain'] ?? false,
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'name': name,
+      'isMain': isMain,
+    };
   }
 }
 
@@ -238,6 +295,15 @@ class StreamingEpisode {
       site: json['site'],
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'title': title,
+      'url': url,
+      'thumbnail': thumbnail,
+      'site': site,
+    };
+  }
 }
 
 class Date {
@@ -253,6 +319,14 @@ class Date {
       month: json['month'],
       day: json['day'],
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'year': year,
+      'month': month,
+      'day': day,
+    };
   }
 }
 
@@ -283,5 +357,16 @@ class MediaRanking {
       year: json['year'] as int?, // Allow null
       allTime: json['allTime'] as bool,
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'rank': rank,
+      'type': type,
+      'context': context,
+      'season': season,
+      'year': year,
+      'allTime': allTime,
+    };
   }
 }

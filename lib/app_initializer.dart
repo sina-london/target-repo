@@ -8,6 +8,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shonenx/data/hive/models/anime_watch_progress_model.dart';
+import 'package:shonenx/data/hive/models/home_page_model.dart';
 import 'package:shonenx/data/hive/models/settings/player_model.dart';
 import 'package:shonenx/data/hive/models/settings/provider_model.dart';
 import 'package:shonenx/data/hive/models/settings/theme_model.dart';
@@ -48,15 +49,17 @@ class AppInitializer {
     await Hive.initFlutter(customPath);
     log("✅ Hive initialized at: $customPath", name: "appInitializer");
 
+    Hive.registerAdapter(HomePageModelAdapter());
     Hive.registerAdapter(ThemeSettingsAdapter());
     Hive.registerAdapter(UiSettingsAdapter());
     Hive.registerAdapter(ProviderSettingsAdapter());
     Hive.registerAdapter(PlayerSettingsAdapter());
-
+    
     Hive.registerAdapter(AnimeWatchProgressEntryAdapter());
     Hive.registerAdapter(EpisodeProgressAdapter());
 
     Future.wait([
+      Hive.openBox<HomePageModel>('home_page'),
       Hive.openBox<ThemeSettings>('theme_settings'),
       Hive.openBox<UiSettings>('ui_settings'),
       Hive.openBox<ProviderSettings>('provider_settings'),

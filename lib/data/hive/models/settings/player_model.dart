@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:shonenx/data/hive/hive_type_ids.dart';
 import 'package:shonenx/data/hive/models/subtitle_style_model.dart';
 
 part 'player_model.g.dart';
 
-@HiveType(typeId: 1)
+@HiveType(typeId: HiveTypeIds.player)
 class PlayerSettings extends HiveObject {
   @HiveField(0)
   final double episodeCompletionThreshold;

@@ -10,7 +10,6 @@ import 'package:shonenx/core/models/anime/source_model.dart';
 import 'package:shonenx/core/sources/anime/aniwatch/parser.dart';
 import 'package:shonenx/core/sources/anime/anime_provider.dart';
 import 'package:html/parser.dart' show parse;
-import 'package:shonenx/data/hive/models/home_page_model.dart';
 
 class HiAnimeProvider extends AnimeProvider {
   HiAnimeProvider({String? customApiUrl})
@@ -31,14 +30,15 @@ class HiAnimeProvider extends AnimeProvider {
   @override
   Future<HomePage> getHome() async {
     log('Fetching home page from $baseUrl');
-    final response =
-        await http.get(Uri.parse('$baseUrl/home'), headers: _getHeaders());
-    final document = parse(response.body);
-    return HomePage(
-      spotlight: parseSpotlight(document, baseUrl),
-      trending: parseTrending(document, baseUrl),
-      featured: parseFeatured(document, baseUrl),
-    );
+    return HomePage();
+    // final response =
+    //     await http.get(Uri.parse('$baseUrl/home'), headers: _getHeaders());
+    // final document = parse(response.body);
+    // return HomePage(
+    //   spotlight: parseSpotlight(document, baseUrl),
+    //   trending: parseTrending(document, baseUrl),
+    //   featured: parseFeatured(document, baseUrl),
+    // );
   }
 
   @override

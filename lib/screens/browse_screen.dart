@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shonenx/core/anilist/services/anilist_service.dart';
 import 'package:shonenx/core/models/anilist/anilist_media_list.dart';
-import 'package:shonenx/data/constants/constants.dart';
 import 'package:shonenx/helpers/navigation.dart';
 import 'package:shonenx/widgets/anime/card/anime_card.dart';
 import 'package:shonenx/widgets/ui/search_bar.dart';
@@ -255,7 +254,8 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen> {
             Wrap(
               spacing: 12,
               runSpacing: 12,
-              children: categories.entries
+              children: {}
+                  .entries
                   .map((category) => _buildCategoryButton(
                         category.key,
                         category.value,

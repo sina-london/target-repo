@@ -9,7 +9,7 @@ part of 'anime_watch_progress_model.dart';
 class AnimeWatchProgressEntryAdapter
     extends TypeAdapter<AnimeWatchProgressEntry> {
   @override
-  final int typeId = 5;
+  final int typeId = 7;
 
   @override
   AnimeWatchProgressEntry read(BinaryReader reader) {
@@ -61,7 +61,7 @@ class AnimeWatchProgressEntryAdapter
 
 class EpisodeProgressAdapter extends TypeAdapter<EpisodeProgress> {
   @override
-  final int typeId = 6;
+  final int typeId = 8;
 
   @override
   EpisodeProgress read(BinaryReader reader) {

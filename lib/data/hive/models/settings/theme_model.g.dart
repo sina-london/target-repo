@@ -8,7 +8,7 @@ part of 'theme_model.dart';
 
 class ThemeSettingsAdapter extends TypeAdapter<ThemeSettings> {
   @override
-  final int typeId = 3;
+  final int typeId = 2;
 
   @override
   ThemeSettings read(BinaryReader reader) {

@@ -3,12 +3,11 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shonenx/core/registery/anime_source_registery_provider.dart';
+import 'package:shonenx/data/hive/providers/home_page_provider.dart';
 import 'package:shonenx/data/hive/providers/theme_provider.dart';
 import 'package:shonenx/data/hive/providers/ui_provider.dart';
 import 'dart:async';
 import 'dart:developer' as dev;
-
-import 'package:shonenx/providers/homepage_provider.dart';
 
 class LoadingScreen extends ConsumerStatefulWidget {
   const LoadingScreen({super.key});
@@ -74,33 +73,12 @@ class _LoadingScreenState extends ConsumerState<LoadingScreen>
     try {
       dev.log('Starting app initialization', name: 'LoadingScreen');
 
-      // Get the selected provider key and custom API URL
-      // final selectedProviderState = ref.read(selectedProviderKeyProvider);
-      // final customApiUrl = selectedProviderState.customApiUrl;
-
       // dev.log(
       //     'Selected provider: ${selectedProviderState.selectedProviderKey}, API URL: $customApiUrl',
       //     name: 'LoadingScreen');
 
-      // Initialize with all required services
-      await Future.wait([
-        //   // Initialize anime source registry
-        ref.read(animeSourceRegistryProvider.notifier).initialize(null),
-        ref.read(homePageProvider.future)
-        //   // Initialize all settings
-        //   ref.read(themeSettingsProvider.notifier).initializeSettings(),
-        //   ref.read(uiSettingsProvider.notifier).initializeSettings(),
-        //   ref.read(playerSettingsProvider.notifier).initializeSettings(),
-
-        //   // Initialize homepage and watch progress
-        //   ref.read(homePageProvider.future),
-
-        //   // Force minimum delay for better UX
-        //   Future.delayed(const Duration(seconds: 2)),
-      ]);
-
-      // ref.read(animeWatchProgressProvider);
-      // ref.read(uiSettingsProvider);
+      ref.read(animeSourceRegistryProvider.notifier).initialize(null);
+      ref.read(homepageProvider.notifier).initialize();
       ref.read(themeSettingsProvider);
       // ref.read(providerSettingsProvider);
 

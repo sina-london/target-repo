@@ -1,3 +1,4 @@
+import 'package:shonenx/core/models/anilist/anilist_media_list.dart';
 import 'package:shonenx/core/models/anime/anime_model.dep.dart';
 
 class Featured {
@@ -6,6 +7,24 @@ class Featured {
   final List<BaseAnimeModel>? animes;
 
   Featured({this.path, this.title, this.animes});
+}
+
+class HomePage {
+  final List<Media> trendingAnime;
+  final List<Media> popularAnime;
+  final List<Media> recentlyUpdated;
+  final List<Media> topRatedAnime;
+  final List<Media> mostFavoriteAnime;
+  final List<Media> mostWatchedAnime;
+
+  HomePage({
+    this.trendingAnime = const [],
+    this.popularAnime = const [],
+    this.recentlyUpdated = const [],
+    this.topRatedAnime = const [],
+    this.mostFavoriteAnime = const [],
+    this.mostWatchedAnime = const [],
+  });
 }
 
 class DetailPage {
