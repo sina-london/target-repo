@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:nekoflow/data/models/anime_interface.dart';
-import 'package:nekoflow/screens/details_screen.dart';
+import 'package:nekoflow/screens/main/details_screen.dart';
 
 class AnimeCard extends StatelessWidget {
   final Anime anime;
@@ -13,7 +13,7 @@ class AnimeCard extends StatelessWidget {
       {required double width, required double height}) {
     return Shimmer.fromColors(
       baseColor: Colors.grey[800]!,
-      highlightColor: Colors.white!,
+      highlightColor: Colors.white,
       child: Container(
         width: width,
         height: height,
@@ -134,6 +134,7 @@ class AnimeCard extends StatelessWidget {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
+                      
                     ],
                   ),
                 ),

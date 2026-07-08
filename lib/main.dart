@@ -3,10 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:nekoflow/data/models/settings_model.dart';
-import 'package:nekoflow/screens/home_screen.dart';
-import 'package:nekoflow/screens/search_screen.dart';
-import 'package:nekoflow/screens/settings_screen.dart';
+import 'package:nekoflow/data/models/settings/settings_model.dart';
+import 'package:nekoflow/screens/main/home_screen.dart';
+import 'package:nekoflow/screens/main/saved_screen.dart';
+import 'package:nekoflow/screens/main/search_screen.dart';
+import 'package:nekoflow/screens/main/settings_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -33,7 +34,7 @@ class _MainAppState extends State<MainApp> {
     SettingsScreen(),
     HomeScreen(),
     SearchScreen(),
-    
+    SavedScreen()
   ];
 
   @override
@@ -78,10 +79,7 @@ class _MainAppState extends State<MainApp> {
       home: Scaffold(
         extendBody: true,
         appBar: AppBar(toolbarHeight: 0),
-        body: IndexedStack(
-          index: _selectedIndex,
-          children: _screens,
-        ),
+        body: _screens[_selectedIndex], 
         bottomNavigationBar: CrystalNavigationBar(
           backgroundColor: Colors.black.withOpacity(0.2),
           currentIndex: _selectedIndex,
