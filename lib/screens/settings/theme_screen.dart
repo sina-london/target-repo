@@ -128,7 +128,6 @@ class _ThemeScreenState extends State<ThemeScreen> {
             icon: Icon(
               Icons.navigate_before,
               size: 35,
-              color: themeData.colorScheme.onBackground,
             ),
           ),
           title: Text(

@@ -3,7 +3,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:nekoflow/data/models/settings/settings_model.dart';
 
 class SettingsBox {
-  static const String boxName = 'user_settings';
+  static const String boxName = 'settings';
   late Box<SettingsModel> _box;
   SettingsModel? _settingsModel;
 
@@ -18,7 +18,7 @@ class SettingsBox {
 
   // Get the theme from SettingsBox
   String? getTheme() {
-    print(_settingsModel?.theme);
+    debugPrint(_settingsModel?.theme);
     return _settingsModel?.theme ?? 'dark';
   }
 

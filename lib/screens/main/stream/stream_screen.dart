@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:hive/hive.dart';
 import 'package:nekoflow/data/boxes/watchlist_box.dart';
 import 'package:nekoflow/data/models/episodes_model.dart';
 import 'package:nekoflow/data/models/stream_model.dart';
@@ -16,18 +15,17 @@ class StreamScreen extends StatefulWidget {
   final String poster;
   final int episode;
   final String name;
-  String? type;
+  final String? type;
 
-  StreamScreen({
-    super.key,
-    required this.title,
-    required this.id,
-    required this.episodeId,
-    required this.poster,
-    required this.episode,
-    required this.name,
-    this.type
-  });
+  const StreamScreen(
+      {super.key,
+      required this.title,
+      required this.id,
+      required this.episodeId,
+      required this.poster,
+      required this.episode,
+      required this.name,
+      this.type});
 
   @override
   State<StreamScreen> createState() => _StreamScreenState();
@@ -57,13 +55,13 @@ class _StreamScreenState extends State<StreamScreen> {
   @override
   void initState() {
     super.initState();
-    _initializeState();
+    _selectedEpisodeId = widget.episodeId;
+    _initializeBox();
   }
 
-  Future<void> _initializeState() async {
+  Future<void> _initializeBox() async {
     _watchlistBox = WatchlistBox();
     await _watchlistBox.init();
-    _selectedEpisodeId = widget.episodeId;
     _initializeData();
 
     // Restore previous position if exists
@@ -249,41 +247,41 @@ class _StreamScreenState extends State<StreamScreen> {
           _playerController?.seekTo(duration);
         }
       }
-      // Save on progress
-      if (event.betterPlayerEventType == BetterPlayerEventType.progress) {
-        final position =
-            _playerController?.videoPlayerController?.value.position;
-        if (position == null || position.inSeconds == 0) return;
+    }
 
-        setState(() {
-          _currentPosition = position.toString();
-        });
+    if (event.betterPlayerEventType == BetterPlayerEventType.progress) {
+      debugPrint("PROGRESS");
 
-        // Update continue watching
-        final continueWatchingItem = ContinueWatchingItem(
+      final position = _playerController?.videoPlayerController?.value.position;
+      if (position == null || position.inSeconds == 0) return;
+
+      setState(() {
+        _currentPosition = position.toString();
+      });
+
+      // Update continue watching
+      final continueWatchingItem = ContinueWatchingItem(
+        title: widget.title,
+        id: widget.id,
+        name: widget.name,
+        poster: widget.poster,
+        episode: widget.episode,
+        episodeId: widget.episodeId,
+        timestamp: _currentPosition,
+        type: widget.type, // Todo: Add appropriate type here
+      );
+      await _watchlistBox.addToContinueWatching(continueWatchingItem);
+
+      // Add to recently watched after 5% of video progress
+      final duration = _playerController?.videoPlayerController?.value.duration;
+      if (duration != null && position.inSeconds > duration.inSeconds * 0.05) {
+        final recentlyWatchedItem = RecentlyWatchedItem(
           id: widget.id,
           name: widget.name,
           poster: widget.poster,
-          episode: widget.episode,
-          episodeId: widget.episodeId,
-          timestamp: _currentPosition,
-          type: 'anime', // Todo: Add appropriate type here
+          type: widget.type, // Add appropriate type here
         );
-        await _watchlistBox.addToContinueWatching(continueWatchingItem);
-
-        // Add to recently watched after 5% of video progress
-        final duration =
-            _playerController?.videoPlayerController?.value.duration;
-        if (duration != null &&
-            position.inSeconds > duration.inSeconds * 0.05) {
-          final recentlyWatchedItem = RecentlyWatchedItem(
-            id: widget.id,
-            name: widget.name,
-            poster: widget.poster,
-            type: widget.type, // Add appropriate type here
-          );
-          await _watchlistBox.addToRecentlyWatched(recentlyWatchedItem);
-        }
+        await _watchlistBox.addToRecentlyWatched(recentlyWatchedItem);
       }
     }
   }
@@ -292,7 +290,6 @@ class _StreamScreenState extends State<StreamScreen> {
   void dispose() {
     _disposeCurrentPlayer();
     _animeService.dispose();
-    _watchlistBox.dispose();
     super.dispose();
   }
 

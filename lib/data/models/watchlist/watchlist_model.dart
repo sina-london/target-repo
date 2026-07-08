@@ -54,12 +54,10 @@ class RecentlyWatchedItem extends HiveObject implements BaseAnimeCard {
 }
 
 @HiveType(typeId: 3)
-class ContinueWatchingItem extends HiveObject implements BaseAnimeCard {
-  @override
+class ContinueWatchingItem extends HiveObject {
   @HiveField(0)
   final String name;
 
-  @override
   @HiveField(1)
   final String poster;
 
@@ -72,22 +70,33 @@ class ContinueWatchingItem extends HiveObject implements BaseAnimeCard {
   @HiveField(4)
   final String timestamp;
 
-  @override
   @HiveField(5)
   final String id;
 
-  @override
   @HiveField(6)
-  final String type;
+  String? type;
 
-  ContinueWatchingItem(
-      {required this.id,
-      required this.name,
-      required this.poster,
-      required this.episode,
-      required this.episodeId,
-      required this.timestamp,
-      this.type = 'N/A'});
+  @HiveField(7)
+  final String title;
+
+  @HiveField(8)
+  bool? isCompleted;
+
+  @HiveField(9)
+  final String duration;
+
+  ContinueWatchingItem({
+    required this.id,
+    required this.name,
+    required this.poster,
+    required this.episode,
+    required this.episodeId,
+    required this.timestamp,
+    required this.title,
+    this.isCompleted = false,
+    this.duration = '0:00:00.000000',
+    this.type,
+  });
 }
 
 @HiveType(typeId: 4)
