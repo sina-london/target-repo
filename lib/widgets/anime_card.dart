@@ -32,9 +32,10 @@ class AnimeCard extends StatelessWidget {
         MaterialPageRoute(
           builder: (context) => DetailsScreen(
             id: anime.id,
-            image: anime.poster.replaceAll("300x400", "600x800"),
+            image: anime.poster.replaceAll(RegExp(r'(\d+)x(\d+)'), '600x800'),
             title: anime.name,
             tag: tag,
+            type: anime.type,
           ),
         ),
       ),

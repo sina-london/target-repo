@@ -11,6 +11,7 @@ class DetailsScreen extends StatefulWidget {
   final String title;
   final String id;
   final String image;
+  final String type;
   final dynamic tag;
 
   const DetailsScreen({
@@ -19,6 +20,7 @@ class DetailsScreen extends StatefulWidget {
     required this.id,
     required this.image,
     required this.tag,
+    this.type = 'N/A'
   });
 
   @override
@@ -364,7 +366,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
                     animeId: widget.id,
                     title: widget.title,
                     image: widget.image,
-                    type: info?.anime?.info?.stats?.type ?? 'N/A',
+                    type: widget.type,
                   ),
                   SizedBox(width: 10)
                 ],
