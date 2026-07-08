@@ -106,7 +106,9 @@ class SettingsSection extends StatelessWidget {
   Widget _buildSettingsItem(SettingsItem item, bool isInGrid) {
     return SettingsItem(
       icon: item.icon,
+      leading: item.leading,
       iconColor: item.iconColor,
+      accent: item.accent,
       title: item.title,
       description: item.description,
       onTap: item.onTap,
@@ -130,6 +132,8 @@ class SettingsSection extends StatelessWidget {
       segmentedOptions: item.segmentedOptions,
       segmentedLabels: item.segmentedLabels,
       onSegmentedChanged: item.onSegmentedChanged,
+      trailingWidgets: item.trailingWidgets,
+      layoutType: item.layoutType,
     );
   }
 }
