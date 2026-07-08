@@ -23,28 +23,23 @@ class MinimalCard extends StatelessWidget {
         children: [
           AnimeImage(anime: anime, tag: tag, height: double.infinity),
           // Info overlay that fades in
-          AnimatedOpacity(
-            opacity: isHovered ? 1.0 : 0.0,
-            duration: const Duration(milliseconds: 250),
-            curve: Curves.easeInOut,
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Colors.transparent, Colors.black.withOpacity(0.9)],
-                  stops: const [0.5, 1.0],
-                ),
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [Colors.transparent, Colors.black.withOpacity(0.9)],
+                stops: const [0.5, 1.0],
               ),
-              child: Padding(
-                padding: const EdgeInsets.all(10.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    AnimeTitle(anime: anime, maxLines: 2),
-                  ],
-                ),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(10.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.end,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  AnimeTitle(anime: anime, maxLines: 2),
+                ],
               ),
             ),
           ),
