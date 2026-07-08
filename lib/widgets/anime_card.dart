@@ -95,7 +95,7 @@ class AnimeCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
+          color: Theme.of(context).colorScheme.primary.withOpacity(0.8),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Text(

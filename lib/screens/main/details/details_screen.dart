@@ -103,6 +103,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
                                   Theme.of(context).colorScheme.secondary,
                               child: Container(
                                 height: 400,
+                                width: 260,
                                 color: Colors.grey[300],
                               ),
                             );
@@ -283,10 +284,11 @@ class _DetailsScreenState extends State<DetailsScreen> {
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
+              themeData.colorScheme.surface,
               themeData.colorScheme.primary,
               themeData.colorScheme.secondary, // End color
             ],
-            begin: Alignment.centerLeft,
+            begin: Alignment.bottomLeft,
             end: Alignment.topRight,
           ),
         ),

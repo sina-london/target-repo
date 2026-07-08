@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:nekoflow/screens/main/settings/about/about_screen.dart';
+import 'package:nekoflow/screens/main/settings/storage/storage_screen.dart';
 import 'package:nekoflow/screens/settings/theme_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
@@ -72,6 +73,13 @@ class SettingsScreen extends StatelessWidget {
             title: "About",
             subtitle: "Information about the developer",
             destination: const AboutScreen(),
+          ),
+          _buildListTile(
+            context: context,
+            leadingIcon: HugeIcons.strokeRoundedCircleArrowDataTransferHorizontal,
+            title: "Storage (SOON)",
+            subtitle: "Export and import your data",
+            destination: const StorageScreen(),
           ),
         ],
       ),
