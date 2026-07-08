@@ -324,9 +324,7 @@ class _StreamScreenState extends State<StreamScreen> {
       ),
       floatingActionButton: Stack(
         children: [
-          _buildActionButton(
-            HugeIcons.strokeRoundedDownload02,
-          ),
+        
         ],
       ),
       body: Column(
@@ -491,37 +489,37 @@ class _StreamScreenState extends State<StreamScreen> {
     );
   }
 
-  Widget _buildActionButton(
-    IconData iconData, {
-    VoidCallback? action,
-    double? top,
-    double? right,
-    double? bottom,
-    double? left,
-  }) {
-    return Positioned(
-      left: left,
-      right: right,
-      top: top,
-      bottom: bottom,
-      child: InkWell(
-        onTap: action,
-        child: Container(
-          height: 50,
-          width: 50,
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primary,
-            borderRadius: BorderRadius.circular(50),
-          ),
-          child: HugeIcon(
-            icon: iconData,
-            color: Theme.of(context).colorScheme.onTertiary,
-            size: 30,
-          ),
-        ),
-      ),
-    );
-  }
+  // Widget _buildActionButton(
+  //   IconData iconData, {
+  //   VoidCallback? action,
+  //   double? top,
+  //   double? right,
+  //   double? bottom,
+  //   double? left,
+  // }) {
+  //   return Positioned(
+  //     left: left,
+  //     right: right,
+  //     top: top,
+  //     bottom: bottom,
+  //     child: InkWell(
+  //       onTap: action,
+  //       child: Container(
+  //         height: 50,
+  //         width: 50,
+  //         decoration: BoxDecoration(
+  //           color: Theme.of(context).colorScheme.primary,
+  //           borderRadius: BorderRadius.circular(50),
+  //         ),
+  //         child: HugeIcon(
+  //           icon: iconData,
+  //           color: Theme.of(context).colorScheme.onTertiary,
+  //           size: 30,
+  //         ),
+  //       ),
+  //     ),
+  //   );
+  // }
 
   Widget _buildVideoPlayer() {
     return ClipRRect(
@@ -530,7 +528,7 @@ class _StreamScreenState extends State<StreamScreen> {
         aspectRatio: 1.8,
         child: _isPlayerInitializing || _playerController == null
             ? Container(
-                color: Theme.of(context).colorScheme.primaryContainer,
+                color: Theme.of(context).colorScheme.primary,
                 child: Center(
                   child: CircularProgressIndicator(
                     color: Theme.of(context).colorScheme.onPrimaryContainer,
