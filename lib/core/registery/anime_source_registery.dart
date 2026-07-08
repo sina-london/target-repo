@@ -1,91 +1,74 @@
 import 'package:shonenx/core/sources/anime/anime_provider.dart';
+import 'package:shonenx/core/sources/anime/animekai.dart';
+import 'package:shonenx/core/sources/anime/animepahe.dart';
+import 'package:shonenx/core/sources/anime/aniwatch/aniwatch.dart';
+import 'package:shonenx/core/sources/anime/aniwatch/hianime.dart';
+import 'package:shonenx/core/sources/anime/aniwatch/kaido.dart';
 import 'package:shonenx/core/utils/app_logger.dart';
 
-/// Enum representing the initialization status of the registry
 enum RegistryStatus { uninitialized, initializing, initialized, error }
 
-/// A registry for anime source providers with improved error handling and management
-class AnimeSourceRegistery {
-  /// Map of provider keys to provider instances
-  final Map<String, AnimeProvider> _providers = {};
-
-  /// Current status of the registry
+class AnimeSourceRegistry {
+  final _providers = <String, AnimeProvider>{};
   RegistryStatus _status = RegistryStatus.uninitialized;
+  String? _error;
 
-  /// Error message if initialization failed
-  String? _errorMessage;
-
-  /// Get the current status of the registry
   RegistryStatus get status => _status;
-
-  /// Get the error message if initialization failed
-  String? get errorMessage => _errorMessage;
-
-  /// Check if the registry is initialized
+  String? get error => _error;
   bool get isInitialized => _status == RegistryStatus.initialized;
 
-  /// Register a provider by a key
-  /// Returns true if registration was successful, false otherwise
-  bool registerProvider(String key, AnimeProvider provider) {
+  bool register(String key, AnimeProvider provider) {
+    if (key.isEmpty) return _fail('Empty key');
+    _providers[key] = provider;
+    AppLogger.i('Registered: $key');
+    return true;
+  }
+
+  AnimeSourceRegistry initialize() {
+    setStatus(RegistryStatus.initializing);
     try {
-      if (key.isEmpty) {
-        AppLogger.w('Cannot register provider with empty key');
-        return false;
-      }
-
-      if (_providers.containsKey(key)) {
-        AppLogger.w('Provider with key $key already exists, replacing');
-      }
-
-      _providers[key] = provider;
-      AppLogger.i('Registered provider: $key');
-      return true;
+      register('aniwatch', AniwatchProvider());
+      register('kaido', KaidoProvider());
+      register('hianime', HiAnimeProvider());
+      register('animekai', AnimekaiProvider());
+      register('animepahe', AnimePaheProvider());
+      setStatus(RegistryStatus.initialized);
+      return this;
     } catch (e, stackTrace) {
-      AppLogger.e('Error registering provider $key: $e', e, stackTrace);
-      return false;
+      setStatus(RegistryStatus.error, 'Failed to initialize: $e\n$stackTrace');
+      return this;
     }
   }
 
-  /// Retrieve a provider by key
-  /// Returns null if the provider doesn't exist
-  AnimeProvider? getProvider(String key) {
-    if (!isInitialized) {
-      AppLogger.w('Registry not initialized, cannot get provider: $key');
-      return null;
-    }
-
-    final provider = _providers[key];
-    if (provider == null) {
-      AppLogger.w('Provider not found for key: $key');
-    }
-    return provider;
+  AnimeProvider? get(String key) {
+    if (!isInitialized) return _warn<AnimeProvider>('Not initialized: $key');
+    return _providers[key] ?? _warn<AnimeProvider>('Not found: $key');
   }
 
-  /// List all registered providers
-  List<AnimeProvider> get allProviders => _providers.values.toList();
+  void setStatus(RegistryStatus status, [String? error]) {
+    _status = status;
+    _error = error;
+    AppLogger.i('Status: $status');
+    if (error != null) AppLogger.e('Error: $error');
+  }
 
-  /// Get all provider keys
-  List<String> get allProviderKeys => _providers.keys.toList();
-
-  /// Check if a provider exists
-  bool hasProvider(String key) => _providers.containsKey(key);
-
-  /// Get the number of registered providers
-  int get providerCount => _providers.length;
-
-  /// Clear all providers
   void clear() {
     _providers.clear();
-    AppLogger.i('Cleared all providers');
+    AppLogger.i('Providers cleared');
   }
 
-  /// Set the registry status
-  void setStatus(RegistryStatus status, [String? errorMessage]) {
-    _status = status;
-    _errorMessage = errorMessage;
-    AppLogger.i('Registry status changed to: $_status');
-    if (errorMessage != null) {
-      AppLogger.e('Registry error: $errorMessage');
-    }
+  bool has(String key) => _providers.containsKey(key);
+  int get count => _providers.length;
+  List<String> get keys => _providers.keys.toList();
+  List<AnimeProvider> get values => _providers.values.toList();
+
+  bool _fail(String msg) {
+    AppLogger.w(msg);
+    return false;
+  }
+
+  T? _warn<T>(String msg) {
+    AppLogger.w(msg);
+    return null;
   }
 }

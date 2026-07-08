@@ -1,4 +1,3 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 
 class AnilistClient {
@@ -18,21 +17,3 @@ class AnilistClient {
     );
   }
 }
-
-// A provider that builds a GraphQLClient. It's a "family" provider,
-// meaning it can take an argument—in this case, the access token.
-// final anilistClientProvider = Provider.family<GraphQLClient, String?>((ref, accessToken) {
-//   final httpLink = HttpLink('https://graphql.anilist.co');
-
-//   final authLink = AuthLink(
-//     // Use the provided accessToken to configure the client
-//     getToken: () => accessToken != null ? 'Bearer $accessToken' : null,
-//   );
-
-//   final link = authLink.concat(httpLink);
-
-//   return GraphQLClient(
-//     link: link,
-//     cache: GraphQLCache(store: HiveStore()),
-//   );
-// });

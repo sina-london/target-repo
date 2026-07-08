@@ -4,7 +4,7 @@ import 'package:shonenx/core/models/anime/page_model.dart';
 import 'package:shonenx/core/repositories/anime_repository.dart';
 import 'package:shonenx/core/utils/app_logger.dart';
 import 'package:shonenx/features/home/model/home_page.dart';
-import 'package:shonenx/shared/providers/anime_repository_provider.dart';
+import 'package:shonenx/shared/providers/anime_repo_provider.dart';
 
 class HomepageState {
   final HomePage? homePage;
@@ -50,21 +50,16 @@ class HomepageNotifier extends Notifier<HomepageState> {
     );
   }
 
-  Future<HomepageState> initialize({bool forceRefresh = false}) {
-    final shouldRefresh = state.homePage == null ||
+  Future<HomepageState> initialize({bool forceRefresh = false}) async {
+    final shouldRefresh = forceRefresh ||
+        state.homePage == null ||
         state.homePage!.trendingAnime.isEmpty ||
         state.homePage!.popularAnime.isEmpty ||
         state.homePage!.mostFavoriteAnime.isEmpty ||
-        state.lastUpdated.isBefore(
-          DateTime.now().subtract(const Duration(hours: 6)),
-        );
+        state.lastUpdated
+            .isBefore(DateTime.now().subtract(const Duration(hours: 6)));
 
-    if (!forceRefresh && !shouldRefresh) {
-      AppLogger.d('✅ Using cached homepage data');
-      return Future.value(state);
-    }
-
-    return fetchHomePage();
+    return shouldRefresh ? await fetchHomePage() : state;
   }
 
   void clearCache() {

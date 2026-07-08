@@ -5,9 +5,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:shonenx/features/browse/view/browse_screen.dart';
+import 'package:shonenx/features/loading/view/loading_screen.dart';
 import 'package:shonenx/features/watchlist/view/watchlist_screen.dart';
-import 'package:shonenx/providers/initialization_provider.dart';
-import 'package:shonenx/screens/loading_screen.dart';
+import 'package:shonenx/features/loading/view_model/initialization_notifier.dart';
 import 'package:shonenx/features/home/view/home_screen.dart' as h_screen;
 
 // Navigation item configuration

@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shonenx/core/models/anilist/anilist_media_list.dart';
 import 'package:shonenx/core/repositories/anime_repository.dart';
-import 'package:shonenx/shared/providers/anime_repository_provider.dart';
+import 'package:shonenx/shared/providers/anime_repo_provider.dart';
 
 enum WatchlistStatus {
   current,

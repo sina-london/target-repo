@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shonenx/core/models/anilist/anilist_media_list.dart';
 import 'package:shonenx/core/utils/app_utils.dart';
+import 'package:shonenx/features/watchlist/view/widget/shonenx_gridview.dart';
 import 'package:shonenx/helpers/navigation.dart';
-import 'package:shonenx/features/anime/widgets/card/anime_card.dart';
+import 'package:shonenx/features/anime/view/widgets/card/anime_card.dart';
 import 'package:shonenx/features/watchlist/view_model/watchlist_notifier.dart';
-import 'package:shonenx/widgets/ui/shonenx_grid.dart';
 
 class WatchlistScreen extends ConsumerStatefulWidget {
   const WatchlistScreen({super.key});
@@ -117,7 +117,7 @@ class _WatchlistTabView extends ConsumerWidget {
     // The actual list UI with pull-to-refresh.
     return RefreshIndicator(
       onRefresh: () => notifier.fetchListForStatus(status, force: true),
-      child: ShonenXGridView(
+      child: ShonenXGridView (
           physics: AlwaysScrollableScrollPhysics(),
           crossAxisCount: 3,
           mainAxisSpacing: 10,
