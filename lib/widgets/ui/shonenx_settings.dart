@@ -565,7 +565,7 @@ class SettingsSwitch extends StatefulWidget {
 class _SettingsSwitchState extends State<SettingsSwitch> {
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    // final theme = Theme.of(context);
 
     return Semantics(
       toggled: widget.value,

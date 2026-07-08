@@ -6,7 +6,6 @@ import 'package:shonenx/core/models/anilist/anilist_media_list.dart'
     as anime_media;
 import 'package:shonenx/data/hive/boxes/settings_box.dart';
 import 'package:shonenx/data/hive/models/settings_offline_model.dart';
-import 'package:shonenx/widgets/anime/card/anime_card.dart';
 import 'package:shonenx/widgets/ui/shonenx_settings.dart';
 
 // Riverpod provider for UI settings

@@ -253,8 +253,8 @@ class PlayerSettingsScreen extends ConsumerWidget {
     Color tempTextColor = Color(playerSettings.subtitleTextColor);
     double tempBackgroundOpacity = playerSettings.subtitleBackgroundOpacity;
     bool tempHasShadow = playerSettings.subtitleHasShadow;
-    double tempShadowOpacity = playerSettings.subtitleShadowOpacity ?? 0.8;
-    double tempShadowBlur = playerSettings.subtitleShadowBlur ?? 4.0;
+    double tempShadowOpacity = playerSettings.subtitleShadowOpacity;
+    double tempShadowBlur = playerSettings.subtitleShadowBlur;
     String tempFontFamily = playerSettings.subtitleFontFamily ?? 'Default';
     int tempPosition = playerSettings.subtitlePosition == 'bottom'
         ? 2
