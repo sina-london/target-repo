@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:html/dom.dart';
@@ -16,7 +17,7 @@ class AniwatchProvider extends AnimeProvider {
       : super(
             apiUrl: customApiUrl != null
                 ? '$customApiUrl/anime/zoro'
-                : 'https://consumet-api-production-cfef.up.railway.app/anime/zoro',
+                : "${dotenv.env['API_URL']}/anime/zoro",
             baseUrl: 'https://aniwatchtv.to',
             providerName: 'aniwatch');
 

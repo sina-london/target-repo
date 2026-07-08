@@ -1,6 +1,6 @@
 import 'dart:convert';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:developer';
-
 import 'package:shonenx/core/models/anime/anime_model.dep.dart';
 import 'package:shonenx/core/models/anime/episode_model.dart';
 import 'package:shonenx/core/models/anime/page_model.dart';
@@ -14,8 +14,8 @@ class AnimekaiProvider extends AnimeProvider {
       : super(
             apiUrl: customApiUrl != null
                 ? '$customApiUrl/anime/animekai'
-                : 'https://shonenx-consumet-api.vercel.app/anime/animekai',
-            baseUrl: 'https://shonenx-consumet-api.vercel.app/anime/animekai',
+                : "${dotenv.env['API_URL']}/anime/animekai",
+            baseUrl: 'https://animekai.to/',
             providerName: 'animekai');
 
   // Map<String, String> _getHeaders() {
@@ -39,7 +39,7 @@ class AnimekaiProvider extends AnimeProvider {
 
   @override
   Future<BaseEpisodeModel> getEpisodes(String animeId) async {
-    final response = await http.get(Uri.parse('$baseUrl/info?id=$animeId'));
+    final response = await http.get(Uri.parse('$apiUrl/info?id=$animeId'));
     final data = jsonDecode(response.body);
     return BaseEpisodeModel(
         totalEpisodes: data['totalEpisodes'],
@@ -74,7 +74,7 @@ class AnimekaiProvider extends AnimeProvider {
   @override
   Future<SearchPage> getSearch(String keyword, String? type, int page) async {
     log("Searching for $keyword");
-    final response = await http.get(Uri.parse('$baseUrl/$keyword'));
+    final response = await http.get(Uri.parse('$apiUrl/$keyword'));
     // log(response.body);
     final data = jsonDecode(response.body);
     log("${(data['results'] as List<dynamic>).map(
@@ -122,10 +122,10 @@ class AnimekaiProvider extends AnimeProvider {
     String? category,
   ) async {
     final dub = category == 'dub' ? 1 : 0;
-    log('Fetching : ${'$baseUrl/watch/$episodeId?dub=$dub'}');
+    log('Fetching : ${'$apiUrl/watch/$episodeId?dub=$dub'}');
     try {
       final response =
-          await http.get(Uri.parse('$baseUrl/watch/$episodeId?dub=$dub'));
+          await http.get(Uri.parse('$apiUrl/watch/$episodeId?dub=$dub'));
       if (response.statusCode != 200) {
         throw Exception('Failed to fetch sources: HTTP ${response.statusCode}');
       }

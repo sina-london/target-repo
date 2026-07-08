@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:developer';
 import 'package:shonenx/core/models/anime/anime_model.dep.dart';
 import 'package:shonenx/core/models/anime/episode_model.dart';
@@ -13,9 +14,9 @@ class AnimePaheProvider extends AnimeProvider {
       : super(
             apiUrl: customApiUrl != null
                 ? '$customApiUrl/anime/animepahe'
-                : 'https://consumet-api-production-cfef.up.railway.app/anime/animepahe',
+                : "${dotenv.env['API_URL']}/anime/animepahe",
             baseUrl:
-                'https://consumet-api-production-cfef.up.railway.app/anime/animepahe',
+                'https://animepahe.ru/',
             providerName: 'animepahe');
 
   // Map<String, String> _getHeaders() {
@@ -39,8 +40,8 @@ class AnimePaheProvider extends AnimeProvider {
 
   @override
   Future<BaseEpisodeModel> getEpisodes(String animeId) async {
-    log('Fetching $baseUrl/info/$animeId', name: providerName);
-    final response = await http.get(Uri.parse('$baseUrl/info/$animeId'));
+    log('Fetching $apiUrl/info/$animeId', name: providerName);
+    final response = await http.get(Uri.parse('$apiUrl/info/$animeId'));
     final data = jsonDecode(response.body);
     return BaseEpisodeModel(
         totalEpisodes: data['totalEpisodes'],
@@ -78,7 +79,7 @@ class AnimePaheProvider extends AnimeProvider {
   @override
   Future<SearchPage> getSearch(String keyword, String? type, int page) async {
     log("Searching for $keyword");
-    final response = await http.get(Uri.parse('$baseUrl/$keyword'));
+    final response = await http.get(Uri.parse('$apiUrl/$keyword'));
     // log(response.body);
     final data = jsonDecode(response.body);
     log("${(data['results'] as List<dynamic>).map(
@@ -126,10 +127,10 @@ class AnimePaheProvider extends AnimeProvider {
     String? serverName,
     String? category,
   ) async {
-    log('Fetching : ${'$baseUrl/watch?episodeId=$episodeId'}');
+    log('Fetching : ${'$apiUrl/watch?episodeId=$episodeId'}');
     try {
       final response =
-          await http.get(Uri.parse('$baseUrl/watch?episodeId=$episodeId'));
+          await http.get(Uri.parse('$apiUrl/watch?episodeId=$episodeId'));
       if (response.statusCode != 200) {
         throw Exception('Failed to fetch sources: HTTP ${response.statusCode}');
       }

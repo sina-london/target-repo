@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:developer';
 import 'package:html/dom.dart';
 import 'package:http/http.dart' as http;
@@ -15,8 +16,8 @@ class HiAnimeProvider extends AnimeProvider {
       : super(
             apiUrl: customApiUrl != null
                 ? '$customApiUrl/anime/zoro'
-                : 'https://consumet-api-production-cfef.up.railway.app/anime/zoro',
-            baseUrl: 'https://hianime.to',
+                : "${dotenv.env['API_URL']}/anime/zoro",
+            baseUrl: 'https://hianimez.to',
             providerName: 'hianime');
 
   Map<String, String> _getHeaders() {
