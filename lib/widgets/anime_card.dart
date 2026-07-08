@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:nekoflow/data/models/watchlist/watchlist_model.dart';
 import 'package:nekoflow/screens/main/details/details_screen.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -6,11 +7,13 @@ import 'package:cached_network_image/cached_network_image.dart';
 class AnimeCard extends StatelessWidget {
   final BaseAnimeCard anime;
   final dynamic tag;
+  final VoidCallback? onLongPress; // Callback for long press (for multi-select)
 
   const AnimeCard({
     super.key,
     required this.anime,
     required this.tag,
+    this.onLongPress,
   });
 
   void _navigateToDetails(BuildContext context) {
@@ -35,42 +38,51 @@ class AnimeCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final cardWidth = screenWidth * 0.4;
+    final cardWidth = screenWidth * 0.42;
     final cardHeight = cardWidth * 1.5;
 
-    return InkWell(
-      onTap: () => _navigateToDetails(context),
-      splashColor: Colors.pink.withOpacity(0.2),
-      borderRadius: BorderRadius.circular(16),
-      child: Hero(
-        tag: 'poster-${anime.id}-$tag',
-        child: Container(
-          width: cardWidth,
-          height: cardHeight,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 10,
-                offset: const Offset(0, 5),
+    return SizedBox(
+      height: cardHeight,
+      width: cardWidth,
+      child: GestureDetector(
+        onTap: () => _navigateToDetails(context),
+        onLongPress: onLongPress,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            Hero(
+              tag: 'poster-${anime.id}-$tag',
+              child: Container(
+                width: cardWidth,
+                height: cardHeight,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 10,
+                      offset: const Offset(0, 5),
+                    ),
+                  ],
+                  image: DecorationImage(
+                    image: CachedNetworkImageProvider(
+                        _getHighResImage(anime.poster)),
+                    fit: BoxFit.cover,
+                  ),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: Stack(
+                    children: [
+                      _buildGradientOverlay(),
+                      _buildTitle(context),
+                      if (anime.type != null) _buildTypeChip(context),
+                    ],
+                  ),
+                ),
               ),
-            ],
-            image: DecorationImage(
-              image: CachedNetworkImageProvider(_getHighResImage(anime.poster)),
-              fit: BoxFit.cover,
             ),
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(16),
-            child: Stack(
-              children: [
-                _buildGradientOverlay(),
-                _buildTitle(context),
-                if (anime.type != null) _buildTypeChip(context),
-              ],
-            ),
-          ),
+          ],
         ),
       ),
     );
@@ -131,4 +143,5 @@ class AnimeCard extends StatelessWidget {
       ),
     );
   }
+
 }
