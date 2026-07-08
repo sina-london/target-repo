@@ -15,18 +15,18 @@ class Anime {
 
   factory Anime.fromJson(Map<String, dynamic> json) {
     return Anime(
-      id: json['id'],
-      image: json['image'],
-      subOrDub: json['subOrDub'],
-      title: json['title'],
-      releaseDate: json['releaseDate'],
+      id: json['id'] as String,
+      image: json['image'] as String,
+      subOrDub: json['subOrDub'] as String,
+      title: json['title'] as String,
+      releaseDate: json['releaseDate'] as String,
     );
   }
 }
 
 class ResultResponse {
   final List<Anime> results;
-  final String currentPage;
+  final int currentPage;
   final bool hasNextPage;
 
   ResultResponse({
@@ -40,8 +40,8 @@ class ResultResponse {
       results: (json['results'] as List<dynamic>)
           .map((result) => Anime.fromJson(result as Map<String, dynamic>))
           .toList(),
-      currentPage: json['currentPage'],
-      hasNextPage: json['hasNextPage'],
+      currentPage: int.tryParse(json['currentPage']) ?? 1,
+      hasNextPage: json['hasNextPage'] as bool,
     );
   }
 }

@@ -38,6 +38,7 @@ class _HomeState extends State<Home> {
         _isLoading = false;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         error = 'Something went wrong';
         _isLoading = false;
@@ -51,18 +52,26 @@ class _HomeState extends State<Home> {
     fetchData();
   }
 
+  @override
+  void dispose() {
+    _animeService.dispose();
+    super.dispose();
+  }
+
   Widget _buildSection(
       {required String title,
       required List<dynamic>? items,
-      required Widget Function(Map<String, dynamic>) itemBuilder}) {
+      required Widget Function(Map<String, dynamic>) itemBuilder,
+      bool featured = false}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          title,
-          style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 20.0),
+        if (title != "")
+          Text(
+            title,
+            style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
+          ),
+        const SizedBox(height: 10.0),
         if (_isLoading)
           const Center(child: CircularProgressIndicator())
         else if (error != null)
@@ -70,13 +79,26 @@ class _HomeState extends State<Home> {
         else if (items == null || items.isEmpty)
           const Center(child: Text('No items found'))
         else
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: items.map((item) => itemBuilder(item)).toList(),
-            ),
-          )
+          featured
+              ? SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: items.map((item) => itemBuilder(item)).toList(),
+                  ),
+                )
+              : GridView(
+                  gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+                      maxCrossAxisExtent:
+                          MediaQuery.of(context).size.width * 0.5,
+                      mainAxisSpacing: 10.0,
+                      crossAxisSpacing: 10.0,
+                      childAspectRatio: 2 / 4),
+                  physics: const NeverScrollableScrollPhysics(),
+                  scrollDirection: Axis.vertical,
+                  shrinkWrap: true,
+                  children: items.map((anime) => itemBuilder(anime)).toList(),
+                )
       ],
     );
   }
@@ -88,26 +110,18 @@ class _HomeState extends State<Home> {
       body: RefreshIndicator(
         onRefresh: fetchData,
         child: Padding(
-          padding: const EdgeInsets.all(10.0),
+          padding: const EdgeInsets.symmetric(horizontal: 10.0),
           child: ListView(
             children: [
               _buildSection(
-                title: 'Featured',
-                items: topAiring,
-                itemBuilder: (anime) => FeaturedItem(anime: anime),
-              ),
-              const Divider(
-                color: Colors.black,
-                thickness: 1,
-              ),
+                  title: '',
+                  items: topAiring,
+                  itemBuilder: (anime) => FeaturedItem(anime: anime),
+                  featured: true),
               _buildSection(
                 title: 'Popular',
                 items: popular,
                 itemBuilder: (anime) => PopularItem(anime: anime),
-              ),
-              const Divider(
-                color: Colors.black,
-                thickness: 1,
               ),
               _buildSection(
                   title: 'Movies',

@@ -21,33 +21,55 @@ class FeaturedItem extends StatelessWidget {
       ),
       child: Container(
         margin: const EdgeInsets.only(right: 20.0),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        width: MediaQuery.of(context).size.width * 0.8,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16.0),
+        ),
+        child: Stack(
+          alignment: Alignment.bottomLeft,
           children: [
-            Container(
-              padding: const EdgeInsets.all(10.0),
-              height: 300,
-              child: RotatedBox(
-                quarterTurns: 3,
-                child: Text(
-                  anime['title'],
-                  textAlign: TextAlign.start,
-                  style: const TextStyle(
-                      fontSize: 18.0, fontWeight: FontWeight.w500),
-                ),
-              ),
-            ),
             ClipRRect(
-              borderRadius: BorderRadius.circular(15.0),
+              borderRadius: BorderRadius.circular(16.0),
               child: Image.network(
                 anime['image'],
-                width: MediaQuery.of(context).size.width * 0.5,
+                fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) =>
                     const Icon(Icons.error),
                 loadingBuilder: (context, child, loadingProgress) {
                   if (loadingProgress == null) return child;
                   return const Center(child: CircularProgressIndicator());
                 },
+              ),
+            ),
+            Container(
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: Colors.red,
+                borderRadius: BorderRadius.circular(16.0),
+                gradient: LinearGradient(
+                  begin: Alignment.bottomCenter,
+                  end: Alignment.topCenter,
+                  colors: [
+                    Colors.black.withOpacity(0.4),
+                    Colors.transparent,
+                  ],
+                ),
+              ),
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    anime['title'],
+                    style: const TextStyle(
+                      fontSize: 28.0,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
               ),
             ),
           ],

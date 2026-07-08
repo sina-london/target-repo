@@ -31,6 +31,7 @@ class _BrowseState extends State<Browse> {
       });
       // response.
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _isLoading = false;
         error = 'Failed to fetch _genres';
@@ -70,9 +71,7 @@ class _BrowseState extends State<Browse> {
                       children: _genres != null
                           ? _genres!.map((genre) {
                               return GestureDetector(
-                                onTap: () {
-                                  
-                                },
+                                onTap: () {},
                                 child: Container(
                                   padding: const EdgeInsets.symmetric(
                                       horizontal: 16.0, vertical: 8.0),
