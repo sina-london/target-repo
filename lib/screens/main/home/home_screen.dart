@@ -93,9 +93,8 @@ class _HomeScreenState extends State<HomeScreen> {
         Theme.of(context); // Use the ThemeManager to get the theme data
     return Shimmer.fromColors(
       baseColor:
-          themeData.colorScheme.surface.withOpacity(0.5), // Use the theme data
-      highlightColor: themeData.colorScheme.onSurface
-          .withOpacity(0.2), // Use the theme data
+          themeData.colorScheme.primary, 
+      highlightColor: themeData.colorScheme.secondary,
       child: SizedBox(
         height: screenSize.height * 0.25,
         child: ListView.builder(
@@ -106,7 +105,7 @@ class _HomeScreenState extends State<HomeScreen> {
             width: screenSize.width * 0.4,
             margin: const EdgeInsets.only(right: 12),
             decoration: BoxDecoration(
-              color: themeData.colorScheme.surface, // Use the theme data
+              color: themeData.colorScheme.surface, 
               borderRadius: BorderRadius.circular(20),
             ),
           ),
