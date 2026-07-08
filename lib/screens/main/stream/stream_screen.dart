@@ -35,7 +35,7 @@ class _StreamScreenState extends State<StreamScreen> {
   final Map<String, EpisodeServersModel> _serversCache = {};
   final Map<String, EpisodeStreamingLinksModel> _linksCache = {};
 
-  late final Box<WatchlistModel?> _watchlistBox;
+  late final Box<WatchlistModel?>? _watchlistBox;
   late String _selectedEpisodeId;
 
   BetterPlayerController? _playerController;
@@ -97,7 +97,8 @@ class _StreamScreenState extends State<StreamScreen> {
   }
 
   Future<void> _fetchStreamingLinks(String episodeId) async {
-    final String finalEpisodeId = episodeId.isEmpty ? widget.episodeId : episodeId;
+    final String finalEpisodeId =
+        episodeId.isEmpty ? widget.episodeId : episodeId;
     final String cacheKey = '$finalEpisodeId-$_selectedServer-$_selectedDubSub';
 
     try {
@@ -262,8 +263,8 @@ class _StreamScreenState extends State<StreamScreen> {
   // UI Builders
   Widget _buildShimmerLoading(double height) {
     return Shimmer.fromColors(
-      baseColor: Colors.grey[850]!,
-      highlightColor: Colors.grey[700]!,
+      baseColor: Theme.of(context).colorScheme.primary,
+      highlightColor: Theme.of(context).colorScheme.secondary,
       child: Container(
         height: height,
         decoration: BoxDecoration(
@@ -290,14 +291,14 @@ class _StreamScreenState extends State<StreamScreen> {
       children: [
         _buildChoiceButton(
           "Sub",
-          Colors.grey[700]!,
+          Theme.of(context).colorScheme.secondary,
           _selectedDubSub == "sub",
           () => _onDubSubChanged("sub"),
         ),
         const SizedBox(width: 15),
         _buildChoiceButton(
           "Dub",
-          Colors.grey[700]!,
+          Theme.of(context).colorScheme.secondary,
           _selectedDubSub == "dub",
           () => _onDubSubChanged("dub"),
         ),
@@ -366,8 +367,8 @@ class _StreamScreenState extends State<StreamScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        forceMaterialTransparency: true,
         title: Text(widget.title),
-        backgroundColor: Colors.grey[900],
         elevation: 0,
       ),
       body: Padding(
@@ -409,7 +410,7 @@ class _StreamScreenState extends State<StreamScreen> {
           padding: const EdgeInsets.symmetric(vertical: 15),
           decoration: BoxDecoration(
             color: isSelected
-                ? Theme.of(context).secondaryHeaderColor
+                ? Theme.of(context).colorScheme.primary
                 : color.withOpacity(0.7),
             borderRadius: BorderRadius.circular(10),
             boxShadow: [
@@ -438,8 +439,8 @@ class _StreamScreenState extends State<StreamScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 20),
         decoration: BoxDecoration(
           color: isSelected
-              ? Theme.of(context).secondaryHeaderColor
-              : Colors.grey[600],
+              ? Theme.of(context).colorScheme.primary
+              : Theme.of(context).colorScheme.secondary,
           borderRadius: BorderRadius.circular(10),
           boxShadow: [
             BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 5)
