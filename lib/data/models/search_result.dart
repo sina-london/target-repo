@@ -26,7 +26,7 @@ class Anime {
 
 class ResultResponse {
   final List<Anime> results;
-  final int currentPage;
+  final String currentPage;
   final bool hasNextPage;
 
   ResultResponse({

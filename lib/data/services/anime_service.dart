@@ -48,9 +48,10 @@ class AnimeService {
     }
   }
 
-  Future<ResultResponse?> fetchByQuery({required String query}) async {
+  Future<ResultResponse?> fetchByQuery(
+      {required String query, int page = 1}) async {
     try {
-      final response = await http.get(Uri.parse("$baseUrl/$query"));
+      final response = await http.get(Uri.parse("$baseUrl/$query?page=$page"));
       if (response.statusCode == 200) {
         final jsonResponse = json.decode(response.body);
         if (jsonResponse['results'] != null) {
@@ -82,18 +83,16 @@ class AnimeService {
   }
 
   Future<WatchResponse?> fetchStream({required String id}) async {
-  try {
-    final response = await http.get(Uri.parse("$baseUrl/watch/$id"));
-    if (response.statusCode == 200) {
-      final jsonResponse = json.decode(response.body);
-      return WatchResponse.fromJson(jsonResponse);
-    } else {
-      throw Exception('Failed to load stream data');
+    try {
+      final response = await http.get(Uri.parse("$baseUrl/watch/$id"));
+      if (response.statusCode == 200) {
+        final jsonResponse = json.decode(response.body);
+        return WatchResponse.fromJson(jsonResponse);
+      } else {
+        throw Exception('Failed to load stream data');
+      }
+    } catch (e) {
+      return null;
     }
-  } catch (e) {
-    return null;
   }
-}
-
-  
 }
