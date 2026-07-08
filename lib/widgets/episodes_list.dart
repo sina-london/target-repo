@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nekoflow/data/models/details_model.dart';
-import 'package:nekoflow/screens/stream.dart';
+import 'package:nekoflow/screens/stream_screen.dart';
 
 class EpisodesList extends StatelessWidget {
   final List<Episode> episodes;
@@ -37,7 +37,7 @@ class EpisodesList extends StatelessWidget {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => Stream(
+                builder: (context) => StreamScreen(
                   id: episode.id,
                   title: title,
                 ),

@@ -5,19 +5,19 @@ import 'package:nekoflow/data/models/details_model.dart';
 import 'package:http/http.dart' as http;
 import 'package:nekoflow/widgets/episodes_list.dart';
 
-class Details extends StatefulWidget {
+class DetailsScreen extends StatefulWidget {
   final String id;
   final String image;
   final String title;
 
-  const Details(
+  const DetailsScreen(
       {super.key, required this.id, required this.image, required this.title});
 
   @override
-  State<Details> createState() => _DetailsState();
+  State<DetailsScreen> createState() => _DetailsScreenState();
 }
 
-class _DetailsState extends State<Details> {
+class _DetailsScreenState extends State<DetailsScreen> {
   ValueNotifier<bool> _isDescriptionExpanded = ValueNotifier(false);
   static const String baseUrl =
       "https://animaze-swart.vercel.app/anime/gogoanime/info";

@@ -4,14 +4,14 @@ import 'package:nekoflow/data/services/anime_service.dart';
 import 'package:nekoflow/widgets/result_card.dart';
 import 'package:nekoflow/widgets/search_bar.dart';
 
-class Search extends StatefulWidget {
-  const Search({super.key});
+class SearchScreen extends StatefulWidget {
+  const SearchScreen({super.key});
 
   @override
-  State<Search> createState() => _SearchState();
+  State<SearchScreen> createState() => _SearchScreenState();
 }
 
-class _SearchState extends State<Search> {
+class _SearchScreenState extends State<SearchScreen> {
   final TextEditingController _searchController = TextEditingController();
   final AnimeService _animeService = AnimeService();
   bool _isLoading = false;

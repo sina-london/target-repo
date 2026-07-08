@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nekoflow/data/models/search_result.dart';
-import 'package:nekoflow/screens/details.dart';
+import 'package:nekoflow/screens/details_screen.dart';
 
 class ResultCard extends StatelessWidget {
   final Anime anime;
@@ -15,7 +15,7 @@ class ResultCard extends StatelessWidget {
           context,
           MaterialPageRoute(
             builder: (context) =>
-                Details(id: anime.id, image: anime.image, title: anime.title),
+                DetailsScreen(id: anime.id, image: anime.image, title: anime.title),
           ),
         );
       },

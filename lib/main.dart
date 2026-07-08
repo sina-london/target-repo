@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:nekoflow/screens/browse.dart';
-import 'package:nekoflow/screens/home.dart';
-import 'package:nekoflow/screens/search.dart';
-import 'package:nekoflow/screens/settings.dart';
+import 'package:hive_flutter/adapters.dart';
+import 'package:nekoflow/data/models/settings_model.dart';
+import 'package:nekoflow/screens/browse_screen.dart';
+import 'package:nekoflow/screens/home_screen.dart';
+import 'package:nekoflow/screens/search_screen.dart';
+import 'package:nekoflow/screens/settings_screen.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Hive.initFlutter();
+  Hive.registerAdapter(SettingsAdapter());
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
   runApp(const MainApp());
 }
@@ -23,10 +27,10 @@ class _MainAppState extends State<MainApp> {
   int _selectedIndex = 0;
   bool _isDarkMode = true;
   static const _screens = [
-    KeyedSubtree(key: ValueKey("Home"), child: Home()),
-    KeyedSubtree(key: ValueKey("Search"), child: Search()),
-    KeyedSubtree(key: ValueKey("Browse"), child: Browse()),
-    KeyedSubtree(key: ValueKey("Settings"), child: Settings()),
+    KeyedSubtree(key: ValueKey("Home"), child: HomeScreen()),
+    KeyedSubtree(key: ValueKey("Search"), child: SearchScreen()),
+    KeyedSubtree(key: ValueKey("Browse"), child: BrowseScreen()),
+    KeyedSubtree(key: ValueKey("Settings"), child: SettingsScreen()),
   ];
 
   @override
